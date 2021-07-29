@@ -27,26 +27,38 @@ impl KeySet {
             && Path::new(ksk_file.as_str()).is_file()
         {
             // load keys from files
-            return KeySet {
-                 sk: LWESecretKey::load( sk_file.as_str()).expect("Failed to load secret key from file."),
-                bsk:       LWEBSK::load(bsk_file.as_str()),     // does not return Result enum
-                ksk:       LWEKSK::load(ksk_file.as_str()),     // does not return Result enum
-            }
+            crate::measure_duration!(
+                "Load KeySet",
+                [
+                    let keys = KeySet {
+                         sk: LWESecretKey::load( sk_file.as_str()).expect("Failed to load secret key from file."),
+                        bsk:       LWEBSK::load(bsk_file.as_str()),     // does not return Result enum
+                        ksk:       LWEKSK::load(ksk_file.as_str()),     // does not return Result enum
+                    };
+                ]
+            );
+
+            return keys;
         } else {
             // generate & save keys
-            let key_set = KeySet::generate(prms);
+            crate::measure_duration!(
+                "Generate & Save KeySet",
+                [
+                    let keys = KeySet::generate(prms);
 
-            crate::measure_duration!(
-                "Saving  LWE secret key",
-                [key_set.sk.save( sk_file.as_str()).expect("Failed to save secret key to file.");]);
-            crate::measure_duration!(
-                "Saving bootstrapping keys",
-                [key_set.bsk.save(bsk_file.as_str());]);
-            crate::measure_duration!(
-                "Saving key-switching keys",
-                [key_set.ksk.save(ksk_file.as_str());]);
+                    crate::measure_duration!(
+                        "Saving  LWE secret key",
+                        [keys.sk.save( sk_file.as_str()).expect("Failed to save secret key to file.");]);
+                    crate::measure_duration!(
+                        "Saving bootstrapping keys",
+                        [keys.bsk.save(bsk_file.as_str());]);
+                    crate::measure_duration!(
+                        "Saving key-switching keys",
+                        [keys.ksk.save(ksk_file.as_str());]);
+                ]
+            );
 
-            return key_set;
+            return keys;
         }
     }
 

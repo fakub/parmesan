@@ -35,28 +35,13 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     // say hello
     parmesan_hello();
 
-    // parameters
-    let _ = params::Params {
-         lwe_params: LWE80_256,
-        rlwe_params: RLWE80_256_1,
-        bs_base_log: 3,
-           bs_level: 2,
-        ks_base_log: 1,
-           ks_level: 3,
-    };
-
     // encoders
     let encoder_input  = Encoder::new_rounding_context(0., 15., 2, 1)?;          // input message can be in the interval [0,16)
     let encoder_output = Encoder::new_rounding_context(0., 31., 3, 0)?;
 
     // keys
-    measure_duration!(
-        "Load / generate the Key set",
-        [
-            //~ let keys = KeySet::load_gen(&params::PARM90__PI_5__D_20);
-            let keys = KeySet::load_gen(&params::PARMXX__TRIVIAL);
-        ]
-    );
+    let keys = KeySet::load_gen(&params::PARM90__PI_5__D_20);
+    //~ let keys = KeySet::load_gen(&params::PARMXX__TRIVIAL);
 
     // messages
     let m: f64 = 15.999;
