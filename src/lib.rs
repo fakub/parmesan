@@ -13,7 +13,9 @@
 //! A library for fast parallel arithmetics on TFHE-encrypted data.
 //!
 
+#[allow(unused_imports)]
 use std::io::{self,Write};
+
 use colored::Colorize;
 use concrete::*;
 
@@ -22,6 +24,8 @@ mod key_set;
 mod misc;
 
 use key_set::KeySet;
+
+static mut LOG_LVL: u8 = 0;
 
 pub fn parmesan_hello() {
     infoln!("Hi, I am {}, using local {} with custom patches & an unsafe PRNG.", String::from("Parmesan").yellow().bold(), String::from("Concrete").blue().bold());
@@ -32,7 +36,7 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     parmesan_hello();
 
     // parameters
-    let prms = params::Params {
+    let _ = params::Params {
          lwe_params: LWE80_256,
         rlwe_params: RLWE80_256_1,
         bs_base_log: 3,
@@ -49,8 +53,8 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     measure_duration!(
         "Load / generate the Key set",
         [
-            let keys = KeySet::load_gen(&prms);
             //~ let keys = KeySet::load_gen(&params::PARM90__PI_5__D_20);
+            let keys = KeySet::load_gen(&params::PARMXX__TRIVIAL);
         ]
     );
 

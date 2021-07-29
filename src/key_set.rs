@@ -1,5 +1,9 @@
 use concrete::*;
 use std::path::Path;
+use colored::Colorize;
+
+#[allow(unused_imports)]
+use std::io::{self,Write};
 
 use super::params;
 
@@ -32,9 +36,15 @@ impl KeySet {
             // generate & save keys
             let key_set = KeySet::generate(prms);
 
-             key_set.sk.save( sk_file.as_str()).expect("Failed to save secret key to file.");
-            key_set.bsk.save(bsk_file.as_str());
-            key_set.ksk.save(ksk_file.as_str());
+            crate::measure_duration!(
+                "Saving  LWE secret key",
+                [key_set.sk.save( sk_file.as_str()).expect("Failed to save secret key to file.");]);
+            crate::measure_duration!(
+                "Saving bootstrapping keys",
+                [key_set.bsk.save(bsk_file.as_str());]);
+            crate::measure_duration!(
+                "Saving key-switching keys",
+                [key_set.ksk.save(ksk_file.as_str());]);
 
             return key_set;
         }
@@ -66,22 +76,30 @@ impl KeySet {
     /// Generate a fresh TFHE key set
     fn generate(prms: &params::Params) -> KeySet {
         // generate LWE & RLWE secret keys
-        let      sk:  LWESecretKey =  LWESecretKey::new(&prms.lwe_params);
-        let rlwe_sk: RLWESecretKey = RLWESecretKey::new(&prms.rlwe_params);
+        crate::measure_duration!(
+            "Generating  LWE secret key",   //TODO add formatting for: "{}-bit", prms.lwe_params.dimension
+            [let      sk:  LWESecretKey =  LWESecretKey::new(&prms.lwe_params );]);
+        crate::measure_duration!(
+            "Generating RLWE secret key",
+            [let rlwe_sk: RLWESecretKey = RLWESecretKey::new(&prms.rlwe_params);]);
 
         // calculate bootstrapping & key-switching keys
-        let bsk: LWEBSK = LWEBSK::new(
-            &sk,
-            &rlwe_sk,
-            prms.bs_base_log,
-            prms.bs_level,
-        );
-        let ksk: LWEKSK = LWEKSK::new(
-            &rlwe_sk.to_lwe_secret_key(),
-            &sk,
-            prms.ks_base_log,
-            prms.ks_level,
-        );
+        crate::measure_duration!(
+            "Calculating bootstrapping keys",
+            [let bsk: LWEBSK = LWEBSK::new(
+                &sk,
+                &rlwe_sk,
+                prms.bs_base_log,
+                prms.bs_level,
+            );]);
+        crate::measure_duration!(
+            "Calculating key-switching keys",
+            [let ksk: LWEKSK = LWEKSK::new(
+                &rlwe_sk.to_lwe_secret_key(),
+                &sk,
+                prms.ks_base_log,
+                prms.ks_level,
+            );]);
 
         // fill & return KeySet struct
         KeySet {

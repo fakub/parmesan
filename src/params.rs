@@ -11,6 +11,22 @@ pub struct Params {
 }
 
 #[allow(dead_code)]
+pub const PARMXX__TRIVIAL: Params = Params {
+    lwe_params: LWEParams {
+        dimension: 64,
+        log2_std_dev: -8,
+    },
+    rlwe_params: RLWEParams {
+        polynomial_size: 256,
+        dimension: 1,
+        log2_std_dev: -10,
+    },
+    bs_base_log: 2,
+       bs_level: 2,
+    ks_base_log: 1,
+       ks_level: 3,
+};
+#[allow(dead_code)]
 pub const PARM90__PI_5__D_20: Params = Params {
     lwe_params: LWEParams {
         dimension: 560,
