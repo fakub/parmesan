@@ -13,37 +13,55 @@
 //! A library for fast parallel arithmetics on TFHE-encrypted data.
 //!
 
-pub use concrete::*;
+use std::io::{self,Write};
 use colored::Colorize;
+use concrete::*;
+
+mod params;
+mod key_set;
+mod misc;
+
+use key_set::KeySet;
 
 pub fn parmesan_hello() {
-    println!("Hi, I am {}, using local {} with custom patches & an unsafe PRNG.", String::from("Parmesan").yellow().bold(), String::from("Concrete").blue().bold());
+    infoln!("Hi, I am {}, using local {} with custom patches & an unsafe PRNG.", String::from("Parmesan").yellow().bold(), String::from("Concrete").blue().bold());
 }
 
 pub fn parmesan_main() -> Result<(), CryptoAPIError> {
-    println!("Main:");
+    // say hello
+    parmesan_hello();
+
+    // parameters
+    let prms = params::Params {
+         lwe_params: LWE80_256,
+        rlwe_params: RLWE80_256_1,
+        bs_base_log: 3,
+           bs_level: 2,
+        ks_base_log: 1,
+           ks_level: 3,
+    };
 
     // encoders
-    let encoder_input = Encoder::new_rounding_context(0., 15., 2, 1)?;          // input message can be in the interval [0,16)
+    let encoder_input  = Encoder::new_rounding_context(0., 15., 2, 1)?;          // input message can be in the interval [0,16)
     let encoder_output = Encoder::new_rounding_context(0., 31., 3, 0)?;
 
     // keys
-    print!("> loading keys ... "); // io::stdout().flush().unwrap();   // requires use std::io::{self,Write};
-    //TODO generate if they do not exist; cf. zqz/keys.rs:28 in demo_z8z
-    let  sk = LWESecretKey::load("rlwe_1024_1_bbs_6_lbs_4_secret_key.json").expect("Failed to load SK file" );
-    let bsk = LWEBSK::load("rlwe_1024_1_bbs_6_lbs_4_bootstrapping_key.txt");
-    let ksk = LWEKSK::load("rlwe_1024_1_bbs_6_lbs_4_keyswitching_key.txt" );
-    println!("DONE");
+    measure_duration!(
+        "Load / generate the Key set",
+        [
+            let keys = KeySet::load_gen(&prms);
+        ]
+    );
 
     // messages
     let m: f64 = 15.999;
 
     // encode and encrypt
-    let c = LWE::encode_encrypt(&sk, m, &encoder_input)?;
+    let c = LWE::encode_encrypt(&keys.sk, m, &encoder_input)?;
 
     // bootstrap
-    let fc_r = c.bootstrap_with_function(&bsk, |x| x * x, &encoder_output)?;
-    let fc = fc_r.keyswitch(&ksk)?;
+    let fc_r =    c.bootstrap_with_function(&keys.bsk, |x| x * x, &encoder_output)?;
+    let fc   = fc_r.keyswitch(&keys.ksk)?;
 
     // try LUT
     //~ let lut = |x| [1, 2, 3, 4, 5][x];
@@ -51,7 +69,7 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     //~ println!("LUT({}) = {}", var, lut(var));
 
     // decrypt
-    let fm = fc.decrypt_decode(&sk)?;
+    let fm = fc.decrypt_decode(&keys.sk)?;
 
     println!("before bootstrap: {}, after bootstrap: {}", m, fm);
 
