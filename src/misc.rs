@@ -19,11 +19,11 @@ macro_rules! measure_duration {
     }
 }
 
-// Parmesan info output
+// Parmesan logging macros
 #[macro_export]
 macro_rules! info {
     ($($arg:tt)*) => {
-        let msg = parm_format!($($arg)*);
+        let msg = parm_format_info!($($arg)*);
         eprint!("{}", msg);
         io::stdout().flush().unwrap();
     }
@@ -31,16 +31,36 @@ macro_rules! info {
 #[macro_export]
 macro_rules! infoln {
     ($($arg:tt)*) => {
-        let msg = parm_format!($($arg)*);
+        let msg = parm_format_info!($($arg)*);
         eprintln!("{}", msg);
     }
 }
+
 #[macro_export]
-macro_rules! parm_format {
+macro_rules! parm_error {
+    ($($arg:tt)*) => {
+        let msg = parm_format_err!($($arg)*);
+        eprintln!("{}", msg);
+    }
+}
+
+#[macro_export]
+macro_rules! parm_format_info {
     ($($arg:tt)*) => {{
         let mut msg = format!($($arg)*);
         msg = format!("🧀 {} {}", String::from(">").yellow().bold(), msg);
         msg = msg.replace("\n", "\n     ");
+        msg
+    }}
+}
+#[macro_export]
+macro_rules! parm_format_err {
+    ($($arg:tt)*) => {{
+        let mut msg = format!($($arg)*);
+        msg = format!("🫕  {}{}", String::from("> Fondue!\n").red().bold(), msg);
+        msg = msg.replace("\n", "\n     ");
+        // does not work this way: msg = msg.replace("\n", String::from("\n     ").red().bold().as_str());
+        msg = format!("{}\n{}", msg, String::from("-----").red().bold());
         msg
     }}
 }
