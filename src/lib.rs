@@ -1,22 +1,34 @@
+// auto-generated:
+//~ #[cfg(test)]
+//~ mod tests {
+    //~ #[test]
+    //~ fn it_works() {
+        //~ assert_eq!(2 + 2, 4);
+    //~ }
+//~ }
+
 //!
 //! PARMESAN: Parallel-ARithMEticS-on-tfhe-ENcrypted-data
 //!
 //! A library for fast parallel arithmetics on TFHE-encrypted data.
 //!
 
-use concrete::*;
+pub use concrete::*;
 use colored::Colorize;
-use std::io::{self,Write};
 
-fn main() -> Result<(), CryptoAPIError> {
+pub fn parmesan_hello() {
     println!("Hi, I am {}, using local {} with custom patches & an unsafe PRNG.", String::from("Parmesan").yellow().bold(), String::from("Concrete").blue().bold());
+}
+
+pub fn parmesan_main() -> Result<(), CryptoAPIError> {
+    println!("Main:");
 
     // encoders
     let encoder_input = Encoder::new_rounding_context(0., 15., 2, 1)?;          // input message can be in the interval [0,16)
     let encoder_output = Encoder::new_rounding_context(0., 31., 3, 0)?;
 
     // keys
-    print!("> loading keys ... "); io::stdout().flush().unwrap();
+    print!("> loading keys ... "); // io::stdout().flush().unwrap();   // requires use std::io::{self,Write};
     //TODO generate if they do not exist; cf. zqz/keys.rs:28 in demo_z8z
     let  sk = LWESecretKey::load("rlwe_1024_1_bbs_6_lbs_4_secret_key.json").expect("Failed to load SK file" );
     let bsk = LWEBSK::load("rlwe_1024_1_bbs_6_lbs_4_bootstrapping_key.txt");
@@ -46,6 +58,4 @@ fn main() -> Result<(), CryptoAPIError> {
     Ok(())
 }
 
-//TODO
-//
-//  pub fn bootstrap_with_lut: reimplement completely
+// a list of modules goes here:
