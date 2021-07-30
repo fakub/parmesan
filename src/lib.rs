@@ -29,7 +29,7 @@ pub use ciphertexts::ParmCiphertext;
 
 // Userovo modules
 mod userovo;
-pub use userovo::keys::{PrivKeySet,PubKeySet,KeySet};   //TODO remove KeySet
+pub use userovo::keys::{PrivKeySet,PubKeySet};
 pub use userovo::encryption;
 
 // Cloudovo modules
@@ -43,31 +43,133 @@ pub use cloudovo::addition;
 //  Parmesan Structs
 //
 
-pub struct ParmesanUserovo {
+// -----------------------------------------------------------------------------
+//  Userovo
+
+/// User-side Parmesan
+pub struct ParmesanUserovo<'a> {
+    pub params: &'a Params,
     priv_keys: PrivKeySet,
-    pub params: Params,
 }
 
-pub struct ParmesanCloudovo {
-    pub_keys: PubKeySet,
-    pub params: Params,
+impl ParmesanUserovo<'_> {
+    /// Create an instance of `ParmesanUserovo`
+    /// * save immutable reference to params
+    /// * generate keys
+    pub fn new(params: &Params) -> ParmesanUserovo {
+        ParmesanUserovo {
+            params,
+            priv_keys: PrivKeySet::new(params),
+        }
+    }
+
+    /// Get the Public Key Set
+    pub fn get_pub_keys(&self) -> PubKeySet {
+        PubKeySet {
+            bsk: &self.priv_keys.bsk,
+            ksk: &self.priv_keys.ksk,
+        }
+    }
+
+    /// Encrypt a 32-bit signed integer
+    pub fn encrypt(&self, m: i32) -> ParmCiphertext {   //TODO change to a template for other integer lengths, too
+        ParmCiphertext {
+            maxlen: 32,
+        }
+    }
+
+    /// Decrypt a 32-bit signed integer
+    pub fn decrypt(&self, c: ParmCiphertext) -> i32 {   //TODO change to a template for other integer lengths, too
+        42
+    }
 }
 
-pub fn parmesan_hello() {
-    infoln!("Hi, I am {}, using local {} with custom patches & an unsafe PRNG.", String::from("Parmesan").yellow().bold(), String::from("Concrete").blue().bold());
+// -----------------------------------------------------------------------------
+//  Cloudovo
+
+/// Cloud-side Parmesan
+pub struct ParmesanCloudovo<'a> {
+    pub params: &'a Params,
+    pub_keys: &'a PubKeySet<'a>,
 }
+
+impl ParmesanCloudovo<'_> {
+    /// Create an instance of `ParmesanCloudovo`
+    pub fn new<'a>(
+        params: &'a Params,
+        pub_keys: &'a PubKeySet,
+    ) -> ParmesanCloudovo<'a> {
+        ParmesanCloudovo {
+            params,
+            pub_keys,
+        }
+    }
+
+    /// Add two ciphertexts in parallel
+    pub fn add(x: ParmCiphertext, y: ParmCiphertext) -> ParmCiphertext {
+        ParmCiphertext {
+            maxlen: 5,
+        }
+    }
+}
+
+
+
+// =============================================================================
+//
+//  Global Functions
+//
+
+// -----------------------------------------------------------------------------
+//  Dev
 
 pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     // say hello
     parmesan_hello();
+
+
+    // =================================
+    //  Initialization
+
+    // ---------------------------------
+    //  Global Scope
+    let par = &params::PARMXX__TRIVIAL;
+
+    // ---------------------------------
+    //  Userovo Scope
+    let pu = ParmesanUserovo::new(par);
+    infoln!("Generated {} scope.", String::from("Userovo").bold().yellow());
+    let pub_k = pu.get_pub_keys();
+
+    // ---------------------------------
+    //  Cloudovo Scope
+    let pc = ParmesanCloudovo::new(par, &pub_k);
+    infoln!("Generated {} scope.", String::from("Cloudovo").bold().yellow());
+
+
+    // =================================
+    //  U: Encryption
+
+
+    // =================================
+    //  C: Evaluation
+
+
+    // =================================
+    //  U: Decryption
+
+
+
+
+
 
     // encoders
     let encoder_input  = Encoder::new_rounding_context(0., 15., 4, 1)?;         // input message can be in the interval [0,16)
     let encoder_output = Encoder::new_rounding_context(0., 15., 4, 0)?;
 
     // keys
-    let keys = KeySet::load_gen(&params::PARM90__PI_5__D_20);
-    //~ let keys = KeySet::load_gen(&params::PARMXX__TRIVIAL);
+    let keys = PrivKeySet::new(&params::PARM90__PI_5__D_20);
+    //~ let keys = KeySet::new(&params::PARMXX__TRIVIAL);
 
     // messages
     let m: f64 = 3.;
@@ -94,4 +196,6 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     Ok(())
 }
 
-// a list of modules goes here:
+pub fn parmesan_hello() {
+    infoln!("Hi, I am {}, using local {} with custom patches & an unsafe PRNG.", String::from("Parmesan").yellow().bold(), String::from("Concrete").blue().bold());
+}

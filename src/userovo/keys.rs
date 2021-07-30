@@ -7,14 +7,15 @@ use std::io::{self,Write};
 
 use crate::params::{self,Params};
 
+
+
+// =============================================================================
+//
+//  Private Keys
+//
+
 pub struct PrivKeySet {
-}
-
-pub struct PubKeySet {
-}
-
-pub struct KeySet {
-    // keys
+    // keys   //TODO change to private
     pub  sk: LWESecretKey,
     pub bsk: LWEBSK,
     pub ksk: LWEKSK,
@@ -24,12 +25,12 @@ pub struct KeySet {
     encd_o: Encoder,
 }
 
-impl KeySet {
+impl PrivKeySet {
 
     /// Load or generate a TFHE key set
-    pub fn load_gen(params: &Params) -> KeySet {
+    pub fn new(params: &Params) -> PrivKeySet {
         // derive filenames
-        let (sk_file, bsk_file, ksk_file) = KeySet::filenames_from_params(params);
+        let (sk_file, bsk_file, ksk_file) = PrivKeySet::filenames_from_params(params);
 
         // check if the keys exist
         if     Path::new( sk_file.as_str()).is_file()
@@ -38,9 +39,9 @@ impl KeySet {
         {
             // load keys from files
             crate::measure_duration!(
-                "Load KeySet",
+                "Load PrivKeySet",
                 [
-                    let keys = KeySet {
+                    let keys = PrivKeySet {
                          sk: LWESecretKey::load( sk_file.as_str()).expect("Failed to load secret key from file."),
                         bsk:       LWEBSK::load(bsk_file.as_str()),     // does not return Result enum
                         ksk:       LWEKSK::load(ksk_file.as_str()),     // does not return Result enum
@@ -54,9 +55,9 @@ impl KeySet {
         } else {
             // generate & save keys
             crate::measure_duration!(
-                "Generate & Save KeySet",
+                "Generate & Save PrivKeySet",
                 [
-                    let keys = KeySet::generate(params);
+                    let keys = PrivKeySet::generate(params);
 
                     crate::measure_duration!(
                         "Saving  LWE secret key",
@@ -75,7 +76,7 @@ impl KeySet {
     }
 
     /// Generate a fresh TFHE key set
-    fn generate(params: &params::Params) -> KeySet {
+    fn generate(params: &params::Params) -> PrivKeySet {
         // generate LWE & RLWE secret keys
         crate::measure_duration!(
             "Generating  LWE secret key",   //TODO add formatting for: "{}-bit", params.lwe_params.dimension
@@ -102,8 +103,8 @@ impl KeySet {
                 params.ks_level,
             );]);
 
-        // fill & return KeySet struct
-        KeySet {
+        // fill & return PrivKeySet struct
+        PrivKeySet {
             sk,     // shortand when variables and fields have the same name
             bsk,    // https://doc.rust-lang.org/book/ch05-01-defining-structs.html#using-the-field-init-shorthand-when-variables-and-fields-have-the-same-name
             ksk,
@@ -134,4 +135,16 @@ impl KeySet {
 
         (sk_file, bsk_file, ksk_file)
     }
+}
+
+
+
+// =============================================================================
+//
+//  Public Keys
+//
+
+pub struct PubKeySet<'a> {
+    pub bsk: &'a LWEBSK,
+    pub ksk: &'a LWEKSK,
 }

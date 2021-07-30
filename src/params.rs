@@ -1,7 +1,9 @@
 use concrete::*;
+//WISH use serde::{Deserialize, Serialize};
 
 //~ pub use self::params::Params;
 
+#[derive(Clone, Debug)]   //WISH Serialize, Deserialize
 pub struct Params {
     pub bit_precision:  usize,          // aka. pi
     pub   quad_weight:  usize,          // aka. 2^2Δ
