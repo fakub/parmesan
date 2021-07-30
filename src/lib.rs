@@ -65,7 +65,7 @@ impl ParmesanUserovo<'_> {
     }
 
     /// Get the Public Key Set
-    pub fn get_pub_keys(&self) -> PubKeySet {
+    pub fn export_pub_keys(&self) -> PubKeySet {
         PubKeySet {
             bsk: &self.priv_keys.bsk,
             ksk: &self.priv_keys.ksk,
@@ -73,8 +73,14 @@ impl ParmesanUserovo<'_> {
     }
 
     /// Encrypt a 32-bit signed integer
-    pub fn encrypt(&self, m: &i32) -> ParmCiphertext {   //TODO change to a template for other integer types/lengths, too
-        encryption::encrypt(self.params, &self.priv_keys, m)
+    /// * `bits` states how many bits of input `m` are to be encrypted, since this will be public
+    /// * least significant bits, including sign, are taken
+    pub fn encrypt(
+        &self,
+        m: i32,
+        bits: usize,
+    ) -> ParmCiphertext {   //TODO change to a template for other integer types/lengths, too
+        encryption::encrypt(self.params, &self.priv_keys, m, bits)
     }
 
     /// Decrypt a 32-bit signed integer
@@ -139,7 +145,7 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     //  Userovo Scope
     let pu = ParmesanUserovo::new(par);
     infoln!("Initialized {} scope.", String::from("Userovo").bold().yellow());
-    let pub_k = pu.get_pub_keys();
+    let pub_k = pu.export_pub_keys();
 
     // ---------------------------------
     //  Cloudovo Scope
@@ -149,10 +155,10 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
 
     // =================================
     //  U: Encryption
-    let m1 = 123456i32;
-    let m2 = 456789i32;
-    let c1 = pu.encrypt(&m1);
-    let c2 = pu.encrypt(&m2);
+    let m1 = 42i32;
+    let m2 = -69i32;
+    let c1 = pu.encrypt(m1, 6);
+    let c2 = pu.encrypt(m2, 6);
     infoln!("{} messages ({}, {}) encrypted.", String::from("User:").bold().yellow(), m1, m2);
 
 
@@ -165,9 +171,9 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     // =================================
     //  U: Decryption
     let m1d = pu.decrypt(&c1);
-    //~ let m2d = pu.decrypt(&c2);
+    let m2d = pu.decrypt(&c2);
     let md  = pu.decrypt(&c );
-    infoln!("{}\ninput 1: {},\ninput 2: ---\nresult: {}.", String::from("User:").bold().yellow(), m1d, md);   // String::from(format!("{}", m)).bold().yellow()
+    infoln!("{}\ninput 1: {},\ninput 2: {}\nresult: {}.", String::from("User:").bold().yellow(), m1d, m2d, md);   // String::from(format!("{}", m)).bold().yellow()
 
     infobox!("Demo END");
 
@@ -180,7 +186,8 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
 
     // keys
     let keys = PrivKeySet::new(&params::PARM90__PI_5__D_20);
-    //~ let keys = KeySet::new(&params::PARMXX__TRIVIAL);
+    //  PARMXX__TRIVIAL
+    //  PARM90__PI_5__D_20
 
     // messages
     let m: f64 = 3.;
