@@ -28,12 +28,12 @@ mod ciphertexts;
 pub use ciphertexts::ParmCiphertext;
 
 // Userovo modules
-mod userovo;
+pub mod userovo;
 pub use userovo::keys::{PrivKeySet,PubKeySet};
 pub use userovo::encryption;
 
 // Cloudovo modules
-mod cloudovo;
+pub mod cloudovo;
 pub use cloudovo::addition;
 
 
@@ -72,15 +72,13 @@ impl ParmesanUserovo<'_> {
     }
 
     /// Encrypt a 32-bit signed integer
-    pub fn encrypt(&self, m: &i32) -> ParmCiphertext {   //TODO change to a template for other integer lengths, too
-        ParmCiphertext {
-            maxlen: 32,
-        }
+    pub fn encrypt(&self, m: &i32) -> ParmCiphertext {   //TODO change to a template for other integer types/lengths, too
+        encryption::encrypt(self.params, &self.priv_keys, m)
     }
 
     /// Decrypt a 32-bit signed integer
-    pub fn decrypt(&self, c: &ParmCiphertext) -> i32 {   //TODO change to a template for other integer lengths, too
-        42
+    pub fn decrypt(&self, c: &ParmCiphertext) -> i32 {   //TODO change to a template for other integer types/lengths, too
+        encryption::decrypt(self.params, &self.priv_keys, c)
     }
 }
 
