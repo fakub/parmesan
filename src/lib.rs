@@ -72,14 +72,14 @@ impl ParmesanUserovo<'_> {
     }
 
     /// Encrypt a 32-bit signed integer
-    pub fn encrypt(&self, m: i32) -> ParmCiphertext {   //TODO change to a template for other integer lengths, too
+    pub fn encrypt(&self, m: &i32) -> ParmCiphertext {   //TODO change to a template for other integer lengths, too
         ParmCiphertext {
             maxlen: 32,
         }
     }
 
     /// Decrypt a 32-bit signed integer
-    pub fn decrypt(&self, c: ParmCiphertext) -> i32 {   //TODO change to a template for other integer lengths, too
+    pub fn decrypt(&self, c: &ParmCiphertext) -> i32 {   //TODO change to a template for other integer lengths, too
         42
     }
 }
@@ -106,7 +106,7 @@ impl ParmesanCloudovo<'_> {
     }
 
     /// Add two ciphertexts in parallel
-    pub fn add(x: ParmCiphertext, y: ParmCiphertext) -> ParmCiphertext {
+    pub fn add(&self, x: &ParmCiphertext, y: &ParmCiphertext) -> ParmCiphertext {
         ParmCiphertext {
             maxlen: 5,
         }
@@ -138,27 +138,36 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     // ---------------------------------
     //  Userovo Scope
     let pu = ParmesanUserovo::new(par);
-    infoln!("Generated {} scope.", String::from("Userovo").bold().yellow());
+    infoln!("Initialized {} scope.", String::from("Userovo").bold().yellow());
     let pub_k = pu.get_pub_keys();
 
     // ---------------------------------
     //  Cloudovo Scope
     let pc = ParmesanCloudovo::new(par, &pub_k);
-    infoln!("Generated {} scope.", String::from("Cloudovo").bold().yellow());
+    infoln!("Initialized {} scope.", String::from("Cloudovo").bold().yellow());
 
 
     // =================================
     //  U: Encryption
+    let m1 = 123456i32;
+    let m2 = 456789i32;
+    let c1 = pu.encrypt(&m1);
+    let c2 = pu.encrypt(&m2);
+    infoln!("{} messages ({}, {}) encrypted.", String::from("User:").bold().yellow(), m1, m2);
 
 
     // =================================
     //  C: Evaluation
+    let c = pc.add(&c1, &c2);
+    infoln!("{} addition evaluated over ciphertexts.", String::from("Cloud:").bold().yellow());
 
 
     // =================================
     //  U: Decryption
+    let m = pu.decrypt(&c);
+    infoln!("{} result decrypted as {}.", String::from("User:").bold().yellow(), m);   // String::from(format!("{}", m)).bold().yellow()
 
-
+    infobox!("Demo END");
 
 
 
@@ -197,5 +206,5 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
 }
 
 pub fn parmesan_hello() {
-    infoln!("Hi, I am {}, using local {} with custom patches & an unsafe PRNG.", String::from("Parmesan").yellow().bold(), String::from("Concrete").blue().bold());
+    infobox!("Hi, I am {}, using local {} with custom patches & an unsafe PRNG.", String::from("Parmesan").yellow().bold(), String::from("Concrete").blue().bold());
 }

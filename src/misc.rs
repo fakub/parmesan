@@ -48,6 +48,13 @@ macro_rules! infoln {
         eprintln!("{}", msg);
     }
 }
+#[macro_export]
+macro_rules! infobox {
+    ($($arg:tt)*) => {
+        let msg = crate::parm_format_infobox!($($arg)*);
+        eprintln!("{}", msg);
+    }
+}
 
 #[macro_export]
 macro_rules! parm_error {
@@ -57,6 +64,7 @@ macro_rules! parm_error {
     }
 }
 
+// Parmesan message formatting macros
 #[macro_export]
 macro_rules! parm_format_info {
     ($($arg:tt)*) => {{
@@ -71,6 +79,28 @@ macro_rules! parm_format_info {
         }
     }}
 }
+
+#[macro_export]
+macro_rules! parm_format_infobox {
+    ($($arg:tt)*) => {{
+        unsafe {
+            let mut msg = format!($($arg)*);
+            let mut ms = String::from(msg);
+            ms.truncate(100);
+            msg = ms.as_str().replace("\n", " | ");
+            let top_of_box = format!("{}{}{}", String::from("┏").yellow(), String::from("━".repeat(msg.chars().count() + 4)).yellow(), String::from("┓").yellow(), );
+            let bot_of_box = format!("{}{}{}", String::from("┗").yellow(), String::from("━".repeat(msg.chars().count() + 4)).yellow(), String::from("┛").yellow(), );
+            msg = format!("    {}\n{}  {}  {}\n{}", top_of_box, String::from("┃").yellow(), msg, String::from("┃").yellow(), bot_of_box);
+            // calc indentation
+            let mut indent = "  │ ".repeat(crate::LOG_LVL as usize);
+            msg = format!("{}{}", indent, msg);
+            indent = format!("\n{}    ", indent);
+            msg = msg.replace("\n", &indent);
+            msg
+        }
+    }}
+}
+
 #[macro_export]
 macro_rules! parm_format_err {
     ($($arg:tt)*) => {{
