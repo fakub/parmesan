@@ -4,7 +4,17 @@ use crate::params::Params;
 use crate::userovo::keys::PrivKeySet;
 use crate::ciphertexts::ParmCiphertext;
 
-pub fn encrypt(
+
+
+// =============================================================================
+//
+//  Encryption
+//
+
+/// Parmesan encryption
+/// * splits signed integer into nibbles (bits)
+/// * encrypt one-by-one
+pub fn parm_encrypt(
     params: &Params,
     priv_keys: &PrivKeySet,
     m: i32,
@@ -12,20 +22,17 @@ pub fn encrypt(
 ) -> ParmCiphertext {
     //WISH some warning if bits is more than given type (-1 for signed)
     let mut ctv: Vec<LWE> = Vec::new();
+    let m_abs = m.abs();
+    let m_pos = m >= 0;
 
     for i in 0..bits {
-        let mi = if (m.abs() >> i) & 1 == 0 {
+        // calculate i-th bit with sign
+        let mi = if ((m_abs >> i) & 1) == 0 {
             0i32
         } else {
-            if m >= 0 {1i32} else {params.minus_1()}
+            if m_pos {1i32} else {-1i32}
         };
-        ctv.push(
-            LWE::encode_encrypt(
-                &priv_keys.sk,
-                mi as f64,
-                &priv_keys.encoder,
-            ).expect("LWE encryption failed.")
-        );
+        ctv.push(parm_encr_nibble(params, priv_keys, mi));
     }
 
     ParmCiphertext {
@@ -34,31 +41,61 @@ pub fn encrypt(
     }
 }
 
-pub fn decrypt (
+fn parm_encr_nibble(
+    params: &Params,
+    priv_keys: &PrivKeySet,
+    mut mi: i32,
+) -> LWE {
+    mi &= params.plaintext_mask();
+    LWE::encode_encrypt(
+        &priv_keys.sk,
+        mi as f64,
+        &priv_keys.encoder,
+    ).expect("LWE encryption failed.")
+}
+
+
+
+// =============================================================================
+//
+//  Decryption
+//
+
+/// Parmesan decryption
+/// * composes signed integer from multiple encrypted nibbles (bits)
+/// * considers symmetric alphabet around zero
+pub fn parm_decrypt(
     params: &Params,
     priv_keys: &PrivKeySet,
     pc: &ParmCiphertext,
 ) -> i32 {
     let mut m = 0i32;
-    let minus_1 = params.minus_1();
-    infoln!("-1 ~ {}", minus_1);
 
     measure_duration!(
         "Decrypt",
         [
             for (i, ct) in pc.ctv.iter().enumerate() {
-                let mi = ct.decrypt_decode(&priv_keys.sk)
-                           .expect("LWE decryption failed.") as i32;   // rounding included in Encoder
-                infoln!("Decrypted {}. element: {}", i, mi);
+                let mi = parm_decr_nibble(params, priv_keys, ct);
+                infoln!("m[{}] = {}", i, mi);
                 m += match mi {
-                    1 => {eprintln!("    mi ~ 1"); 1i32 << i},
-                    0 => {eprintln!("    mi ~ 0"); 0i32},
-                    _ if mi == minus_1 => {eprintln!("    mi ~ {}", minus_1); -(1i32 << i)},
-                    _ => {eprintln!("    mi ~ _"); 0i32},   //WISH fail
+                     1 => {1i32 << i},
+                     0 => {0i32},
+                    -1 => {-(1i32 << i)},
+                    _  => {0i32},   //WISH fail
                 };
             }
         ]
     );
 
     m
+}
+
+fn parm_decr_nibble(
+    params: &Params,
+    priv_keys: &PrivKeySet,
+    ct: &LWE,
+) -> i32 {
+    let mi = ct.decrypt_decode(&priv_keys.sk)
+               .expect("LWE decryption failed.") as i32;   // rounding included in Encoder
+    if mi >= params.plaintext_pos_max() {mi - params.plaintext_space_size()} else {mi}
 }

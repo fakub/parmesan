@@ -81,12 +81,12 @@ impl ParmesanUserovo<'_> {
         m: i32,
         bits: usize,
     ) -> ParmCiphertext {   //TODO change to a template for other integer types/lengths, too
-        encryption::encrypt(self.params, &self.priv_keys, m, bits)
+        encryption::parm_encrypt(self.params, &self.priv_keys, m, bits)
     }
 
     /// Decrypt a 32-bit signed integer
     pub fn decrypt(&self, c: &ParmCiphertext) -> i32 {   //TODO change to a template for other integer types/lengths, too
-        encryption::decrypt(self.params, &self.priv_keys, c)
+        encryption::parm_decrypt(self.params, &self.priv_keys, c)
     }
 }
 
