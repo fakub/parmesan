@@ -21,8 +21,7 @@ pub struct PrivKeySet {
     pub ksk: LWEKSK,
     // rlwe_sk: RLWESecretKey,   // encrypts bsk .. add?
     // encoders
-    pub encd_i: Encoder,
-    pub encd_o: Encoder,
+    pub encoder: Encoder,
 }
 
 impl PrivKeySet {
@@ -45,8 +44,7 @@ impl PrivKeySet {
                          sk: LWESecretKey::load( sk_file.as_str()).expect("Failed to load secret key from file."),
                         bsk:       LWEBSK::load(bsk_file.as_str()),     // does not return Result enum
                         ksk:       LWEKSK::load(ksk_file.as_str()),     // does not return Result enum
-                        encd_i:   Encoder::new(0., ((1usize << params.bit_precision) - 1) as f64, params.bit_precision, 0).expect("Failed to create I-Encoder."),
-                        encd_o:   Encoder::new(0., ((1usize << params.bit_precision) - 1) as f64, params.bit_precision, 0).expect("Failed to create O-Encoder."),
+                        encoder:   PrivKeySet::get_encoder(params),
                     };
                 ]
             );
@@ -108,9 +106,13 @@ impl PrivKeySet {
             sk,     // shortand when variables and fields have the same name
             bsk,    // https://doc.rust-lang.org/book/ch05-01-defining-structs.html#using-the-field-init-shorthand-when-variables-and-fields-have-the-same-name
             ksk,
-            encd_i:   Encoder::new(0., ((1usize << params.bit_precision) - 1) as f64, params.bit_precision, 0).expect("Failed to create I-Encoder."),
-            encd_o:   Encoder::new(0., ((1usize << params.bit_precision) - 1) as f64, params.bit_precision, 0).expect("Failed to create O-Encoder."),
+            encoder: PrivKeySet::get_encoder(params),
         }
+    }
+
+    /// Get appropriate Encoder
+    fn get_encoder(params: &Params) -> Encoder {
+        Encoder::new_rounding_context(0., ((1usize << params.bit_precision) - 1) as f64, params.bit_precision, 0).expect("Failed to create Encoder.")
     }
 
     /// Get filenames from params
@@ -145,6 +147,7 @@ impl PrivKeySet {
 //
 
 pub struct PubKeySet<'a> {
-    pub bsk: &'a LWEBSK,
-    pub ksk: &'a LWEKSK,
+    pub bsk:     &'a LWEBSK,
+    pub ksk:     &'a LWEKSK,
+    pub encoder: &'a Encoder,
 }

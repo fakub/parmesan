@@ -37,6 +37,7 @@ pub use userovo::encryption;
 // Cloudovo modules
 pub mod cloudovo;
 pub use cloudovo::addition;
+use cloudovo::pbs;   //WISH to be removed after tested
 
 
 // =============================================================================
@@ -67,8 +68,9 @@ impl ParmesanUserovo<'_> {
     /// Get the Public Key Set
     pub fn export_pub_keys(&self) -> PubKeySet {
         PubKeySet {
-            bsk: &self.priv_keys.bsk,
-            ksk: &self.priv_keys.ksk,
+            bsk:     &self.priv_keys.bsk,
+            ksk:     &self.priv_keys.ksk,
+            encoder: &self.priv_keys.encoder,
         }
     }
 

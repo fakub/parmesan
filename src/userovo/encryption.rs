@@ -23,7 +23,7 @@ pub fn encrypt(
             LWE::encode_encrypt(
                 &priv_keys.sk,
                 mi as f64,
-                &priv_keys.encd_i,
+                &priv_keys.encoder,
             ).expect("LWE encryption failed.")
         );
     }
@@ -43,9 +43,8 @@ pub fn decrypt (
 
     for (i, ct) in pc.ctv.iter().enumerate() {
         let mi = ct.decrypt_decode(&priv_keys.sk)
-                   .expect("LWE decryption failed.")
-                   .round() as i32;
-        infoln!("Decrypted {}. element: {}", i, mi);
+                   .expect("LWE decryption failed.") as i32;   // rounding included in Encoder
+        infoln!("Decrypted {}. element: {} ({})", i, mi, mf);
         let minus_1 = params.minus_1();
         m += match mi {
             1 => {1i32 << i},

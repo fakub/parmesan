@@ -12,6 +12,10 @@ pub fn add_impl(
     // run parallel addition algorithm
     let mut ctv: Vec<LWE> = Vec::new();
 
+    for ct in &x.ctv {
+        ctv.push(ct.clone());
+    }
+
     ParmCiphertext {
         ctv,
         maxlen: 32,
