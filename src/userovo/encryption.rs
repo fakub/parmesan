@@ -46,10 +46,12 @@ fn parm_encr_nibble(
     priv_keys: &PrivKeySet,
     mut mi: i32,
 ) -> LWE {
+    // little hack, how to bring mi into positive interval [0,2^pi)
     mi &= params.plaintext_mask();
-    LWE::encode_encrypt(
+
+    LWE::encrypt_uint(
         &priv_keys.sk,
-        mi as f64,
+        mi as u32,
         &priv_keys.encoder,
     ).expect("LWE encryption failed.")
 }
@@ -95,7 +97,7 @@ fn parm_decr_nibble(
     priv_keys: &PrivKeySet,
     ct: &LWE,
 ) -> i32 {
-    let mi = ct.decrypt_decode(&priv_keys.sk)
+    let mi = ct.decrypt_uint(&priv_keys.sk)
                .expect("LWE decryption failed.") as i32;   // rounding included in Encoder
     if mi >= params.plaintext_pos_max() {mi - params.plaintext_space_size()} else {mi}
 }
