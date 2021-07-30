@@ -1,7 +1,8 @@
 use concrete::LWE;
 use crate::params::Params;
-use crate::userovo::keys::PubKeySet;
 use crate::ciphertexts::ParmCiphertext;
+use crate::userovo::keys::PubKeySet;
+use super::pbs;
 
 pub fn add_impl(
     params: &Params,
@@ -13,7 +14,7 @@ pub fn add_impl(
     let mut ctv: Vec<LWE> = Vec::new();
 
     for ct in &x.ctv {
-        ctv.push(ct.clone());
+        ctv.push(pbs::id(pub_keys, ct));
     }
 
     ParmCiphertext {

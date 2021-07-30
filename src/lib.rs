@@ -133,7 +133,7 @@ impl ParmesanCloudovo<'_> {
 
 pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     // say hello
-    parmesan_hello();
+    infobox!("Hi, I am {}, using local {} with custom patches & an unsafe PRNG.", String::from("Parmesan").yellow().bold(), String::from("Concrete").blue().bold());
 
 
     // =================================
@@ -141,7 +141,7 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
 
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARMXX__TRIVIAL;
+    let par = &params::PARM90__PI_5__D_20;   //    PARM90__PI_5__D_20      PARMXX__TRIVIAL
 
     // ---------------------------------
     //  Userovo Scope
@@ -179,43 +179,5 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
 
     infobox!("Demo END");
 
-
-
-
-    // encoders
-    let encoder_input  = Encoder::new_rounding_context(0., 15., 4, 1)?;         // input message can be in the interval [0,16)
-    let encoder_output = Encoder::new_rounding_context(0., 15., 4, 0)?;
-
-    // keys
-    let keys = PrivKeySet::new(&params::PARM90__PI_5__D_20);
-    //  PARMXX__TRIVIAL
-    //  PARM90__PI_5__D_20
-
-    // messages
-    let m: f64 = 3.;
-
-    // encode and encrypt
-    let p: Plaintext = encoder_input.encode_single(m)?;
-    let m_dec = p.decode()?;
-    let c = LWE::encode_encrypt(&keys.sk, m, &encoder_input)?;
-
-    // bootstrap
-    let fc_r =    c.bootstrap_with_function(&keys.bsk, |x| x * x, &encoder_output)?;
-    let fc   = fc_r.keyswitch(&keys.ksk)?;
-
-    // try LUT
-    //~ let lut = |x| [1, 2, 3, 4, 5][x];
-    //~ let var = 3;
-    //~ println!("LUT({}) = {}", var, lut(var));
-
-    // decrypt
-    let fm = fc.decrypt_decode(&keys.sk)?;
-
-    println!("before bootstrap: {}, after bootstrap: {}", m_dec[0], fm);
-
     Ok(())
-}
-
-pub fn parmesan_hello() {
-    infobox!("Hi, I am {}, using local {} with custom patches & an unsafe PRNG.", String::from("Parmesan").yellow().bold(), String::from("Concrete").blue().bold());
 }

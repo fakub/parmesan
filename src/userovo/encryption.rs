@@ -15,8 +15,8 @@ pub fn encrypt(
     for i in 0..bits {
         let mi = if (m.abs() >> i) & 1 == 0 {
             0i32
-        } else {
-            if m >= 0 {1i32} else {params.minus_1()}
+        } else {       //FIXME: 1i32
+            if m >= 0 {2i32} else {params.minus_1()}
         };
         infoln!("Encrypting {}. bit: {}", i, mi);
         ctv.push(
@@ -44,7 +44,7 @@ pub fn decrypt (
     for (i, ct) in pc.ctv.iter().enumerate() {
         let mi = ct.decrypt_decode(&priv_keys.sk)
                    .expect("LWE decryption failed.") as i32;   // rounding included in Encoder
-        infoln!("Decrypted {}. element: {} ({})", i, mi, mf);
+        infoln!("Decrypted {}. element: {}", i, mi);
         let minus_1 = params.minus_1();
         m += match mi {
             1 => {1i32 << i},
@@ -55,5 +55,4 @@ pub fn decrypt (
     }
 
     m
-    //~ decrypt_decode(&keys.sk)
 }
