@@ -18,6 +18,12 @@ pub struct Params {
     pub      ks_level:  usize,          // aka. t
 }
 
+impl Params {
+    pub fn minus_1(&self) -> i32 {
+        (1i32 << self.bit_precision) - 1
+    }
+}
+
 #[allow(dead_code)]
 pub const PARMXX__TRIVIAL: Params = Params {
     bit_precision: 2,
