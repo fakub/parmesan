@@ -37,7 +37,6 @@ pub use userovo::encryption;
 // Cloudovo modules
 pub mod cloudovo;
 pub use cloudovo::addition;
-use cloudovo::pbs;   //WISH to be removed after tested
 
 
 // =============================================================================
@@ -118,7 +117,12 @@ impl ParmesanCloudovo<'_> {
         x: &ParmCiphertext,
         y: &ParmCiphertext,
     ) -> ParmCiphertext {
-        addition::add_impl(self.params, self.pub_keys, x, y)
+        addition::add_impl(
+            //~ self.params,
+            self.pub_keys,
+            x,
+            y,
+        )
     }
 }
 
@@ -146,13 +150,11 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     // ---------------------------------
     //  Userovo Scope
     let pu = ParmesanUserovo::new(par);
-    infoln!("Initialized {} scope.", String::from("Userovo").bold().yellow());
     let pub_k = pu.export_pub_keys();
 
     // ---------------------------------
     //  Cloudovo Scope
     let pc = ParmesanCloudovo::new(par, &pub_k);
-    infoln!("Initialized {} scope.", String::from("Cloudovo").bold().yellow());
 
 
     // =================================
@@ -167,7 +169,6 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     // =================================
     //  C: Evaluation
     let c = pc.add(&c1, &c2);
-    infoln!("{} addition evaluated over ciphertexts.", String::from("Cloud:").bold().yellow());
 
 
     // =================================

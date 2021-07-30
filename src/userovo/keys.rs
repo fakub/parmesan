@@ -117,7 +117,7 @@ impl PrivKeySet {
             ((1usize << params.bit_precision) - 1) as f64,      // max
             params.bit_precision,                               // bit-precision
             0,                                                  // padding
-            //~ true,                                               //TODO negacyclic?
+            true,                                               // negacyclic?
         ).expect("Failed to create Encoder.")
     }
 

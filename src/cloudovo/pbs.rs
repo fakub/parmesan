@@ -8,7 +8,7 @@ pub fn id(
 ) -> LWE {
     crate::measure_duration!(
         "PBS: Identity",
-        [let res = c.bootstrap_with_function(pub_keys.bsk, |x| x * x, pub_keys.encoder)
+        [let res = c.bootstrap_with_function(pub_keys.bsk, |x| x, pub_keys.encoder)
                     .expect("Identity PBS failed.")
                     .keyswitch(pub_keys.ksk)
                     .expect("KS failed (in identity).");]

@@ -1,12 +1,12 @@
 use concrete::LWE;
 use colored::Colorize;
-use crate::params::Params;
+//~ use crate::params::Params;
 use crate::ciphertexts::ParmCiphertext;
 use crate::userovo::keys::PubKeySet;
 use super::pbs;
 
 pub fn add_impl(
-    params: &Params,
+    //~ params: &Params,
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
     y: &ParmCiphertext,
@@ -17,8 +17,10 @@ pub fn add_impl(
     measure_duration!(
         "Parallel addition",
         [
-            for ct in &x.ctv {
-                ctv.push(pbs::id(pub_keys, ct));
+            for (i, ct) in x.ctv.iter().enumerate() {
+                ctv.push(
+                    if i & 1 != 0 {pbs::id(pub_keys, ct)} else {y.ctv[i].clone()}
+                );
             }
         ]
     );
