@@ -1,4 +1,5 @@
 use concrete::LWE;
+use colored::Colorize;
 use crate::params::Params;
 use crate::ciphertexts::ParmCiphertext;
 use crate::userovo::keys::PubKeySet;
@@ -13,9 +14,14 @@ pub fn add_impl(
     // run parallel addition algorithm
     let mut ctv: Vec<LWE> = Vec::new();
 
-    for ct in &x.ctv {
-        ctv.push(pbs::id(pub_keys, ct));
-    }
+    measure_duration!(
+        "Parallel addition",
+        [
+            for ct in &x.ctv {
+                ctv.push(pbs::id(pub_keys, ct));
+            }
+        ]
+    );
 
     ParmCiphertext {
         ctv,

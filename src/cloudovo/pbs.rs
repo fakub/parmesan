@@ -1,14 +1,20 @@
 use concrete::LWE;
+use colored::Colorize;
 use crate::userovo::keys::PubKeySet;
 
 pub fn id(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> LWE {
-    c.bootstrap_with_function(pub_keys.bsk, |x| x * x, pub_keys.encoder)
-     .expect("Identity PBS failed.")
-     .keyswitch(pub_keys.ksk)
-     .expect("KS failed (in identity).")
+    crate::measure_duration!(
+        "PBS: Identity",
+        [let res = c.bootstrap_with_function(pub_keys.bsk, |x| x * x, pub_keys.encoder)
+                    .expect("Identity PBS failed.")
+                    .keyswitch(pub_keys.ksk)
+                    .expect("KS failed (in identity).");]
+    );
+
+    res
 }
 
 // try LUT

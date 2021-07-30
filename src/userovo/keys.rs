@@ -113,10 +113,11 @@ impl PrivKeySet {
     /// Get appropriate Encoder
     fn get_encoder(params: &Params) -> Encoder {
         Encoder::new_rounding_context(
-            0.,
-            ((1usize << (params.bit_precision   -1)) - 1) as f64,   //FIXME I want full bit precision here
-            params.bit_precision   -1,   //FIXME I want full bit precision here
-            1,   //FIXME I want 0 here
+            0.,                                                 // min
+            ((1usize << params.bit_precision) - 1) as f64,      // max
+            params.bit_precision,                               // bit-precision
+            0,                                                  // padding
+            //~ true,                                               //TODO negacyclic?
         ).expect("Failed to create Encoder.")
     }
 

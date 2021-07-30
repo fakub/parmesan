@@ -20,7 +20,7 @@ pub struct Params {
 
 impl Params {
     pub fn minus_1(&self) -> i32 {
-        (1i32 << (self.bit_precision   -1)) - 1   //FIXME I want full bit precision here
+        (1i32 << self.bit_precision) - 1
     }
 }
 

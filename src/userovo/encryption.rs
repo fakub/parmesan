@@ -15,10 +15,9 @@ pub fn encrypt(
     for i in 0..bits {
         let mi = if (m.abs() >> i) & 1 == 0 {
             0i32
-        } else {       //FIXME: 1i32
-            if m >= 0 {2i32} else {params.minus_1()}
+        } else {
+            if m >= 0 {1i32} else {params.minus_1()}
         };
-        infoln!("Encrypting {}. bit: {}", i, mi);
         ctv.push(
             LWE::encode_encrypt(
                 &priv_keys.sk,
