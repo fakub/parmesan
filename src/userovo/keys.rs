@@ -21,8 +21,8 @@ pub struct PrivKeySet {
     pub ksk: LWEKSK,
     // rlwe_sk: RLWESecretKey,   // encrypts bsk .. add?
     // encoders
-    encd_i: Encoder,
-    encd_o: Encoder,
+    pub encd_i: Encoder,
+    pub encd_o: Encoder,
 }
 
 impl PrivKeySet {

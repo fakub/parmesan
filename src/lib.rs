@@ -1,17 +1,19 @@
+
+////////////////////////////////////////////////////////////////////////////////
 //!
 //! # PARMESAN: Parallel-ARithMEticS-on-tfhe-ENcrypted-data
 //!
 //! *A library for fast parallel arithmetics on TFHE-encrypted data.*
 //!
+////////////////////////////////////////////////////////////////////////////////
 
-#[allow(unused_imports)]
-use std::io::{self,Write};
+
 
 use colored::Colorize;
 use concrete::*;
 
+/// Keeps log level for nested time measurements
 static mut LOG_LVL: u8 = 0;
-
 
 
 // =============================================================================
@@ -21,10 +23,10 @@ static mut LOG_LVL: u8 = 0;
 
 // Global modules
 #[macro_use]
-mod misc;
-mod params;
+pub mod misc;
+pub mod params;
 pub use params::Params;
-mod ciphertexts;
+pub mod ciphertexts;
 pub use ciphertexts::ParmCiphertext;
 
 // Userovo modules
@@ -37,7 +39,6 @@ pub mod cloudovo;
 pub use cloudovo::addition;
 
 
-
 // =============================================================================
 //
 //  Parmesan Structs
@@ -46,7 +47,7 @@ pub use cloudovo::addition;
 // -----------------------------------------------------------------------------
 //  Userovo
 
-/// User-side Parmesan
+/// # User-side Parmesan
 pub struct ParmesanUserovo<'a> {
     pub params: &'a Params,
     priv_keys: PrivKeySet,
@@ -85,7 +86,7 @@ impl ParmesanUserovo<'_> {
 // -----------------------------------------------------------------------------
 //  Cloudovo
 
-/// Cloud-side Parmesan
+/// # Cloud-side Parmesan
 pub struct ParmesanCloudovo<'a> {
     pub params: &'a Params,
     pub_keys: &'a PubKeySet<'a>,
@@ -104,13 +105,14 @@ impl ParmesanCloudovo<'_> {
     }
 
     /// Add two ciphertexts in parallel
-    pub fn add(&self, x: &ParmCiphertext, y: &ParmCiphertext) -> ParmCiphertext {
-        ParmCiphertext {
-            maxlen: 5,
-        }
+    pub fn add(
+        &self,
+        x: &ParmCiphertext,
+        y: &ParmCiphertext,
+    ) -> ParmCiphertext {
+        addition::add_impl(self.params, self.pub_keys, x, y)
     }
 }
-
 
 
 // =============================================================================
@@ -162,8 +164,10 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
 
     // =================================
     //  U: Decryption
-    let m = pu.decrypt(&c);
-    infoln!("{} result decrypted as {}.", String::from("User:").bold().yellow(), m);   // String::from(format!("{}", m)).bold().yellow()
+    let m1d = pu.decrypt(&c1);
+    //~ let m2d = pu.decrypt(&c2);
+    let md  = pu.decrypt(&c );
+    infoln!("{}\ninput 1: {},\ninput 2: ---\nresult: {}.", String::from("User:").bold().yellow(), m1d, md);   // String::from(format!("{}", m)).bold().yellow()
 
     infobox!("Demo END");
 

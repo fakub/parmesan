@@ -1,8 +1,11 @@
 use concrete::*;
 //WISH use serde::{Deserialize, Serialize};
 
-//~ pub use self::params::Params;
-
+/// # Parmesan Parameters
+/// Contains
+/// * plaintext precision
+/// * quadratic weights
+/// * THFE parameters
 #[derive(Clone, Debug)]   //WISH Serialize, Deserialize
 pub struct Params {
     pub bit_precision:  usize,          // aka. pi
