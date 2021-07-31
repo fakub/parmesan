@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use concrete::LWE;
 #[allow(unused_imports)]
 use colored::Colorize;
@@ -6,32 +8,28 @@ use crate::userovo::keys::PubKeySet;
 pub fn pos_id(
     pub_keys: &PubKeySet,
     c: &LWE,
-) -> LWE {
+) -> Result<LWE, Box<dyn Error>> {
     crate::measure_duration!(
         "PBS: Positive identity",
-        [let res = c.bootstrap_with_function(pub_keys.bsk, |x| x, pub_keys.encoder)
-                    .expect("Identity PBS failed.")
-                    .keyswitch(pub_keys.ksk)
-                    .expect("KS failed (in identity).");]
+        [let res = c.bootstrap_with_function(pub_keys.bsk, |x| x, pub_keys.encoder)?
+                    .keyswitch(pub_keys.ksk)?;]
     );
 
-    res
+    Ok(res)
 }
 
 #[allow(non_snake_case)]
 pub fn f_4__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
-) -> LWE {
+) -> Result<LWE, Box<dyn Error>> {
     crate::measure_duration!(
         "PBS: X ⋛ ±4 (for π = 5)",
-        [let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.,0.][x as usize], pub_keys.encoder)
-                    .expect("___ PBS failed.")
-                    .keyswitch(pub_keys.ksk)
-                    .expect("KS failed (in ___).");]
+        [let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.,0.][x as usize], pub_keys.encoder)?
+                    .keyswitch(pub_keys.ksk)?;]
     );
 
-    res
+    Ok(res)
 }
 
 #[allow(non_snake_case)]
@@ -39,17 +37,15 @@ pub fn f_1__pi_5__with_val(
     pub_keys: &PubKeySet,
     c: &LWE,
     val: u32,
-) -> LWE {
+) -> Result<LWE, Box<dyn Error>> {
     let val_f = val as f64;
     crate::measure_duration!(
         "PBS: X ⋛ ±1 /sgn/ (times val, for π = 5)",
-        [let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f][x as usize], pub_keys.encoder)
-                    .expect("___ PBS failed.")
-                    .keyswitch(pub_keys.ksk)
-                    .expect("KS failed (in ___).");]
+        [let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f][x as usize], pub_keys.encoder)?
+                    .keyswitch(pub_keys.ksk)?;]
     );
 
-    res
+    Ok(res)
 }
 
 #[allow(non_snake_case)]
@@ -57,33 +53,29 @@ pub fn f_0__pi_5__with_val(
     pub_keys: &PubKeySet,
     c: &LWE,
     val: u32,
-) -> LWE {
+) -> Result<LWE, Box<dyn Error>> {
     let val_f = val as f64;
     crate::measure_duration!(
         "PBS: X ≥ 0 /sgn+/ (times val, for π = 5)",
-        [let res = c.bootstrap_with_function(pub_keys.bsk, |x| [val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f][x as usize], pub_keys.encoder)
-                    .expect("___ PBS failed.")
-                    .keyswitch(pub_keys.ksk)
-                    .expect("KS failed (in ___).");]
+        [let res = c.bootstrap_with_function(pub_keys.bsk, |x| [val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f][x as usize], pub_keys.encoder)?
+                    .keyswitch(pub_keys.ksk)?;]
     );
 
-    res
+    Ok(res)
 }
 
 #[allow(non_snake_case)]
 pub fn relu_plus__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
-) -> LWE {
+) -> Result<LWE, Box<dyn Error>> {
     crate::measure_duration!(
         "PBS: ReLU+ (for π = 5)",
-        [let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,31.,0.,1.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.][x as usize], pub_keys.encoder)
-                    .expect("___ PBS failed.")
-                    .keyswitch(pub_keys.ksk)
-                    .expect("KS failed (in ___).");]
+        [let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,31.,0.,1.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.][x as usize], pub_keys.encoder)?
+                    .keyswitch(pub_keys.ksk)?;]
     );
 
-    res
+    Ok(res)
 }
 
 
@@ -116,10 +108,8 @@ pub fn relu_plus__pi_5(
 //~ ) -> LWE {
     //~ crate::measure_duration!(
         //~ "PBS: Identity",
-        //~ [let res = c.bootstrap_with_function(pub_keys.bsk, |x| x*x, pub_keys.encoder)
-                    //~ .expect("Identity PBS failed.")
-                    //~ .keyswitch(pub_keys.ksk)
-                    //~ .expect("KS failed (in identity).");]
+        //~ [let res = c.bootstrap_with_function(pub_keys.bsk, |x| x*x, pub_keys.encoder)?
+                    //~ .keyswitch(pub_keys.ksk)?;]
     //~ );
 
     //~ res

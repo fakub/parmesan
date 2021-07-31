@@ -120,14 +120,14 @@ impl ParmesanCloudovo<'_> {
         &self,
         x: &ParmCiphertext,
         y: &ParmCiphertext,
-    ) -> ParmCiphertext {
-        addition::add_sub_impl(
+    ) -> Result<ParmCiphertext, Box<dyn Error>> {
+        Ok(addition::add_sub_impl(
             true,
             //~ self.params,
             self.pub_keys,
             x,
             y,
-        )
+        )?)
     }
 
     /// Subtract two ciphertexts in parallel
@@ -135,26 +135,26 @@ impl ParmesanCloudovo<'_> {
         &self,
         x: &ParmCiphertext,
         y: &ParmCiphertext,
-    ) -> ParmCiphertext {
-        addition::add_sub_impl(
+    ) -> Result<ParmCiphertext, Box<dyn Error>> {
+        Ok(addition::add_sub_impl(
             false,
             //~ self.params,
             self.pub_keys,
             x,
             y,
-        )
+        )?)
     }
 
     /// Signum of a ciphertext by parallel reduction
     pub fn sgn(
         &self,
         x: &ParmCiphertext,
-    ) -> ParmCiphertext {
-        signum::sgn_impl(
+    ) -> Result<ParmCiphertext, Box<dyn Error>> {
+        Ok(signum::sgn_impl(
             self.params,
             self.pub_keys,
             x,
-        )
+        )?)
     }
 
     /// Maximum of two ciphertexts in parallel using signum
@@ -162,13 +162,13 @@ impl ParmesanCloudovo<'_> {
         &self,
         x: &ParmCiphertext,
         y: &ParmCiphertext,
-    ) -> ParmCiphertext {
-        maximum::max_impl(
+    ) -> Result<ParmCiphertext, Box<dyn Error>> {
+        Ok(maximum::max_impl(
             self.params,
             self.pub_keys,
             x,
             y,
-        )
+        )?)
     }
 }
 
@@ -219,10 +219,10 @@ pub fn parmesan_dev_main() -> Result<(), Box<dyn Error>> {
 
     // =================================
     //  C: Evaluation
-    let c_add = pc.add(&c1, &c2);
-    let c_sub = pc.sub(&c1, &c2);
-    let c_sgn = pc.sgn(&c3);
-    let c_max = pc.max(&c1, &c2);
+    let c_add = pc.add(&c1, &c2)?;
+    let c_sub = pc.sub(&c1, &c2)?;
+    let c_sgn = pc.sgn(&c3)?;
+    let c_max = pc.max(&c1, &c2)?;
 
 
     // =================================
