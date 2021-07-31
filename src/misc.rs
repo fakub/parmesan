@@ -16,11 +16,13 @@ macro_rules! measure_duration {   //WISH add ON/OFF feature
            $block
         )+
         // get elapsed time
-        let __time = __now.elapsed().unwrap().as_millis() as f64;
+        let __time = __now.elapsed().unwrap().as_micros() as f64;
         let __s_time = if __time < 1_000. {
-            String::from(format!("{} ms", __time)        ).blue()
+            String::from(format!("{} μs", __time             )).purple()
+        } else if __time < 1_000_000. {
+            String::from(format!("{} ms", __time / 1_000.    )).blue()
         } else {
-            String::from(format!("{} s", __time / 1_000.)).blue().bold()
+            String::from(format!("{} s",  __time / 1_000_000.)).cyan().bold()
         };
         // decrease log level back
         unsafe {
