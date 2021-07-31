@@ -2,7 +2,7 @@
 // This macro allows to compute the duration of the execution of the expressions enclosed.
 // Note that the variables are not captured.
 #[macro_export]
-macro_rules! measure_duration {
+macro_rules! measure_duration {   //WISH add ON/OFF feature
     ($title:literal, [$($block:tt)+]) => {
         // write title
         crate::infoln!("{} ... ", $title);

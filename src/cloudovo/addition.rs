@@ -3,7 +3,6 @@ use std::error::Error;
 use concrete::LWE;
 #[allow(unused_imports)]
 use colored::Colorize;
-//~ use crate::params::Params;
 use crate::ciphertexts::ParmCiphertext;
 use crate::userovo::keys::PubKeySet;
 use super::pbs;
@@ -11,7 +10,6 @@ use super::pbs;
 /// Implementation of parallel addition/subtraction
 pub fn add_sub_impl(
     is_add: bool,
-    //~ params: &Params,
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
     y: &ParmCiphertext,
@@ -25,6 +23,7 @@ pub fn add_sub_impl(
     measure_duration!(
         "Parallel addition/subtraction",
         [
+            //WISH add ciphertexts with different lengths (fill with zeros)
             for (xi, yi) in x.iter().zip(y.iter()) {
                 let mut wi_0    = xi.clone();
                 if is_add {

@@ -123,7 +123,6 @@ impl ParmesanCloudovo<'_> {
     ) -> Result<ParmCiphertext, Box<dyn Error>> {
         Ok(addition::add_sub_impl(
             true,
-            //~ self.params,
             self.pub_keys,
             x,
             y,
@@ -138,7 +137,6 @@ impl ParmesanCloudovo<'_> {
     ) -> Result<ParmCiphertext, Box<dyn Error>> {
         Ok(addition::add_sub_impl(
             false,
-            //~ self.params,
             self.pub_keys,
             x,
             y,
