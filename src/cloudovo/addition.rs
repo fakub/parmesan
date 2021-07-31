@@ -6,14 +6,14 @@ use crate::ciphertexts::ParmCiphertext;
 use crate::userovo::keys::PubKeySet;
 use super::pbs;
 
-/// Implementation of parallel addition
-pub fn add_impl(
+/// Implementation of parallel addition/subtraction
+pub fn add_sub_impl(
+    is_add: bool,
     //~ params: &Params,
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
     y: &ParmCiphertext,
 ) -> ParmCiphertext {
-    // run parallel addition algorithm
     let mut z: ParmCiphertext = Vec::new();
     let dim = x.first().expect("Empty vector.").dimension;
     let encoder = &x.first().expect("Empty vector.").encoder;
@@ -21,10 +21,15 @@ pub fn add_impl(
     let mut qi_1:   LWE = LWE::zero_with_encoder(dim, encoder).expect("LWE::zero_with_encoder failed.");
 
     measure_duration!(
-        "Parallel addition",
+        "Parallel addition/subtraction",
         [
             for (xi, yi) in x.iter().zip(y.iter()) {
-                let     wi_0    = xi.add_uint(&yi).expect("Addition (uint) failed.");
+                let mut wi_0    = xi.clone();
+                if is_add {
+                    wi_0.add_uint_inplace(&yi).expect("Addition (uint) failed.")
+                } else {
+                    wi_0.sub_uint_inplace(&yi).expect("Subtraction (uint) failed.")
+                }
                 let mut wi_0_3  = wi_0.mul_uint_constant(3).expect("Multiplication (uint) by const failed.");
                                   wi_0_3.add_uint_inplace(&wi_1).expect("Addition (uint) inplace failed.");
 

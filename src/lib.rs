@@ -120,7 +120,23 @@ impl ParmesanCloudovo<'_> {
         x: &ParmCiphertext,
         y: &ParmCiphertext,
     ) -> ParmCiphertext {
-        addition::add_impl(
+        addition::add_sub_impl(
+            true,
+            //~ self.params,
+            self.pub_keys,
+            x,
+            y,
+        )
+    }
+
+    /// Subtract two ciphertexts in parallel
+    pub fn sub(
+        &self,
+        x: &ParmCiphertext,
+        y: &ParmCiphertext,
+    ) -> ParmCiphertext {
+        addition::add_sub_impl(
+            false,
             //~ self.params,
             self.pub_keys,
             x,
@@ -137,6 +153,20 @@ impl ParmesanCloudovo<'_> {
             self.params,
             self.pub_keys,
             x,
+        )
+    }
+
+    /// Maximum of two ciphertexts in parallel using signum
+    pub fn max(
+        &self,
+        x: &ParmCiphertext,
+        y: &ParmCiphertext,
+    ) -> ParmCiphertext {
+        maximum::max_impl(
+            self.params,
+            self.pub_keys,
+            x,
+            y,
         )
     }
 }
@@ -176,30 +206,45 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     //  U: Encryption
     let m1 =  0b00100111i32;
     let m2 =  0b00101110i32;
+    let m3 = -0b00011001i32;
     let c1 = pu.encrypt(m1, 6);
     let c2 = pu.encrypt(m2, 6);
-    infoln!("{} messages\nm1 = {}{:b} ({}),\nm2 = {}{:b} ({}).", String::from("User:").bold().yellow(),
-                          if m1 >= 0 {""} else {"-"}, m1.abs(), m1,
-                                  if m2 >= 0 {""} else {"-"}, m2.abs(), m2);
+    let c3 = pu.encrypt(m3, 6);
+    infoln!("{} messages\nm1 = {}{:b} ({})\nm2 = {}{:b} ({})m3 = {}{:b} ({})", String::from("User:").bold().yellow(),
+                                if m1 >= 0 {""} else {"-"}, m1.abs(), m1,
+                                                  if m2 >= 0 {""} else {"-"}, m2.abs(), m2,
+                                                                  if m3 >= 0 {""} else {"-"}, m3.abs(), m3);
 
 
     // =================================
     //  C: Evaluation
-    let c_sum = pc.add(&c1, &c2);
-    let c_sgn = pc.sgn(&c1);
+    let c_add = pc.add(&c1, &c2);
+    let c_sub = pc.sub(&c1, &c2);
+    let c_sgn = pc.sgn(&c3);
+    let c_max = pc.max(&c1, &c2);
 
 
     // =================================
     //  U: Decryption
-    let m_sum  = pu.decrypt(&c_sum);
+    let m_add  = pu.decrypt(&c_add);
+    let m_sub  = pu.decrypt(&c_sub);
     let m_sgn  = pu.decrypt(&c_sgn);
+    let m_max  = pu.decrypt(&c_max);
 
-    infoln!("{} result\nm1 + m2 = {} :: {} (exp. {})\nsgn(m1) = {} :: {}.", String::from("User:").bold().yellow(),
-                                   m_sum,
-                                         if m_sum == (m1+m2) % (1<<6) {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                                                  (m1+m2) % (1<<6),
-                                                                 m_sgn,
-                                                                       if m_sgn == m1.signum() {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},);
+    //~ let mut summary = format!();
+
+    infoln!("{} result\nm1 + m2 = {} :: {} (exp. {})\nm1 - m2 = {} :: {} (exp. {})\nsgn(m3) = {} :: {}\nmax{{m1, m2}} = {} :: {}",
+              String::from("User:").bold().yellow(),
+                    m_add,
+                    if m_add - (m1+m2) % (1<<6) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                    (m1+m2) % (1<<6),
+                            m_sub,
+                            if m_sub - (m1-m2) % (1<<6) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            (m1-m2) % (1<<6),
+                                    m_sgn,
+                                    if m_sgn == m3.signum() {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                                            m_max,
+                                            if m_max == std::cmp::max(m1, m2) {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()});
 
     infobox!("Demo END");
 

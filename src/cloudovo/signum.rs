@@ -15,31 +15,32 @@ pub fn sgn_impl(
     measure_duration!(
         "Signum",
         [
-            let s = sgn_recursion(
+            let s_raw: ParmCiphertext = sgn_recursion_raw(
                 params.bit_precision - 1,
                 pub_keys,
                 x,
             );
+
+            infoln!("length 1 bit (final signum bootstrap)");
+            let s_lwe = pbs::f_1__pi_5__with_val(
+                pub_keys,
+                &s_raw[0],
+                1,
+            );
         ]
     );
 
-    s
+    vec![s_lwe]
 }
 
-fn sgn_recursion(
+pub fn sgn_recursion_raw(
     gamma: usize,
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
 ) -> ParmCiphertext {
     // end of recursion
     if x.len() == 1 {
-        infoln!("length 1 bit (final signum bootstrap)");
-        return vec![
-        pbs::f_1__pi_5__with_val(
-            pub_keys,
-            &x[0],
-            1,
-        )];
+        return x.clone();
     }
 
     let dim = x.first().expect("Empty vector.").dimension;
@@ -70,7 +71,7 @@ fn sgn_recursion(
                 b.push(bj);
             }
 
-            let s = sgn_recursion(
+            let s = sgn_recursion_raw(
                 gamma,
                 pub_keys,
                 &b,
