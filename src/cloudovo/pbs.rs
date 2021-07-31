@@ -18,7 +18,7 @@ pub fn id(
 }
 
 #[allow(non_snake_case)]
-pub fn f_1__pi_5(
+pub fn f_4__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> LWE {

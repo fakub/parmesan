@@ -163,7 +163,9 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     let m2 = -0b10110100i32;
     let c1 = pu.encrypt(m1, 6);
     let c2 = pu.encrypt(m2, 6);
-    infoln!("{} messages ({}, {}) encrypted.", String::from("User:").bold().yellow(), m1, m2);
+    infoln!("{} messages ({}{:b}, {}{:b}) encrypted.", String::from("User:").bold().yellow(),
+                          if m1 >= 0 {""} else {"-"}, m1.abs(),
+                                  if m2 >= 0 {""} else {"-"}, m2.abs());
 
 
     // =================================
