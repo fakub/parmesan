@@ -23,15 +23,16 @@ pub fn add_impl(
         "Parallel addition",
         [
             for (i, xi) in x.ctv.iter().enumerate() {
-                //~           if i & 1 != 0 {pbs::id(pub_keys, ct)} else {y.ctv[i].clone()};
-                let wi: LWE = xi.add_uint(&y.ctv[i]).expect("Addition (uint) failed.");
+                //~ let wi: LWE = if i & 1 != 0 {pbs::id(pub_keys, ct)} else {y.ctv[i].clone()};
+                //~ let wi: LWE = xi.add_uint(&y.ctv[i]).expect("Addition (uint) failed.");
+                let wi: LWE = xi.mul_uint_constant(4).expect("Multiplication (uint) by const failed.");
                 z.push(wi);
             }
         ]
     );
 
     ParmCiphertext {
-        ctv,
+        ctv: z,
         maxlen: 32,
     }
 }
