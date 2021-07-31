@@ -13,17 +13,17 @@ pub fn add_impl(
     y: &ParmCiphertext,
 ) -> ParmCiphertext {
     // run parallel addition algorithm
-    let mut z: Vec<LWE> = Vec::new();
+    let mut z: ParmCiphertext = Vec::new();
 
     measure_duration!(
         "Parallel addition",
         [
-            let dim = x.ctv[0].dimension;
-            let encoder = &x.ctv[0].encoder;
+            let dim = x[0].dimension;
+            let encoder = &x[0].encoder;
             let mut wi_1:   LWE = LWE::zero_with_encoder(dim, encoder).expect("LWE::zero_with_encoder failed.");
             let mut qi_1:   LWE = LWE::zero_with_encoder(dim, encoder).expect("LWE::zero_with_encoder failed.");
 
-            for (xi, yi) in x.ctv.iter().zip(y.ctv.iter()) {
+            for (xi, yi) in x.iter().zip(y.iter()) {
                 let     wi_0    = xi.add_uint(&yi).expect("Addition (uint) failed.");
                 let mut wi_0_3  = wi_0.mul_uint_constant(3).expect("Multiplication (uint) by const failed.");
                                   wi_0_3.add_uint_inplace(&wi_1).expect("Addition (uint) inplace failed.");
@@ -41,11 +41,9 @@ pub fn add_impl(
                 wi_1    = wi_0.clone();
                 qi_1    = qi_0.clone();
             }
+            //TODO add one more round if < maxlen
         ]
     );
 
-    ParmCiphertext {
-        ctv: z,
-        maxlen: 32,
-    }
+    z
 }

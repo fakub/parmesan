@@ -145,7 +145,7 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
 
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20;   //    PARM90__PI_5__D_20      PARMXX__TRIVIAL
+    let par = &params::PARM90__PI_5__D_20__LEN_32;   //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
 
     // ---------------------------------
     //  Userovo Scope
@@ -163,9 +163,9 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     let m2 = -0b10110100i32;
     let c1 = pu.encrypt(m1, 6);
     let c2 = pu.encrypt(m2, 6);
-    infoln!("{} messages ({}{:b}, {}{:b}) encrypted.", String::from("User:").bold().yellow(),
-                          if m1 >= 0 {""} else {"-"}, m1.abs(),
-                                  if m2 >= 0 {""} else {"-"}, m2.abs());
+    infoln!("{} messages ({}{:b} ({}), {}{:b} ({})) encrypted.", String::from("User:").bold().yellow(),
+                          if m1 >= 0 {""} else {"-"}, m1.abs(), m1,
+                                  if m2 >= 0 {""} else {"-"}, m2.abs(), m2);
 
 
     // =================================

@@ -21,7 +21,7 @@ pub fn parm_encrypt(
     bits: usize,
 ) -> ParmCiphertext {
     //WISH some warning if bits is more than given type (-1 for signed)
-    let mut ctv: Vec<LWE> = Vec::new();
+    let mut res: ParmCiphertext = Vec::new();
     let m_abs = m.abs();
     let m_pos = m >= 0;
 
@@ -32,13 +32,10 @@ pub fn parm_encrypt(
         } else {
             if m_pos {1i32} else {-1i32}
         };
-        ctv.push(parm_encr_nibble(params, priv_keys, mi));
+        res.push(parm_encr_nibble(params, priv_keys, mi));
     }
 
-    ParmCiphertext {
-        ctv,
-        maxlen: 32,
-    }
+    res
 }
 
 fn parm_encr_nibble(
@@ -76,7 +73,7 @@ pub fn parm_decrypt(
     measure_duration!(
         "Decrypt",
         [
-            for (i, ct) in pc.ctv.iter().enumerate() {
+            for (i, ct) in pc.iter().enumerate() {
                 let mi = parm_decr_nibble(params, priv_keys, ct);
                 infoln!("m[{}] = {} (pi = {})", i, mi, ct.encoder.nb_bit_precision);
                 m += match mi {

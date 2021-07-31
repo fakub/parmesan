@@ -3,11 +3,13 @@ use concrete::*;
 
 /// # Parmesan Parameters
 /// Contains
+/// * maximum bit-length of encrypted integers
 /// * plaintext precision
 /// * quadratic weights
 /// * THFE parameters
 #[derive(Clone, Debug)]   //WISH Serialize, Deserialize
 pub struct Params {
+    pub        maxlen:  usize,
     pub bit_precision:  usize,          // aka. pi
     pub   quad_weight:  usize,          // aka. 2^2Δ
     pub    lwe_params:  LWEParams,
@@ -39,6 +41,7 @@ impl Params {
 
 #[allow(dead_code)]
 pub const PARMXX__TRIVIAL: Params = Params {
+           maxlen: 8,
     bit_precision: 2,
       quad_weight: 2,
     lwe_params: LWEParams {
@@ -56,7 +59,8 @@ pub const PARMXX__TRIVIAL: Params = Params {
        ks_level: 3,
 };
 #[allow(dead_code)]
-pub const PARM90__PI_5__D_20: Params = Params {
+pub const PARM90__PI_5__D_20__LEN_32: Params = Params {
+           maxlen: 32,
     bit_precision: 5,
       quad_weight: 20,
     lwe_params: LWEParams {
@@ -74,7 +78,8 @@ pub const PARM90__PI_5__D_20: Params = Params {
        ks_level: 16,
 };
 #[allow(dead_code)]
-pub const PARM90__PI_5__D_36: Params = Params {
+pub const PARM90__PI_5__D_36__LEN_32: Params = Params {
+           maxlen: 32,
     bit_precision: 5,
       quad_weight: 36,
     lwe_params: LWEParams {
