@@ -2,6 +2,8 @@
 name = "parmesan"
 version = "0.0.1"
 edition = "2018"
+description = "Initial version of PARMESAN: Parallel ARithMEticS on tfhe ENcrypted data."
+license = "AGPL-3.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
