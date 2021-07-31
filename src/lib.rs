@@ -9,9 +9,10 @@
 
 
 
+use std::error::Error;
+
 #[allow(unused_imports)]
 use colored::Colorize;
-use concrete::*;
 
 /// Keeps log level for nested time measurements
 static mut LOG_LVL: u8 = 0;
@@ -60,11 +61,11 @@ impl ParmesanUserovo<'_> {
     /// Create an instance of `ParmesanUserovo`
     /// * save immutable reference to params
     /// * generate keys
-    pub fn new(params: &Params) -> ParmesanUserovo {
-        ParmesanUserovo {
+    pub fn new(params: &Params) -> Result<ParmesanUserovo, Box<dyn Error>> {
+        Ok(ParmesanUserovo {
             params,
-            priv_keys: PrivKeySet::new(params),
-        }
+            priv_keys: PrivKeySet::new(params)?,
+        })
     }
 
     /// Get the Public Key Set
@@ -83,13 +84,13 @@ impl ParmesanUserovo<'_> {
         &self,
         m: i32,
         bits: usize,
-    ) -> ParmCiphertext {   //TODO change to a template for other integer types/lengths, too
-        encryption::parm_encrypt(self.params, &self.priv_keys, m, bits)
+    ) -> Result<ParmCiphertext, Box<dyn Error>> {   //WISH change to a template for other integer types/lengths, too
+        Ok(encryption::parm_encrypt(self.params, &self.priv_keys, m, bits)?)
     }
 
     /// Decrypt a 32-bit signed integer
-    pub fn decrypt(&self, c: &ParmCiphertext) -> i32 {   //TODO change to a template for other integer types/lengths, too
-        encryption::parm_decrypt(self.params, &self.priv_keys, c)
+    pub fn decrypt(&self, c: &ParmCiphertext) -> Result<i32, Box<dyn Error>> {   //WISH change to a template for other integer types/lengths, too
+        Ok(encryption::parm_decrypt(self.params, &self.priv_keys, c)?)
     }
 }
 
@@ -180,7 +181,7 @@ impl ParmesanCloudovo<'_> {
 // -----------------------------------------------------------------------------
 //  Dev
 
-pub fn parmesan_main() -> Result<(), CryptoAPIError> {
+pub fn parmesan_dev_main() -> Result<(), Box<dyn Error>> {
     // say hello
     //~ infobox!("Hi, I am {}, using local {} with custom patches & an unsafe PRNG.", String::from("Parmesan").yellow().bold(), String::from("Concrete").blue().bold());
 
@@ -194,7 +195,7 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
 
     // ---------------------------------
     //  Userovo Scope
-    let pu = ParmesanUserovo::new(par);
+    let pu = ParmesanUserovo::new(par)?;
     let pub_k = pu.export_pub_keys();
 
     // ---------------------------------
@@ -207,9 +208,9 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     let m1 =  0b00100111i32;
     let m2 =  0b00101110i32;
     let m3 = -0b00011001i32;
-    let c1 = pu.encrypt(m1, 6);
-    let c2 = pu.encrypt(m2, 6);
-    let c3 = pu.encrypt(m3, 6);
+    let c1 = pu.encrypt(m1, 6)?;
+    let c2 = pu.encrypt(m2, 6)?;
+    let c3 = pu.encrypt(m3, 6)?;
     infoln!("{} messages\nm1 = {}{:b} ({})\nm2 = {}{:b} ({})m3 = {}{:b} ({})", String::from("User:").bold().yellow(),
                                 if m1 >= 0 {""} else {"-"}, m1.abs(), m1,
                                                   if m2 >= 0 {""} else {"-"}, m2.abs(), m2,
@@ -226,10 +227,10 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
 
     // =================================
     //  U: Decryption
-    let m_add  = pu.decrypt(&c_add);
-    let m_sub  = pu.decrypt(&c_sub);
-    let m_sgn  = pu.decrypt(&c_sgn);
-    let m_max  = pu.decrypt(&c_max);
+    let m_add  = pu.decrypt(&c_add)?;
+    let m_sub  = pu.decrypt(&c_sub)?;
+    let m_sgn  = pu.decrypt(&c_sgn)?;
+    let m_max  = pu.decrypt(&c_max)?;
 
     //~ let mut summary = format!();
 

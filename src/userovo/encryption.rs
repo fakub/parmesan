@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use concrete::LWE;
 #[allow(unused_imports)]
 use colored::Colorize;
@@ -20,7 +22,7 @@ pub fn parm_encrypt(
     priv_keys: &PrivKeySet,
     m: i32,
     bits: usize,
-) -> ParmCiphertext {
+) -> Result<ParmCiphertext, Box<dyn Error>> {
     //WISH some warning if bits is more than given type (-1 for signed)
     let mut res: ParmCiphertext = Vec::new();
     let m_abs = m.abs();
@@ -33,25 +35,25 @@ pub fn parm_encrypt(
         } else {
             if m_pos {1i32} else {-1i32}
         };
-        res.push(parm_encr_nibble(params, priv_keys, mi));
+        res.push(parm_encr_nibble(params, priv_keys, mi)?);
     }
 
-    res
+    Ok(res)
 }
 
 fn parm_encr_nibble(
     params: &Params,
     priv_keys: &PrivKeySet,
     mut mi: i32,
-) -> LWE {
+) -> Result<LWE, Box<dyn Error>> {
     // little hack, how to bring mi into positive interval [0,2^pi)
     mi &= params.plaintext_mask();
 
-    LWE::encrypt_uint(
+    Ok(LWE::encrypt_uint(
         &priv_keys.sk,
         mi as u32,
         &priv_keys.encoder,
-    ).expect("LWE encryption failed.")
+    )?)
 }
 
 
@@ -68,14 +70,14 @@ pub fn parm_decrypt(
     params: &Params,
     priv_keys: &PrivKeySet,
     pc: &ParmCiphertext,
-) -> i32 {
+) -> Result<i32, Box<dyn Error>> {
     let mut m = 0i32;
 
     //~ measure_duration!(
         //~ "Decrypt",
         //~ [
             for (i, ct) in pc.iter().enumerate() {
-                let mi = parm_decr_nibble(params, priv_keys, ct);
+                let mi = parm_decr_nibble(params, priv_keys, ct)?;
                 infoln!("m[{}] = {} (pi = {})", i, mi, ct.encoder.nb_bit_precision);
                 m += match mi {
                      1 => {1i32 << i},
@@ -87,15 +89,14 @@ pub fn parm_decrypt(
         //~ ]
     //~ );
 
-    m
+    Ok(m)
 }
 
 fn parm_decr_nibble(
     params: &Params,
     priv_keys: &PrivKeySet,
     ct: &LWE,
-) -> i32 {
-    let mi = ct.decrypt_uint(&priv_keys.sk)
-               .expect("LWE decryption failed.") as i32;   // rounding included in Encoder
-    if mi >= params.plaintext_pos_max() {mi - params.plaintext_space_size()} else {mi}
+) -> Result<i32, Box<dyn Error>> {
+    let mi = ct.decrypt_uint(&priv_keys.sk)? as i32;   // rounding included in Encoder
+    if mi >= params.plaintext_pos_max() {Ok(mi - params.plaintext_space_size())} else {Ok(mi)}
 }

@@ -1,9 +1,11 @@
-use concrete::*;
+use std::error::Error;
 use std::path::Path;
 #[allow(unused_imports)]
-use colored::Colorize;
-#[allow(unused_imports)]
 use std::io::{self,Write};
+
+#[allow(unused_imports)]
+use colored::Colorize;
+use concrete::*;
 
 use crate::params::{self,Params};
 
@@ -27,7 +29,7 @@ pub struct PrivKeySet {
 impl PrivKeySet {
 
     /// Load or generate a TFHE key set
-    pub fn new(params: &Params) -> PrivKeySet {
+    pub fn new(params: &Params) -> Result<PrivKeySet, Box<dyn Error>> {
         // derive filenames
         let (sk_file, bsk_file, ksk_file) = PrivKeySet::filenames_from_params(params);
 
@@ -41,25 +43,25 @@ impl PrivKeySet {
                 "Load PrivKeySet",
                 [
                     let keys = PrivKeySet {
-                         sk: LWESecretKey::load( sk_file.as_str()).expect("Failed to load secret key from file."),
+                         sk: LWESecretKey::load( sk_file.as_str())?,
                         bsk:       LWEBSK::load(bsk_file.as_str()),     // does not return Result enum
                         ksk:       LWEKSK::load(ksk_file.as_str()),     // does not return Result enum
-                        encoder:   PrivKeySet::get_encoder(params),
+                        encoder:   PrivKeySet::get_encoder(params)?,
                     };
                 ]
             );
 
-            return keys;
+            return Ok(keys);
         } else {
             // generate & save keys
             crate::measure_duration!(
                 "Generate & Save PrivKeySet",
                 [
-                    let keys = PrivKeySet::generate(params);
+                    let keys = PrivKeySet::generate(params)?;
 
                     crate::measure_duration!(
                         "Saving  LWE secret key",
-                        [keys.sk.save( sk_file.as_str()).expect("Failed to save secret key to file.");]);
+                        [keys .sk.save( sk_file.as_str())?;]);
                     crate::measure_duration!(
                         "Saving bootstrapping keys",
                         [keys.bsk.save(bsk_file.as_str());]);
@@ -69,12 +71,12 @@ impl PrivKeySet {
                 ]
             );
 
-            return keys;
+            return Ok(keys);
         }
     }
 
     /// Generate a fresh TFHE key set
-    fn generate(params: &params::Params) -> PrivKeySet {
+    fn generate(params: &params::Params) -> Result<PrivKeySet, Box<dyn Error>> {
         // generate LWE & RLWE secret keys
         crate::measure_duration!(
             "Generating  LWE secret key",   //TODO add formatting for: "{}-bit", params.lwe_params.dimension
@@ -102,23 +104,23 @@ impl PrivKeySet {
             );]);
 
         // fill & return PrivKeySet struct
-        PrivKeySet {
+        Ok(PrivKeySet {
             sk,     // shortand when variables and fields have the same name
             bsk,    // https://doc.rust-lang.org/book/ch05-01-defining-structs.html#using-the-field-init-shorthand-when-variables-and-fields-have-the-same-name
             ksk,
-            encoder: PrivKeySet::get_encoder(params),
-        }
+            encoder: PrivKeySet::get_encoder(params)?,
+        })
     }
 
     /// Get appropriate Encoder
-    fn get_encoder(params: &Params) -> Encoder {
-        Encoder::new_rounding_context(
+    fn get_encoder(params: &Params) -> Result<Encoder, Box<dyn Error>> {
+        Ok(Encoder::new_rounding_context(
             0.,                                                 // min
             ((1usize << params.bit_precision) - 1) as f64,      // max
             params.bit_precision,                               // bit-precision
             0,                                                  // padding
             true,                                               // negacyclic?
-        ).expect("Failed to create Encoder.")
+        )?)
     }
 
     /// Get filenames from params
