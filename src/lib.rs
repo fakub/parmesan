@@ -209,7 +209,7 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     let c1 = pu.encrypt(m1, 6)?;
     let c2 = pu.encrypt(m2, 6)?;
     let c3 = pu.encrypt(m3, 6)?;
-    infoln!("{} messages\nm1 = {}{:b} ({})\nm2 = {}{:b} ({})m3 = {}{:b} ({})", String::from("User:").bold().yellow(),
+    infoln!("{} messages\nm1 = {}{:b} ({})\nm2 = {}{:b} ({})\nm3 = {}{:b} ({})", String::from("User:").bold().yellow(),
                                 if m1 >= 0 {""} else {"-"}, m1.abs(), m1,
                                                   if m2 >= 0 {""} else {"-"}, m2.abs(), m2,
                                                                   if m3 >= 0 {""} else {"-"}, m3.abs(), m3);

@@ -8,8 +8,9 @@ license = "AGPL-3.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-colored = "2.0.0"
-concrete = { git = "https://github.com/fakub/concrete", branch = "negacyclic", features = ["unsafe"] }   # uses unsafe Rust's PRNG (faster) instead of OpenSSL's one
+colored = "^2.0.0"
+rayon = "^1.5.1"
+# concrete = { git = "https://github.com/fakub/concrete", branch = "negacyclic", features = ["unsafe"] }   # uses unsafe Rust's PRNG (faster) instead of OpenSSL's one
 
 # for local development, uncomment & use the following line instead:
-# concrete = { path = "../concrete-lib/concrete", features = ["unsafe"] }
+concrete = { path = "../concrete-lib/concrete", features = ["unsafe"] }
