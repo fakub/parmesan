@@ -1,6 +1,6 @@
 [package]
 name = "parmesan"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2018"
 description = "Initial version of PARMESAN: Parallel ARithMEticS on tfhe ENcrypted data."
 license = "AGPL-3.0"
