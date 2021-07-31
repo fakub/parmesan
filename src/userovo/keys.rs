@@ -1,7 +1,7 @@
 use concrete::*;
 use std::path::Path;
+#[allow(unused_imports)]
 use colored::Colorize;
-
 #[allow(unused_imports)]
 use std::io::{self,Write};
 

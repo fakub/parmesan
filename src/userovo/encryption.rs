@@ -1,4 +1,5 @@
 use concrete::LWE;
+#[allow(unused_imports)]
 use colored::Colorize;
 use crate::params::Params;
 use crate::userovo::keys::PrivKeySet;
@@ -70,9 +71,9 @@ pub fn parm_decrypt(
 ) -> i32 {
     let mut m = 0i32;
 
-    measure_duration!(
-        "Decrypt",
-        [
+    //~ measure_duration!(
+        //~ "Decrypt",
+        //~ [
             for (i, ct) in pc.iter().enumerate() {
                 let mi = parm_decr_nibble(params, priv_keys, ct);
                 infoln!("m[{}] = {} (pi = {})", i, mi, ct.encoder.nb_bit_precision);
@@ -83,8 +84,8 @@ pub fn parm_decrypt(
                     _  => {0i32},   //WISH fail
                 };
             }
-        ]
-    );
+        //~ ]
+    //~ );
 
     m
 }

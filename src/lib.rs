@@ -9,6 +9,7 @@
 
 
 
+#[allow(unused_imports)]
 use colored::Colorize;
 use concrete::*;
 
@@ -37,6 +38,8 @@ pub use userovo::encryption;
 // Cloudovo modules
 pub mod cloudovo;
 pub use cloudovo::addition;
+pub use cloudovo::signum;
+pub use cloudovo::maximum;
 
 
 // =============================================================================
@@ -124,6 +127,18 @@ impl ParmesanCloudovo<'_> {
             y,
         )
     }
+
+    /// Signum of a ciphertext by parallel reduction
+    pub fn sgn(
+        &self,
+        x: &ParmCiphertext,
+    ) -> ParmCiphertext {
+        signum::sgn_impl(
+            self.params,
+            self.pub_keys,
+            x,
+        )
+    }
 }
 
 
@@ -163,22 +178,28 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     let m2 =  0b00101110i32;
     let c1 = pu.encrypt(m1, 6);
     let c2 = pu.encrypt(m2, 6);
-    infoln!("{} messages\n{}{:b} ({}),\n{}{:b} ({}).", String::from("User:").bold().yellow(),
+    infoln!("{} messages\nm1 = {}{:b} ({}),\nm2 = {}{:b} ({}).", String::from("User:").bold().yellow(),
                           if m1 >= 0 {""} else {"-"}, m1.abs(), m1,
                                   if m2 >= 0 {""} else {"-"}, m2.abs(), m2);
 
 
     // =================================
     //  C: Evaluation
-    let c = pc.add(&c1, &c2);
+    let c_sum = pc.add(&c1, &c2);
+    let c_sgn = pc.sgn(&c1);
 
 
     // =================================
     //  U: Decryption
-    let md  = pu.decrypt(&c );
-    infoln!("{} result\n{} {} (exp. {}).", String::from("User:").bold().yellow(),
-                        md,if md == (m1+m2) % (1<<6) {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                                    (m1+m2) % (1<<6));
+    let m_sum  = pu.decrypt(&c_sum);
+    let m_sgn  = pu.decrypt(&c_sgn);
+
+    infoln!("{} result\nm1 + m2 = {} :: {} (exp. {})\nsgn(m1) = {} :: {}.", String::from("User:").bold().yellow(),
+                                   m_sum,
+                                         if m_sum == (m1+m2) % (1<<6) {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                                                  (m1+m2) % (1<<6),
+                                                                 m_sgn,
+                                                                       if m_sgn == m1.signum() {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},);
 
     infobox!("Demo END");
 

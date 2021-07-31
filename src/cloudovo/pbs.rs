@@ -1,4 +1,5 @@
 use concrete::LWE;
+#[allow(unused_imports)]
 use colored::Colorize;
 use crate::userovo::keys::PubKeySet;
 
@@ -25,6 +26,24 @@ pub fn f_4__pi_5(
     crate::measure_duration!(
         "PBS: X ⋛ ±4 (for π = 5)",
         [let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.,0.][x as usize], pub_keys.encoder)
+                    .expect("___ PBS failed.")
+                    .keyswitch(pub_keys.ksk)
+                    .expect("KS failed (in ___).");]
+    );
+
+    res
+}
+
+#[allow(non_snake_case)]
+pub fn f_1__pi_5__with_val(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+    val: u32,
+) -> LWE {
+    let val_f = val as f64;
+    crate::measure_duration!(
+        "PBS: X ⋛ ±1 (times val, for π = 5)",
+        [let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f][x as usize], pub_keys.encoder)
                     .expect("___ PBS failed.")
                     .keyswitch(pub_keys.ksk)
                     .expect("KS failed (in ___).");]

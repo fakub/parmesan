@@ -1,4 +1,5 @@
 use concrete::LWE;
+#[allow(unused_imports)]
 use colored::Colorize;
 //~ use crate::params::Params;
 use crate::ciphertexts::ParmCiphertext;
@@ -14,15 +15,14 @@ pub fn add_impl(
 ) -> ParmCiphertext {
     // run parallel addition algorithm
     let mut z: ParmCiphertext = Vec::new();
+    let dim = x.first().expect("Empty vector.").dimension;
+    let encoder = &x.first().expect("Empty vector.").encoder;
+    let mut wi_1:   LWE = LWE::zero_with_encoder(dim, encoder).expect("LWE::zero_with_encoder failed.");
+    let mut qi_1:   LWE = LWE::zero_with_encoder(dim, encoder).expect("LWE::zero_with_encoder failed.");
 
     measure_duration!(
         "Parallel addition",
         [
-            let dim = x[0].dimension;
-            let encoder = &x[0].encoder;
-            let mut wi_1:   LWE = LWE::zero_with_encoder(dim, encoder).expect("LWE::zero_with_encoder failed.");
-            let mut qi_1:   LWE = LWE::zero_with_encoder(dim, encoder).expect("LWE::zero_with_encoder failed.");
-
             for (xi, yi) in x.iter().zip(y.iter()) {
                 let     wi_0    = xi.add_uint(&yi).expect("Addition (uint) failed.");
                 let mut wi_0_3  = wi_0.mul_uint_constant(3).expect("Multiplication (uint) by const failed.");
@@ -35,6 +35,8 @@ pub fn add_impl(
                                 zi.sub_uint_inplace(&qi_0_2).expect("Subtraction (uint) inplace failed.");
                                 zi.add_uint_inplace(&qi_1).expect("Addition (uint) inplace failed.");
 
+                //TODO add one more bootstrap with identity (or leave it for user? in some cases BS could be saved)
+                // call sth like add_impl_no_final_bs(); /this now/ and then bootstrap the result s.t. add_impl implicitly bootstraps the result
                 z.push(zi);
 
                 // update for next round:
