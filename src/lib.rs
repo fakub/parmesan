@@ -137,7 +137,7 @@ impl ParmesanCloudovo<'_> {
 
 pub fn parmesan_main() -> Result<(), CryptoAPIError> {
     // say hello
-    infobox!("Hi, I am {}, using local {} with custom patches & an unsafe PRNG.", String::from("Parmesan").yellow().bold(), String::from("Concrete").blue().bold());
+    //~ infobox!("Hi, I am {}, using local {} with custom patches & an unsafe PRNG.", String::from("Parmesan").yellow().bold(), String::from("Concrete").blue().bold());
 
 
     // =================================
@@ -159,8 +159,8 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
 
     // =================================
     //  U: Encryption
-    let m1 = 42i32;
-    let m2 = -69i32;
+    let m1 =  0b00101110i32;
+    let m2 = -0b10110100i32;
     let c1 = pu.encrypt(m1, 6);
     let c2 = pu.encrypt(m2, 6);
     infoln!("{} messages ({}, {}) encrypted.", String::from("User:").bold().yellow(), m1, m2);
@@ -173,10 +173,10 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
 
     // =================================
     //  U: Decryption
-    let m1d = pu.decrypt(&c1);
-    let m2d = pu.decrypt(&c2);
+    //~ let m1d = pu.decrypt(&c1);
+    //~ let m2d = pu.decrypt(&c2);
     let md  = pu.decrypt(&c );
-    infoln!("{}\ninput 1: {},\ninput 2: {}\nresult: {}.", String::from("User:").bold().yellow(), m1d, m2d, md);   // String::from(format!("{}", m)).bold().yellow()
+    infoln!("{}\ninput 1: {},\ninput 2: {}\nresult: {}.", String::from("User:").bold().yellow(), -99i32, -99i32, md);   // String::from(format!("{}", m)).bold().yellow()
 
     infobox!("Demo END");
 

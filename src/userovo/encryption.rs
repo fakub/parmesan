@@ -78,7 +78,7 @@ pub fn parm_decrypt(
         [
             for (i, ct) in pc.ctv.iter().enumerate() {
                 let mi = parm_decr_nibble(params, priv_keys, ct);
-                infoln!("m[{}] = {}", i, mi);
+                infoln!("m[{}] = {} (pi = {})", i, mi, ct.encoder.nb_bit_precision);
                 m += match mi {
                      1 => {1i32 << i},
                      0 => {0i32},
