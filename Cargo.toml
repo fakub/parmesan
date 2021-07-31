@@ -1,11 +1,13 @@
 [package]
 name = "parmesan"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 colored = "2.0.0"
-concrete = { path = "../concrete-lib/concrete", features = ["unsafe"] }         # uses unsafe Rust's PRNG instead of OpenSSL's one
-                                                                                # find this particular concrete fork at https://github.com/fakub/concrete/tree/negacyclic
+concrete = { git = "https://github.com/fakub/concrete", branch = "negacyclic", features = ["unsafe"] }   # uses unsafe Rust's PRNG (faster) instead of OpenSSL's one
+
+# for local development, uncomment & use the following line instead:
+# concrete = { path = "../concrete-lib/concrete", features = ["unsafe"] }
