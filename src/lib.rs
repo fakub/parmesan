@@ -181,7 +181,7 @@ impl ParmesanCloudovo<'_> {
 // -----------------------------------------------------------------------------
 //  Dev
 
-pub fn parmesan_dev_main() -> Result<(), Box<dyn Error>> {
+pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     // say hello
     //~ infobox!("Hi, I am {}, using local {} with custom patches & an unsafe PRNG.", String::from("Parmesan").yellow().bold(), String::from("Concrete").blue().bold());
 
