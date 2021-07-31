@@ -159,11 +159,11 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
 
     // =================================
     //  U: Encryption
-    let m1 =  0b00101110i32;
-    let m2 = -0b10110100i32;
+    let m1 =  0b00100111i32;
+    let m2 =  0b00101110i32;
     let c1 = pu.encrypt(m1, 6);
     let c2 = pu.encrypt(m2, 6);
-    infoln!("{} messages ({}{:b} ({}), {}{:b} ({})) encrypted.", String::from("User:").bold().yellow(),
+    infoln!("{} messages\n{}{:b} ({}),\n{}{:b} ({}).", String::from("User:").bold().yellow(),
                           if m1 >= 0 {""} else {"-"}, m1.abs(), m1,
                                   if m2 >= 0 {""} else {"-"}, m2.abs(), m2);
 
@@ -175,10 +175,10 @@ pub fn parmesan_main() -> Result<(), CryptoAPIError> {
 
     // =================================
     //  U: Decryption
-    //~ let m1d = pu.decrypt(&c1);
-    //~ let m2d = pu.decrypt(&c2);
     let md  = pu.decrypt(&c );
-    infoln!("{}\ninput 1: {},\ninput 2: {}\nresult: {}.", String::from("User:").bold().yellow(), -99i32, -99i32, md);   // String::from(format!("{}", m)).bold().yellow()
+    infoln!("{} result\n{} {} (exp. {}).", String::from("User:").bold().yellow(),
+                        md,if md == (m1+m2) % (1<<6) {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                                    (m1+m2) % (1<<6));
 
     infobox!("Demo END");
 
