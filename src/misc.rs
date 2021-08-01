@@ -66,6 +66,14 @@ macro_rules! parm_error {
     }
 }
 
+#[macro_export]
+macro_rules! dbgln {
+    ($($arg:tt)*) => {
+        let msg = crate::parm_format_dbg!($($arg)*);
+        eprintln!("{}", msg);
+    }
+}
+
 // Parmesan message formatting macros
 #[macro_export]
 macro_rules! parm_format_info {
@@ -75,6 +83,21 @@ macro_rules! parm_format_info {
             // calc indentation
             let mut indent = "  │ ".repeat(crate::LOG_LVL as usize);
             msg = format!("{} 🧀 {}", indent, msg);
+            indent = format!("\n{}    ", indent);
+            msg = msg.replace("\n", &indent);
+            msg
+        }
+    }}
+}
+
+#[macro_export]
+macro_rules! parm_format_dbg {
+    ($($arg:tt)*) => {{
+        unsafe {
+            let mut msg = format!($($arg)*);
+            // calc indentation
+            let mut indent = "  │ ".repeat(crate::LOG_LVL as usize);
+            msg = format!("{}{} {}", indent, String::from("DBG").bold().red(), msg);
             indent = format!("\n{}    ", indent);
             msg = msg.replace("\n", &indent);
             msg
