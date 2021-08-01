@@ -55,7 +55,8 @@ pub use cloudovo::maximum;
 /// # User-side Parmesan
 pub struct ParmesanUserovo<'a> {
     pub params: &'a Params,
-    priv_keys: PrivKeySet,
+    //DBG pub
+    pub priv_keys: PrivKeySet,
 }
 
 impl ParmesanUserovo<'_> {
@@ -101,6 +102,8 @@ impl ParmesanUserovo<'_> {
 /// # Cloud-side Parmesan
 pub struct ParmesanCloudovo<'a> {
     pub params: &'a Params,
+    //DBG
+    priv_keys: &'a PrivKeySet,
     pub_keys: &'a PubKeySet<'a>,
 }
 
@@ -108,10 +111,14 @@ impl ParmesanCloudovo<'_> {
     /// Create an instance of `ParmesanCloudovo`
     pub fn new<'a>(
         params: &'a Params,
+        //DBG
+        priv_keys: &'a PrivKeySet,
         pub_keys: &'a PubKeySet,
     ) -> ParmesanCloudovo<'a> {
         ParmesanCloudovo {
             params,
+            //DBG
+            priv_keys,
             pub_keys,
         }
     }
@@ -164,6 +171,8 @@ impl ParmesanCloudovo<'_> {
     ) -> Result<ParmCiphertext, Box<dyn Error>> {
         Ok(maximum::max_impl(
             self.params,
+            //DBG
+            self.priv_keys,
             self.pub_keys,
             x,
             y,
@@ -206,7 +215,12 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
 
     // ---------------------------------
     //  Cloudovo Scope
-    let pc = ParmesanCloudovo::new(par, &pub_k);
+    let pc = ParmesanCloudovo::new(
+        par,
+        //DBG
+        &pu.priv_keys,
+        &pub_k,
+    );
 
 
     // =================================
@@ -237,9 +251,9 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     // =================================
     //  C: Evaluation
     let c_add = pc.add(&c[0], &c[1])?;
-    let c_sub = pc.sub(&c[0], &c[1])?;
+    let c_sub = pc.sub(&c[1], &c[0])?;
     let c_sgn = pc.sgn(&c[2])?;
-    let c_max = pc.max(&c[0], &c[1])?;
+    let c_max = pc.max(&c[1], &c[0])?;
 
 
     // =================================
@@ -255,10 +269,10 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
                             if (m[0] as i64 + m[1] as i64 - m_add as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             (m_as[0] as i64 + m_as[1] as i64) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
     );
-    summary_text = format!("{}\nm_0 - m_1 = {} :: {} (exp. {} % {})", summary_text,
+    summary_text = format!("{}\nm_1 - m_0 = {} :: {} (exp. {} % {})", summary_text,
                             m_sub,
-                            if (m[0] as i64 - m[1] as i64 - m_sub as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            (m_as[0] as i64 - m_as[1] as i64) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
+                            if (m[1] as i64 - m[0] as i64 - m_sub as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            (m_as[1] as i64 - m_as[0] as i64) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
     );
     summary_text = format!("{}\nsgn(m_2) = {} :: {}", summary_text,
                             m_sgn,
