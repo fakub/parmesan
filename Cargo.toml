@@ -1,6 +1,6 @@
 [package]
 name = "parmesan"
-version = "0.0.3-beta-2"
+version = "0.0.4"
 edition = "2018"
 description = "PARMESAN: Parallel ARithMEticS on tfhe ENcrypted data."
 license = "AGPL-3.0"
@@ -10,11 +10,11 @@ license = "AGPL-3.0"
 [dependencies]
 colored = "^2.0.0"
 rayon = "^1.5.1"
-# concrete = { git = "https://github.com/fakub/concrete", branch = "negacyclic", features = ["unsafe"] }   # uses unsafe Rust's PRNG (faster) instead of OpenSSL's one
+concrete = { git = "https://github.com/fakub/concrete", branch = "negacyclic", features = ["unsafe"] }   # uses unsafe Rust's PRNG (faster) instead of OpenSSL's one
 
 # for local development, uncomment & use the following line instead:
-concrete = { path = "../concrete-lib/concrete", features = ["unsafe"] }
+# concrete = { path = "../concrete-lib/concrete", features = ["unsafe"] }
 
 [features]
-default = []   # no feature selected by default
-sequential = []
+default = []        # no feature selected by default
+sequential = []     # select this feature to run algorithms sequentially
