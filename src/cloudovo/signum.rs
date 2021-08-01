@@ -1,5 +1,7 @@
 use std::error::Error;
 
+#[allow(unused_imports)]   //WISH only use when sequential feature is OFF
+use rayon::prelude::*;
 use concrete::LWE;
 #[allow(unused_imports)]
 use colored::Colorize;
@@ -51,7 +53,6 @@ pub fn sgn_recursion_raw(
 
     let dim = x[0].dimension;   //WISH fix this, was: x.first()?.dimension
     let encoder = &x[0].encoder;
-    let mut b: ParmCiphertext = Vec::new();
 
     let s: ParmCiphertext;
 
@@ -59,32 +60,32 @@ pub fn sgn_recursion_raw(
     #[cfg(not(feature = "sequential"))]
     {
     measure_duration!(
-        "Signum recursion",
+        "Signum recursion in parallel",
         [
             infoln!("length {} bits, groups by {} bits", x.len(), gamma);
-            //TODO x.par_iter()
 
-            for j in 0..((x.len() - 1) / gamma + 1) {
-                let mut bj: LWE = LWE::zero_with_encoder(dim, encoder)?;
+            let mut b: ParmCiphertext = vec![LWE::zero_with_encoder(dim, encoder)?; (x.len() - 1) / gamma + 1];
 
-                for i in 0..gamma {
-                    let si: LWE;
+            // the thread needs to know the index j so that it can check against x.len()
+            b.par_iter_mut().enumerate().for_each(| (j, bj) | {
 
+                let mut sj: ParmCiphertext = vec![LWE::zero_with_encoder(dim, encoder).expect("LWE::zero_with_encoder failed."); gamma];
+
+                sj.par_iter_mut().enumerate().for_each(| (i, sji) | {
                     if gamma * j + i < x.len() {
-                        si = pbs::f_1__pi_5__with_val(
+                        *sji = pbs::f_1__pi_5__with_val(
                             pub_keys,
                             &x[gamma * j + i],
                             1 << i,
-                        )?;
-                    } else {
-                        si = LWE::zero_with_encoder(dim, encoder)?;
+                        ).expect("pbs::f_1__pi_5__with_val failed.");
                     }
+                });
 
-                    bj.add_uint_inplace(&si)?;
+                // possibly exchange for parallel reduction (negligible effect expected)
+                for sji in sj {
+                    bj.add_uint_inplace(&sji).expect("add_uint_inplace failed.");
                 }
-
-                b.push(bj);
-            }
+            });
 
             s = sgn_recursion_raw(
                 gamma,
@@ -99,9 +100,12 @@ pub fn sgn_recursion_raw(
     #[cfg(feature = "sequential")]
     {
     measure_duration!(
-        "- recursion",
+        "Signum recursion sequential",
         [
             infoln!("length {} bits, groups by {} bits", x.len(), gamma);
+
+            let mut b: ParmCiphertext = Vec::new();
+
             for j in 0..((x.len() - 1) / gamma + 1) {
                 let mut bj: LWE = LWE::zero_with_encoder(dim, encoder)?;
 
