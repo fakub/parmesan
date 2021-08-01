@@ -21,6 +21,7 @@ pub fn max_impl(
         "Maximum",
         [
             // r = x - y
+            //WISH after I implement manual bootstrap after addition, here it can be customized to powers of two (then first layer of bootstraps can be omitted in signum)
             let r: ParmCiphertext = super::addition::add_sub_impl(
                 false,
                 pub_keys,
