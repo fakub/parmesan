@@ -278,9 +278,10 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
                             m_sgn,
                             if m_sgn == m[2].signum() {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
     );
-    summary_text = format!("{}\nmax{{m_1, m_0}} = {} :: {}", summary_text,
+    summary_text = format!("{}\nmax{{m_1, m_0}} = {} :: {} (exp. {} % {})", summary_text,
                             m_max,
-                            if m_max == std::cmp::max(m_as[1], m_as[0]) {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()}
+                            if (std::cmp::max(m_as[1], m_as[0]) as i64 - m_max as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            std::cmp::max(m_as[1], m_as[0]), 1 << DEMO_BITLEN
     );
     infoln!("{}", summary_text);
 

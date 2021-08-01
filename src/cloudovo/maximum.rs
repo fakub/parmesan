@@ -61,11 +61,18 @@ pub fn max_impl(
 
                 m = vec![LWE::zero_with_encoder(dim, encoder)?; x.len()];
 
-                // calc using an analogy to ReLU
-                m.par_iter_mut().zip(y.par_iter().zip(r.par_iter())).for_each(| (mi, (yi, ri)) | {
-                    let ri_2s: LWE = ri.add_uint(&s_2).expect("add_uint failed.");
-                    *mi = pbs::relu_plus__pi_5(pub_keys, &ri_2s).expect("pbs::relu_plus__pi_5 failed.");
-                    mi.add_uint_inplace(yi).expect("add_uint_inplace failed.");
+                // calc x and y selectors
+                m.par_iter_mut().zip(x.par_iter().zip(y.par_iter())).for_each(| (mi, (xi, yi)) | {
+                    // xi + 2s
+                    let xi_p2s: LWE = xi.add_uint(&s_2).expect("add_uint failed.");
+                    // yi - 2s
+                    let yi_n2s: LWE = yi.sub_uint(&s_2).expect("sub_uint failed.");
+                    // t, u
+                    //TODO this can be also in parallel
+                    *mi    = pbs::relu_plus__pi_5(pub_keys, &xi_p2s).expect("pbs::relu_plus__pi_5 failed.");   // ti
+                    let ui = pbs::relu_plus__pi_5(pub_keys, &yi_n2s).expect("pbs::relu_plus__pi_5 failed.");
+                    // t + u
+                    mi.add_uint_inplace(&ui).expect("add_uint_inplace failed.");
                 });
             }
 
