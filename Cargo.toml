@@ -14,3 +14,7 @@ rayon = "^1.5.1"
 
 # for local development, uncomment & use the following line instead:
 concrete = { path = "../concrete-lib/concrete", features = ["unsafe"] }
+
+[features]
+default = []   # no feature selected by default
+sequential = []

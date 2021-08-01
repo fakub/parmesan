@@ -183,6 +183,12 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     // say hello
     //~ infobox!("Hi, I am {}, using local {} with custom patches & an unsafe PRNG.", String::from("Parmesan").yellow().bold(), String::from("Concrete").blue().bold());
 
+    // move to Cloudovo initialization (makes no sense at user, but now I want to have it on the top)
+    #[cfg(not(feature = "sequential"))]
+    infobox!("Parallel ({} threads)", rayon::current_num_threads());
+    #[cfg(feature = "sequential")]
+    infobox!("Sequential");
+
 
     // =================================
     //  Initialization
@@ -203,12 +209,12 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
 
     // =================================
     //  U: Encryption
-    let m1 =  0b00100111i32;
-    let m2 =  0b00101110i32;
-    let m3 = -0b00011001i32;
-    let c1 = pu.encrypt(m1, 6)?;
-    let c2 = pu.encrypt(m2, 6)?;
-    let c3 = pu.encrypt(m3, 6)?;
+    let m1 =  0b101101100111i32;
+    let m2 =  0b001000101110i32;
+    let m3 = -0b110011011001i32;
+    let c1 = pu.encrypt(m1, 12)?;
+    let c2 = pu.encrypt(m2, 12)?;
+    let c3 = pu.encrypt(m3, 12)?;
     infoln!("{} messages\nm1 = {}{:b} ({})\nm2 = {}{:b} ({})\nm3 = {}{:b} ({})", String::from("User:").bold().yellow(),
                                 if m1 >= 0 {""} else {"-"}, m1.abs(), m1,
                                                   if m2 >= 0 {""} else {"-"}, m2.abs(), m2,
@@ -235,11 +241,11 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     infoln!("{} result\nm1 + m2 = {} :: {} (exp. {})\nm1 - m2 = {} :: {} (exp. {})\nsgn(m3) = {} :: {}\nmax{{m1, m2}} = {} :: {}",
               String::from("User:").bold().yellow(),
                     m_add,
-                    if m_add - (m1+m2) % (1<<6) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                    (m1+m2) % (1<<6),
+                    if m_add - (m1+m2) % (1<<12) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                    (m1+m2) % (1<<12),
                             m_sub,
-                            if m_sub - (m1-m2) % (1<<6) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            (m1-m2) % (1<<6),
+                            if m_sub - (m1-m2) % (1<<12) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            (m1-m2) % (1<<12),
                                     m_sgn,
                                     if m_sgn == m3.signum() {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                                             m_max,

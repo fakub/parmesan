@@ -1,5 +1,6 @@
 use std::error::Error;
 
+#[allow(unused_imports)]   //WISH only use when sequential feature is OFF
 use rayon::prelude::*;
 use concrete::LWE;
 #[allow(unused_imports)]
@@ -19,21 +20,19 @@ pub fn add_sub_impl(
     let dim = x[0].dimension;   //WISH fix this, was: x.first()?.dimension
     let encoder = &x[0].encoder;
 
-    let mut w = x.clone();
-    let mut q = vec![LWE::zero_with_encoder(dim, encoder)?; x.len()];
+    //WISH add ciphertexts with different lengths (fill with zeros)
 
-    //~ let mut z: ParmCiphertext = Vec::new();
+    let mut z: ParmCiphertext;
 
-    //~ let mut wi_1:   LWE = LWE::zero_with_encoder(dim, encoder)?;
-    //~ let mut qi_1:   LWE = LWE::zero_with_encoder(dim, encoder)?;
-
+    // Parallel
+    #[cfg(not(feature = "sequential"))]
+    {
     measure_duration!(
         "Parallel addition/subtraction",
         [
-            //WISH add ciphertexts with different lengths (fill with zeros)
+            let mut w = x.clone();
 
-            infoln!("current_num_threads = {}", rayon::current_num_threads());
-
+            // w = x + y
             // -----------------------------------------------------------------
             // sequential approach (6-bit: 50-70 us)
             measure_duration!(
@@ -49,7 +48,6 @@ pub fn add_sub_impl(
                     }
                 }
             ]);
-            // -----------------------------------------------------------------
             // parallel approach (6-bit: 110-130 us)
             //~ measure_duration!(
             //~ "w = x + y (par)",
@@ -62,10 +60,9 @@ pub fn add_sub_impl(
             //~ ]);
             // -----------------------------------------------------------------
 
-            let mut z = w.clone();
+            let mut q = vec![LWE::zero_with_encoder(dim, encoder)?; x.len()];
+            z = w.clone();
 
-            // -----------------------------------------------------------------
-            // parallel approach
             q.par_iter_mut().zip(w.par_iter().enumerate()).for_each(| (qi, (i, wi)) | {
                 // calc   3 w_i + w_i-1
                 let mut wi_3 = wi.mul_uint_constant(3).expect("mul_uint_constant failed.");
@@ -78,32 +75,46 @@ pub fn add_sub_impl(
                 let qi_2 = qi.mul_uint_constant(2).expect("mul_uint_constant failed.");
                 zi.sub_uint_inplace(&qi_2).expect("sub_uint_inplace failed.");
                 if i > 0 { zi.add_uint_inplace(&q[i-1]).expect("add_uint_inplace failed."); }
-                //TODO add one more bootstrap with identity (or leave it for user? in some cases BS could be saved)
-                //TODO add one more thread if < maxlen
             });
-
-            // -----------------------------------------------------------------
-            // sequential approach
-            //~ for wi_0 in w {
-                //~ let mut wi_0_3  = wi_0.mul_uint_constant(3)?;
-                                  //~ wi_0_3.add_uint_inplace(&wi_1)?;
-
-                //~ let     qi_0    = pbs::f_4__pi_5(pub_keys, &wi_0_3)?;
-                //~ let     qi_0_2  = qi_0.mul_uint_constant(2)?;
-
-                //~ let mut zi      = wi_0.clone();
-                                //~ zi.sub_uint_inplace(&qi_0_2)?;
-                                //~ zi.add_uint_inplace(&qi_1)?;
-
-                //~ // call sth like add_impl_no_final_bs(); /this now/ and then bootstrap the result s.t. add_impl implicitly bootstraps the result
-                //~ z.push(zi);
-
-                //~ // update for next round:
-                //~ wi_1    = wi_0.clone();
-                //~ qi_1    = qi_0.clone();
-            //~ }
+            //TODO add one more bootstrap with identity (or leave it for user? in some cases BS could be saved)
+            //TODO add one more thread if < maxlen
         ]
     );
+    }
+
+    // Sequential
+    #[cfg(feature = "sequential")]
+    {
+        let mut wi_1:   LWE = LWE::zero_with_encoder(dim, encoder)?;
+        let mut qi_1:   LWE = LWE::zero_with_encoder(dim, encoder)?;
+        z = Vec::new();
+
+        for (xi, yi) in x.iter().zip(y.iter()) {
+            let mut wi_0    = xi.clone();
+            if is_add {
+                wi_0.add_uint_inplace(&yi)?;
+            } else {
+                wi_0.sub_uint_inplace(&yi)?;
+            }
+            let mut wi_0_3  = wi_0.mul_uint_constant(3)?;
+                              wi_0_3.add_uint_inplace(&wi_1)?;
+
+            let     qi_0    = pbs::f_4__pi_5(pub_keys, &wi_0_3)?;
+            let     qi_0_2  = qi_0.mul_uint_constant(2)?;
+
+            let mut zi      = wi_0.clone();
+                            zi.sub_uint_inplace(&qi_0_2)?;
+                            zi.add_uint_inplace(&qi_1)?;
+
+            //TODO add one more bootstrap with identity (or leave it for user? in some cases BS could be saved)
+            // call sth like add_impl_no_final_bs(); /this now/ and then bootstrap the result s.t. add_impl implicitly bootstraps the result
+            z.push(zi);
+
+            // update for next round:
+            wi_1    = wi_0.clone();
+            qi_1    = qi_0.clone();
+        }
+    }
 
     Ok(z)
 }
