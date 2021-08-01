@@ -51,7 +51,7 @@ pub fn sgn_recursion_raw(
         return Ok(x.clone());
     }
 
-    let dim = x[0].dimension;   //WISH fix this, was: x.first()?.dimension
+    let dim = x[0].dimension;
     let encoder = &x[0].encoder;
 
     let s: ParmCiphertext;

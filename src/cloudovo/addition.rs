@@ -17,7 +17,7 @@ pub fn add_sub_impl(
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
-    let dim = x[0].dimension;   //WISH fix this, was: x.first()?.dimension
+    let dim = x[0].dimension;
     let encoder = &x[0].encoder;
 
     //WISH add ciphertexts with different lengths (fill with zeros)
