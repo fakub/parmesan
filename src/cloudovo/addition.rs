@@ -85,35 +85,40 @@ pub fn add_sub_impl(
     // Sequential
     #[cfg(feature = "sequential")]
     {
-        let mut wi_1:   LWE = LWE::zero_with_encoder(dim, encoder)?;
-        let mut qi_1:   LWE = LWE::zero_with_encoder(dim, encoder)?;
-        z = Vec::new();
+    measure_duration!(
+        "Sequential addition/subtraction (in redundant representation)",
+        [
+            let mut wi_1:   LWE = LWE::zero_with_encoder(dim, encoder)?;
+            let mut qi_1:   LWE = LWE::zero_with_encoder(dim, encoder)?;
+            z = Vec::new();
 
-        for (xi, yi) in x.iter().zip(y.iter()) {
-            let mut wi_0    = xi.clone();
-            if is_add {
-                wi_0.add_uint_inplace(&yi)?;
-            } else {
-                wi_0.sub_uint_inplace(&yi)?;
+            for (xi, yi) in x.iter().zip(y.iter()) {
+                let mut wi_0    = xi.clone();
+                if is_add {
+                    wi_0.add_uint_inplace(&yi)?;
+                } else {
+                    wi_0.sub_uint_inplace(&yi)?;
+                }
+                let mut wi_0_3  = wi_0.mul_uint_constant(3)?;
+                                  wi_0_3.add_uint_inplace(&wi_1)?;
+
+                let     qi_0    = pbs::f_4__pi_5(pub_keys, &wi_0_3)?;
+                let     qi_0_2  = qi_0.mul_uint_constant(2)?;
+
+                let mut zi      = wi_0.clone();
+                                zi.sub_uint_inplace(&qi_0_2)?;
+                                zi.add_uint_inplace(&qi_1)?;
+
+                //TODO add one more bootstrap with identity (or leave it for user? in some cases BS could be saved)
+                // call sth like add_impl_no_final_bs(); /this now/ and then bootstrap the result s.t. add_impl implicitly bootstraps the result
+                z.push(zi);
+
+                // update for next round:
+                wi_1    = wi_0.clone();
+                qi_1    = qi_0.clone();
             }
-            let mut wi_0_3  = wi_0.mul_uint_constant(3)?;
-                              wi_0_3.add_uint_inplace(&wi_1)?;
-
-            let     qi_0    = pbs::f_4__pi_5(pub_keys, &wi_0_3)?;
-            let     qi_0_2  = qi_0.mul_uint_constant(2)?;
-
-            let mut zi      = wi_0.clone();
-                            zi.sub_uint_inplace(&qi_0_2)?;
-                            zi.add_uint_inplace(&qi_1)?;
-
-            //TODO add one more bootstrap with identity (or leave it for user? in some cases BS could be saved)
-            // call sth like add_impl_no_final_bs(); /this now/ and then bootstrap the result s.t. add_impl implicitly bootstraps the result
-            z.push(zi);
-
-            // update for next round:
-            wi_1    = wi_0.clone();
-            qi_1    = qi_0.clone();
-        }
+        ]
+    );
     }
 
     Ok(z)
