@@ -55,8 +55,7 @@ pub use cloudovo::maximum;
 /// # User-side Parmesan
 pub struct ParmesanUserovo<'a> {
     pub params: &'a Params,
-    //DBG pub
-    pub priv_keys: PrivKeySet,
+    priv_keys: PrivKeySet,
 }
 
 impl ParmesanUserovo<'_> {
@@ -102,8 +101,6 @@ impl ParmesanUserovo<'_> {
 /// # Cloud-side Parmesan
 pub struct ParmesanCloudovo<'a> {
     pub params: &'a Params,
-    //DBG
-    priv_keys: &'a PrivKeySet,
     pub_keys: &'a PubKeySet<'a>,
 }
 
@@ -111,14 +108,10 @@ impl ParmesanCloudovo<'_> {
     /// Create an instance of `ParmesanCloudovo`
     pub fn new<'a>(
         params: &'a Params,
-        //DBG
-        priv_keys: &'a PrivKeySet,
         pub_keys: &'a PubKeySet,
     ) -> ParmesanCloudovo<'a> {
         ParmesanCloudovo {
             params,
-            //DBG
-            priv_keys,
             pub_keys,
         }
     }
@@ -171,8 +164,6 @@ impl ParmesanCloudovo<'_> {
     ) -> Result<ParmCiphertext, Box<dyn Error>> {
         Ok(maximum::max_impl(
             self.params,
-            //DBG
-            self.priv_keys,
             self.pub_keys,
             x,
             y,
@@ -217,8 +208,6 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     //  Cloudovo Scope
     let pc = ParmesanCloudovo::new(
         par,
-        //DBG
-        &pu.priv_keys,
         &pub_k,
     );
 

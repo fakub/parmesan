@@ -10,15 +10,9 @@ use crate::ciphertexts::ParmCiphertext;
 use crate::userovo::keys::PubKeySet;
 use super::pbs;
 
-//DBG
-use crate::userovo::keys::PrivKeySet;
-use crate::userovo::encryption;
-
 /// Implementation of parallel maximum using signum
 pub fn max_impl(
     params: &Params,
-    //DBG
-    priv_keys: &PrivKeySet,
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
     y: &ParmCiphertext,

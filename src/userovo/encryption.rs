@@ -92,8 +92,7 @@ pub fn parm_decrypt(
     Ok(m)
 }
 
-//DBG pub
-pub fn parm_decr_nibble(
+fn parm_decr_nibble(
     params: &Params,
     priv_keys: &PrivKeySet,
     ct: &LWE,
