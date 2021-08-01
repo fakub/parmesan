@@ -29,7 +29,7 @@ macro_rules! measure_duration {   //WISH add ON/OFF feature
             if crate::LOG_LVL > 0 {crate::LOG_LVL -= 1;}
             let indent = format!("{}  └ ", "  │ ".repeat(crate::LOG_LVL as usize));
             let status = String::from("OK").green().bold();   // can be other statuses
-            eprintln!("{}{} (in {})", indent, status, __s_time);
+            eprintln!("{}{} {}: {} (in {})", indent, String::from("Finished").yellow().bold(), $title, status, __s_time);
         }
     }
 }
