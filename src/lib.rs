@@ -13,6 +13,7 @@ use std::error::Error;
 
 #[allow(unused_imports)]
 use colored::Colorize;
+use concrete::LWE;
 
 /// Keeps log level for nested time measurements
 static mut LOG_LVL: u8 = 0;
@@ -180,8 +181,6 @@ impl ParmesanCloudovo<'_> {
 //  Dev
 
 pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
-    // say hello
-    //~ infobox!("Hi, I am {}, using local {} with custom patches & an unsafe PRNG.", String::from("Parmesan").yellow().bold(), String::from("Concrete").blue().bold());
 
     // move to Cloudovo initialization (makes no sense at user, but now I want to have it on the top)
     #[cfg(not(feature = "sequential"))]
@@ -202,6 +201,9 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     let pu = ParmesanUserovo::new(par)?;
     let pub_k = pu.export_pub_keys();
 
+    const DEMO_BITLEN: usize = 12;
+    const DEMO_N_MSGS: usize = 3;
+
     // ---------------------------------
     //  Cloudovo Scope
     let pc = ParmesanCloudovo::new(par, &pub_k);
@@ -209,24 +211,35 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
 
     // =================================
     //  U: Encryption
-    let m1 =  0b101101100111i32;
-    let m2 =  0b001000101110i32;
-    let m3 = -0b110011011001i32;
-    let c1 = pu.encrypt(m1, 12)?;
-    let c2 = pu.encrypt(m2, 12)?;
-    let c3 = pu.encrypt(m3, 12)?;
-    infoln!("{} messages\nm1 = {}{:b} ({})\nm2 = {}{:b} ({})\nm3 = {}{:b} ({})", String::from("User:").bold().yellow(),
-                                if m1 >= 0 {""} else {"-"}, m1.abs(), m1,
-                                                  if m2 >= 0 {""} else {"-"}, m2.abs(), m2,
-                                                                  if m3 >= 0 {""} else {"-"}, m3.abs(), m3);
+    let m: [i32; DEMO_N_MSGS] = [
+         0b01111110110010010011100110111011,
+         0b00110010001111100110111100100000,
+        -0b01000100001010010111100000010101,
+    ];
+    let mut m_as: [i32; DEMO_N_MSGS] = [0,0,0];
+    let mut c: [ParmCiphertext; DEMO_N_MSGS] = [
+        vec![LWE::zero(0)?; DEMO_BITLEN],
+        vec![LWE::zero(0)?; DEMO_BITLEN],
+        vec![LWE::zero(0)?; DEMO_BITLEN],
+    ];
+    for (ci, (mi, mi_as)) in c.iter_mut().zip(m.iter().zip(m_as.iter_mut())) {
+        *ci = pu.encrypt(*mi, DEMO_BITLEN)?;
+        *mi_as = (*mi).signum() * ((*mi).abs() % (1 << DEMO_BITLEN));
+    }
+
+    let mut intro_text = format!("{} messages ({} bits taken)", String::from("User:").bold().yellow(), DEMO_BITLEN);
+    for (i, (mi, mi_as)) in m.iter().zip(m_as.iter()).enumerate() {
+        intro_text = format!("{}\nm_{} = {}{:032b} ({})", intro_text, i, if *mi >= 0 {""} else {"-"}, mi.abs(), mi_as);
+    }
+    infoln!("{}", intro_text);
 
 
     // =================================
     //  C: Evaluation
-    let c_add = pc.add(&c1, &c2)?;
-    let c_sub = pc.sub(&c1, &c2)?;
-    let c_sgn = pc.sgn(&c3)?;
-    let c_max = pc.max(&c1, &c2)?;
+    let c_add = pc.add(&c[0], &c[1])?;
+    let c_sub = pc.sub(&c[0], &c[1])?;
+    let c_sgn = pc.sgn(&c[2])?;
+    let c_max = pc.max(&c[0], &c[1])?;
 
 
     // =================================
@@ -236,22 +249,31 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     let m_sgn  = pu.decrypt(&c_sgn)?;
     let m_max  = pu.decrypt(&c_max)?;
 
-    //~ let mut summary = format!();
-
-    infoln!("{} result\nm1 + m2 = {} :: {} (exp. {})\nm1 - m2 = {} :: {} (exp. {})\nsgn(m3) = {} :: {}\nmax{{m1, m2}} = {} :: {}",
-              String::from("User:").bold().yellow(),
-                    m_add,
-                    if m_add - (m1+m2) % (1<<12) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                    (m1+m2) % (1<<12),
+    let mut summary_text = format!("{} results", String::from("User:").bold().yellow(),);
+    summary_text = format!("{}\nm_0 + m_1 = {} :: {} (exp. {} % {})", summary_text,
+                            m_add,
+                            if (m[0] as i64 + m[1] as i64 - m_add as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            (m_as[0] as i64 + m_as[1] as i64) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
+    );
+    summary_text = format!("{}\nm_0 - m_1 = {} :: {} (exp. {} % {})", summary_text,
                             m_sub,
-                            if m_sub - (m1-m2) % (1<<12) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            (m1-m2) % (1<<12),
-                                    m_sgn,
-                                    if m_sgn == m3.signum() {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                                            m_max,
-                                            if m_max == std::cmp::max(m1, m2) {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()});
+                            if (m[0] as i64 - m[1] as i64 - m_sub as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            (m_as[0] as i64 - m_as[1] as i64) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
+    );
+    summary_text = format!("{}\nsgn(m_2) = {} :: {}", summary_text,
+                            m_sgn,
+                            if m_sgn == m[2].signum() {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+    );
+    summary_text = format!("{}\nmax{{m_1, m_0}} = {} :: {}", summary_text,
+                            m_max,
+                            if m_max == std::cmp::max(m_as[1], m_as[0]) {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()}
+    );
+    infoln!("{}", summary_text);
 
+
+    // =================================
     infobox!("Demo END");
+    // =================================
 
     Ok(())
 }
