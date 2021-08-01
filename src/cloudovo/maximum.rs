@@ -12,6 +12,7 @@ use super::pbs;
 
 //DBG
 use crate::userovo::keys::PrivKeySet;
+use crate::userovo::encryption;
 
 /// Implementation of parallel maximum using signum
 pub fn max_impl(
@@ -38,12 +39,14 @@ pub fn max_impl(
             )?;
 
             // s = 2 * sgn^+(r)
+            // returns one sample, not bootstrapped
             let s_raw: ParmCiphertext = super::signum::sgn_recursion_raw(
                 params.bit_precision - 1,
                 pub_keys,
                 &r,
             )?;
             //TODO for parallel, copy this into vector (and test if this helps)
+            // bootstrap whether >= 0 (val =  2)
             let s_2: LWE = pbs::f_0__pi_5__with_val(
                 pub_keys,
                 &s_raw[0],
@@ -71,12 +74,19 @@ pub fn max_impl(
             {
                 m = Vec::new();
 
-                // calc using an analogy to ReLU
-                for (yi, ri) in y.iter().zip(r.iter()) {
-                    let ri_2s: LWE = ri.add_uint(&s_2)?;
-                    let mut relu_x_y = pbs::relu_plus__pi_5(pub_keys, &ri_2s)?;
-                    relu_x_y.add_uint_inplace(yi)?;
-                    m.push(relu_x_y);
+                // calc x and y selectors
+                for (xi, yi) in x.iter().zip(y.iter()) {
+                    // xi + 2s
+                    let xi_p2s: LWE = xi.add_uint(&s_2)?;
+                    // yi - 2s
+                    let yi_n2s: LWE = yi.sub_uint(&s_2)?;
+                    // t, u
+                    let mut ti = pbs::relu_plus__pi_5(pub_keys, &xi_p2s)?;
+                    let     ui = pbs::relu_plus__pi_5(pub_keys, &yi_n2s)?;
+                    // t + u
+                    ti.add_uint_inplace(&ui)?;
+                    //TODO not bootstrapped!
+                    m.push(ti);
                 }
             }
         ]
