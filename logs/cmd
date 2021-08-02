@@ -1,0 +1,1 @@
+reset ; cargo run | aha --black > ../parmesan/logs/<version>/<machine>/<sequential|parallel>.html
