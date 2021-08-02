@@ -29,7 +29,7 @@ macro_rules! measure_duration {   //WISH add ON/OFF feature
             if crate::LOG_LVL > 0 {crate::LOG_LVL -= 1;}
             let indent = format!("{}  └ ", "  │ ".repeat(crate::LOG_LVL as usize));
             let status = String::from("OK").green().bold();   // can be other statuses
-            eprintln!("{}{} {}: {} (in {})", indent, String::from("Finished").yellow().bold(), $title, status, __s_time);
+            println!("{}{} {}: {} (in {})", indent, String::from("Finished").yellow().bold(), $title, status, __s_time);
         }
     }
 }
@@ -39,7 +39,7 @@ macro_rules! measure_duration {   //WISH add ON/OFF feature
 //~ macro_rules! info {
     //~ ($($arg:tt)*) => {
         //~ let msg = crate::parm_format_info!($($arg)*);
-        //~ eprint!("{}", msg);
+        //~ print!("{}", msg);
         //~ io::stderr().flush().unwrap();
     //~ }
 //~ }
@@ -47,14 +47,14 @@ macro_rules! measure_duration {   //WISH add ON/OFF feature
 macro_rules! infoln {
     ($($arg:tt)*) => {
         let msg = crate::parm_format_info!($($arg)*);
-        eprintln!("{}", msg);
+        println!("{}", msg);
     }
 }
 #[macro_export]
 macro_rules! infobox {
     ($($arg:tt)*) => {
         let msg = crate::parm_format_infobox!($($arg)*);
-        eprintln!("{}", msg);
+        println!("{}", msg);
     }
 }
 
@@ -62,7 +62,7 @@ macro_rules! infobox {
 macro_rules! parm_error {
     ($($arg:tt)*) => {
         let msg = crate::parm_format_err!($($arg)*);
-        eprintln!("{}", msg);
+        println!("{}", msg);
     }
 }
 
@@ -70,7 +70,7 @@ macro_rules! parm_error {
 macro_rules! dbgln {
     ($($arg:tt)*) => {
         let msg = crate::parm_format_dbg!($($arg)*);
-        eprintln!("{}", msg);
+        println!("{}", msg);
     }
 }
 
