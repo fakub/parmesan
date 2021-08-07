@@ -5,6 +5,9 @@ use concrete::LWE;
 use colored::Colorize;
 use crate::userovo::keys::PubKeySet;
 
+//
+//  X (positive half)
+//
 pub fn pos_id(
     pub_keys: &PubKeySet,
     c: &LWE,
@@ -18,6 +21,9 @@ pub fn pos_id(
     Ok(res)
 }
 
+//
+//  X ⋛ ±4
+//
 #[allow(non_snake_case)]
 pub fn f_4__pi_5(
     pub_keys: &PubKeySet,
@@ -32,6 +38,26 @@ pub fn f_4__pi_5(
     Ok(res)
 }
 
+//
+//  |X| ≥ 2
+//
+#[allow(non_snake_case)]
+pub fn a_2__pi_5(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    crate::measure_duration!(
+        "PBS: |X| ≥ 2 (for π = 5)",
+        [let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,1.,1.,1.,1.,1.,1.,31.,31.,31.,31.,31.,31.,31.,0.][x as usize], pub_keys.encoder)?
+                    .keyswitch(pub_keys.ksk)?;]
+    );
+
+    Ok(res)
+}
+
+//
+//  X ⋛ ±1 (× val)
+//
 #[allow(non_snake_case)]
 pub fn f_1__pi_5__with_val(
     pub_keys: &PubKeySet,
@@ -48,6 +74,9 @@ pub fn f_1__pi_5__with_val(
     Ok(res)
 }
 
+//
+//  X ≥ 0 /sgn+/ (× val)
+//
 #[allow(non_snake_case)]
 pub fn f_0__pi_5__with_val(
     pub_keys: &PubKeySet,
@@ -64,6 +93,12 @@ pub fn f_0__pi_5__with_val(
     Ok(res)
 }
 
+//
+//  ReLU+:
+//
+//      0   (X < 0)
+//  X - 2   (X > 0)
+//
 #[allow(non_snake_case)]
 pub fn relu_plus__pi_5(
     pub_keys: &PubKeySet,

@@ -42,6 +42,7 @@ pub mod cloudovo;
 pub use cloudovo::addition;
 pub use cloudovo::signum;
 pub use cloudovo::maximum;
+pub use cloudovo::multiplication;
 
 
 // =============================================================================
@@ -169,6 +170,24 @@ impl ParmesanCloudovo<'_> {
             y,
         )?)
     }
+
+    /// Product of two 1-word ciphertexts
+    pub fn mult_oneword(
+        &self,
+        x: &ParmCiphertext,
+        y: &ParmCiphertext,
+    ) -> Result<ParmCiphertext, Box<dyn Error>> {
+        if x.len() != 1 || y.len() != 1 {
+            //TODO this does not do anything itself (only halts program, no error message)
+            return Err("One-word Parmesan ciphertexts expected.".into());
+        }
+
+        Ok(vec![multiplication::mult_lwe(
+            self.pub_keys,
+            &x[0],
+            &y[0],
+        )?])
+    }
 }
 
 
@@ -239,6 +258,51 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
 
     // =================================
     //  C: Evaluation
+
+    //DBG BEGIN
+    let pos_1 = pu.encrypt( 1,1)?;
+    let neg_1 = pu.encrypt(-1,1)?;
+    let zer_0 = pu.encrypt( 0,1)?;
+
+    let pp = pc.mult_oneword(&pos_1, &pos_1)?;
+    let pz = pc.mult_oneword(&pos_1, &zer_0)?;
+    let pn = pc.mult_oneword(&pos_1, &neg_1)?;
+
+    let zp = pc.mult_oneword(&zer_0, &pos_1)?;
+    let zz = pc.mult_oneword(&zer_0, &zer_0)?;
+    let zn = pc.mult_oneword(&zer_0, &neg_1)?;
+
+    let np = pc.mult_oneword(&neg_1, &pos_1)?;
+    let nz = pc.mult_oneword(&neg_1, &zer_0)?;
+    let nn = pc.mult_oneword(&neg_1, &neg_1)?;
+
+    let pp_p = pu.decrypt(&pp)?;
+    let pz_p = pu.decrypt(&pz)?;
+    let pn_p = pu.decrypt(&pn)?;
+
+    let zp_p = pu.decrypt(&zp)?;
+    let zz_p = pu.decrypt(&zz)?;
+    let zn_p = pu.decrypt(&zn)?;
+
+    let np_p = pu.decrypt(&np)?;
+    let nz_p = pu.decrypt(&nz)?;
+    let nn_p = pu.decrypt(&nn)?;
+
+    infoln!(" 1 ×  1 = {}", pp_p);
+    infoln!(" 1 ×  0 = {}", pz_p);
+    infoln!(" 1 × -1 = {}", pn_p);
+
+    infoln!(" 0 ×  1 = {}", zp_p);
+    infoln!(" 0 ×  0 = {}", zz_p);
+    infoln!(" 0 × -1 = {}", zn_p);
+
+    infoln!("-1 ×  1 = {}", np_p);
+    infoln!("-1 ×  0 = {}", nz_p);
+    infoln!("-1 × -1 = {}", nn_p);
+
+    return Ok(());
+    //DBG END
+
     let c_add = pc.add(&c[0], &c[1])?;
     let c_sub = pc.sub(&c[1], &c[0])?;
     let c_sgn = pc.sgn(&c[2])?;
