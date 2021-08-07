@@ -56,7 +56,8 @@ pub use cloudovo::multiplication;
 /// # User-side Parmesan
 pub struct ParmesanUserovo<'a> {
     pub params: &'a Params,
-    priv_keys: PrivKeySet,
+    //DBG pub
+    pub priv_keys: PrivKeySet,
 }
 
 impl ParmesanUserovo<'_> {
@@ -172,7 +173,7 @@ impl ParmesanCloudovo<'_> {
     }
 
     /// Product of two 1-word ciphertexts
-    pub fn mult_oneword(
+    pub fn mul_oneword(
         &self,
         x: &ParmCiphertext,
         y: &ParmCiphertext,
@@ -182,11 +183,35 @@ impl ParmesanCloudovo<'_> {
             return Err("One-word Parmesan ciphertexts expected.".into());
         }
 
-        Ok(vec![multiplication::mult_lwe(
+        Ok(vec![multiplication::mul_lwe(
             self.pub_keys,
             &x[0],
             &y[0],
         )?])
+    }
+
+    /// Product of two ciphertexts
+    pub fn mul(
+        &self,
+        //DBG
+        priv_keys: &PrivKeySet,
+        x: &ParmCiphertext,
+        y: &ParmCiphertext,
+    ) -> Result<ParmCiphertext, Box<dyn Error>> {
+        if x.len() != y.len() {
+            //TODO ...
+            return Err("Multiplication: Parmesan ciphertexts of equal length expected.".into());
+        }
+
+        Ok(multiplication::mul_impl(
+            //DBG
+            priv_keys,
+            //DBG
+            self.params,
+            self.pub_keys,
+            x,
+            y,
+        )?)
     }
 }
 
@@ -260,45 +285,14 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     //  C: Evaluation
 
     //DBG BEGIN
-    let pos_1 = pu.encrypt( 1,1)?;
-    let neg_1 = pu.encrypt(-1,1)?;
-    let zer_0 = pu.encrypt( 0,1)?;
+    let  x   = pu.encrypt(0b1111,4)?;
+    let  y   = pu.encrypt(0b1011,4)?;
+    let xy   = pc.mul(//DBG
+                            &pu.priv_keys, &x, &y)?;
 
-    let pp = pc.mult_oneword(&pos_1, &pos_1)?;
-    let pz = pc.mult_oneword(&pos_1, &zer_0)?;
-    let pn = pc.mult_oneword(&pos_1, &neg_1)?;
+    let xy_p = pu.decrypt(&xy)?;
 
-    let zp = pc.mult_oneword(&zer_0, &pos_1)?;
-    let zz = pc.mult_oneword(&zer_0, &zer_0)?;
-    let zn = pc.mult_oneword(&zer_0, &neg_1)?;
-
-    let np = pc.mult_oneword(&neg_1, &pos_1)?;
-    let nz = pc.mult_oneword(&neg_1, &zer_0)?;
-    let nn = pc.mult_oneword(&neg_1, &neg_1)?;
-
-    let pp_p = pu.decrypt(&pp)?;
-    let pz_p = pu.decrypt(&pz)?;
-    let pn_p = pu.decrypt(&pn)?;
-
-    let zp_p = pu.decrypt(&zp)?;
-    let zz_p = pu.decrypt(&zz)?;
-    let zn_p = pu.decrypt(&zn)?;
-
-    let np_p = pu.decrypt(&np)?;
-    let nz_p = pu.decrypt(&nz)?;
-    let nn_p = pu.decrypt(&nn)?;
-
-    infoln!(" 1 ×  1 = {}", pp_p);
-    infoln!(" 1 ×  0 = {}", pz_p);
-    infoln!(" 1 × -1 = {}", pn_p);
-
-    infoln!(" 0 ×  1 = {}", zp_p);
-    infoln!(" 0 ×  0 = {}", zz_p);
-    infoln!(" 0 × -1 = {}", zn_p);
-
-    infoln!("-1 ×  1 = {}", np_p);
-    infoln!("-1 ×  0 = {}", nz_p);
-    infoln!("-1 × -1 = {}", nn_p);
+    infoln!("X Y = {}", xy_p);
 
     return Ok(());
     //DBG END
