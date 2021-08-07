@@ -12,6 +12,11 @@ pub fn pos_id(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
     crate::measure_duration!(
         "PBS: Positive identity",
         [let res = c.bootstrap_with_function(pub_keys.bsk, |x| x, pub_keys.encoder)?
@@ -29,6 +34,11 @@ pub fn f_4__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
     crate::measure_duration!(
         "PBS: X ⋛ ±4 (for π = 5)",
         [let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.,0.][x as usize], pub_keys.encoder)?
@@ -46,6 +56,11 @@ pub fn a_2__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
     crate::measure_duration!(
         "PBS: |X| ≥ 2 (for π = 5)",
         [let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,1.,1.,1.,1.,1.,1.,31.,31.,31.,31.,31.,31.,31.,0.][x as usize], pub_keys.encoder)?
@@ -64,9 +79,14 @@ pub fn f_1__pi_5__with_val(
     c: &LWE,
     val: u32,
 ) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
     let val_f = val as f64;
     crate::measure_duration!(
-        "PBS: X ⋛ ±1 /sgn/ (times val, for π = 5)",
+        "PBS: X ⋛ ±1 /sgn/ (× val, for π = 5)",
         [let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f][x as usize], pub_keys.encoder)?
                     .keyswitch(pub_keys.ksk)?;]
     );
@@ -83,9 +103,14 @@ pub fn f_0__pi_5__with_val(
     c: &LWE,
     val: u32,
 ) -> Result<LWE, Box<dyn Error>> {
+    //TODO resolve trivial case
+    //~ if c.dimension == 0 {
+        //~ return Ok(LWE that trivially encrypts val_f);
+    //~ }
+
     let val_f = val as f64;
     crate::measure_duration!(
-        "PBS: X ≥ 0 /sgn+/ (times val, for π = 5)",
+        "PBS: X ≥ 0 /sgn+/ (× val, for π = 5)",
         [let res = c.bootstrap_with_function(pub_keys.bsk, |x| [val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f][x as usize], pub_keys.encoder)?
                     .keyswitch(pub_keys.ksk)?;]
     );
