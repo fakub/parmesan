@@ -193,8 +193,6 @@ impl ParmesanCloudovo<'_> {
     /// Product of two ciphertexts
     pub fn mul(
         &self,
-        //DBG
-        priv_keys: &PrivKeySet,
         x: &ParmCiphertext,
         y: &ParmCiphertext,
     ) -> Result<ParmCiphertext, Box<dyn Error>> {
@@ -204,10 +202,6 @@ impl ParmesanCloudovo<'_> {
         }
 
         Ok(multiplication::mul_impl(
-            //DBG
-            priv_keys,
-            //DBG
-            self.params,
             self.pub_keys,
             x,
             y,
@@ -258,12 +252,19 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
 
     // =================================
     //  U: Encryption
+
+    // for most operations
     let m: [i32; DEMO_N_MSGS] = [
          0b01111110110010010011100110111011,
          0b00110010001111100110111100100000,
         -0b01000100001010010111100000010101,
     ];
     let mut m_as: [i32; DEMO_N_MSGS] = [0,0,0];
+    // for multiplication (so far only 4bit)
+    let m_x = 0b1110;   // 14
+    let m_y = 0b1001;   //  9
+
+    // encrypt all values
     let mut c: [ParmCiphertext; DEMO_N_MSGS] = [
         vec![LWE::zero(0)?; DEMO_BITLEN],
         vec![LWE::zero(0)?; DEMO_BITLEN],
@@ -273,7 +274,10 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
         *ci = pu.encrypt(*mi, DEMO_BITLEN)?;
         *mi_as = (*mi).signum() * ((*mi).abs() % (1 << DEMO_BITLEN));
     }
+    let cx = pu.encrypt(m_x, 4)?;
+    let cy = pu.encrypt(m_y, 4)?;
 
+    // print message
     let mut intro_text = format!("{} messages ({} bits taken)", String::from("User:").bold().yellow(), DEMO_BITLEN);
     for (i, (mi, mi_as)) in m.iter().zip(m_as.iter()).enumerate() {
         intro_text = format!("{}\nm_{} = {}{:032b} ({})", intro_text, i, if *mi >= 0 {""} else {"-"}, mi.abs(), mi_as);
@@ -284,23 +288,11 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     // =================================
     //  C: Evaluation
 
-    //DBG BEGIN
-    let  x   = pu.encrypt(0b1111,4)?;
-    let  y   = pu.encrypt(0b1011,4)?;
-    let xy   = pc.mul(//DBG
-                            &pu.priv_keys, &x, &y)?;
-
-    let xy_p = pu.decrypt(&xy)?;
-
-    infoln!("X Y = {}", xy_p);
-
-    return Ok(());
-    //DBG END
-
     let c_add = pc.add(&c[0], &c[1])?;
     let c_sub = pc.sub(&c[1], &c[0])?;
-    let c_sgn = pc.sgn(&c[2])?;
+    let c_sgn = pc.sgn(&c[2]       )?;
     let c_max = pc.max(&c[1], &c[0])?;
+    let c_xy  = pc.mul(&cx,   &cy  )?;
 
 
     // =================================
@@ -309,6 +301,7 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     let m_sub  = pu.decrypt(&c_sub)?;
     let m_sgn  = pu.decrypt(&c_sgn)?;
     let m_max  = pu.decrypt(&c_max)?;
+    let m_xy   = pu.decrypt(&c_xy )?;
 
     let mut summary_text = format!("{} results", String::from("User:").bold().yellow(),);
     summary_text = format!("{}\nm_0 + m_1 = {} :: {} (exp. {} % {})", summary_text,
@@ -329,6 +322,11 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
                             m_max,
                             if (std::cmp::max(m_as[1], m_as[0]) as i64 - m_max as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             std::cmp::max(m_as[1], m_as[0]), 1 << DEMO_BITLEN
+    );
+    summary_text = format!("{}\nx × y = {} :: {} (exp. {})", summary_text,
+                            m_xy,
+                            if m_x * m_y == m_xy {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x * m_y
     );
     infoln!("{}", summary_text);
 

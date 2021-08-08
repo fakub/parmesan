@@ -6,10 +6,6 @@ use concrete::LWE;
 #[allow(unused_imports)]
 use colored::Colorize;
 use crate::ciphertexts::ParmCiphertext;
-//DBG
-use crate::userovo::keys::PrivKeySet;
-//DBG
-use crate::params::Params;
 use crate::userovo::keys::PubKeySet;
 use super::pbs;
 
@@ -62,32 +58,30 @@ pub fn mul_lwe(
 
 /// Implementation of product of two ciphertexts using Karatsuba algorithm
 pub fn mul_impl(
-    //DBG
-    priv_keys: &PrivKeySet,
-    //DBG
-    params: &Params,
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
-    //TODO Karatsuba
-    Ok(mul_schoolbook_4word(
-            //DBG
-            priv_keys,
-            //DBG
-            params,
-            pub_keys,
-            x,
-            y,
-    )?)
+
+    let p: ParmCiphertext;
+
+    measure_duration!(
+        "Multiplication",
+        [
+            //TODO Karatsuba
+            p = mul_schoolbook_4word(
+                    pub_keys,
+                    x,
+                    y,
+            )?;
+        ]
+    );
+
+    Ok(p)
 }
 
 /// Implementation of product of two ciphertexts using O(n^2) schoolbook multiplication
 fn mul_schoolbook_4word(
-    //DBG
-    priv_keys: &PrivKeySet,
-    //DBG
-    params: &Params,
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
     y: &ParmCiphertext,
@@ -105,15 +99,6 @@ fn mul_schoolbook_4word(
         &x_yj[j..j+4].par_iter_mut().zip(x.par_iter()).for_each(| (xi_yj, xi) | {
             *xi_yj = mul_lwe(pub_keys, &xi, &yj).expect("mul_lwe failed.");
         });
-    });
-
-    dbgln!("mulary_4 filled:");
-    mulary_4.iter().for_each(|x_yj| {
-        x_yj.iter().for_each(|xi_yj| {
-            let p = crate::userovo::encryption::parm_decr_nibble(params, priv_keys, &xi_yj).expect("parm_decr_nibble failed.");
-            dbgln!("        {} (3-sigma: {} %)", p, 3. * xi_yj.variance.sqrt() * (1 << (xi_yj.encoder.nb_bit_precision+1)) as f64 * 100.);
-        });
-        dbgln!("----");
     });
 
     let mut mulary_2 = vec![vec![LWE::zero(0)?; 8]; 2];
@@ -134,34 +119,10 @@ fn mul_schoolbook_4word(
         &mulary_4[3],
     )?;
 
-    dbgln!("mulary_2 filled:");
-    mulary_2.iter().for_each(|x_yj| {
-        x_yj.iter().for_each(|xi_yj| {
-            let p = crate::userovo::encryption::parm_decr_nibble(params, priv_keys, &xi_yj).expect("parm_decr_nibble failed.");
-            dbgln!("        {} (3-sigma: {} %)", p, 3. * xi_yj.variance.sqrt() * (1 << (xi_yj.encoder.nb_bit_precision+1)) as f64 * 100.);
-        });
-        dbgln!("----");
-    });
-
-    //~ Ok(super::addition::add_sub_impl(
-        //~ true,
-        //~ pub_keys,
-        //~ &mulary_2[0],
-        //~ &mulary_2[1],
-    //~ )?)
-
-    let m = super::addition::add_sub_impl(
+    Ok(super::addition::add_sub_impl(
         true,
         pub_keys,
         &mulary_2[0],
         &mulary_2[1],
-    )?;
-
-    dbgln!("result:");
-    m.iter().for_each(|mi| {
-        let p = crate::userovo::encryption::parm_decr_nibble(params, priv_keys, &mi).expect("parm_decr_nibble failed.");
-            dbgln!("        {} (3-sigma: {} %)", p, 3. * mi.variance.sqrt() * (1 << (mi.encoder.nb_bit_precision+1)) as f64 * 100.);
-    });
-
-    Ok(m)
+    )?)
 }
