@@ -6,6 +6,27 @@ use colored::Colorize;
 use crate::userovo::keys::PubKeySet;
 
 //
+//  X (around zero)
+//
+pub fn id(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
+    crate::measure_duration!(
+        "PBS: Identity (around zero)",
+        [let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,2.,3.,4.,5.,6.,7.,8.,7.,6.,5.,4.,3.,2.,1.][x as usize], pub_keys.encoder)?
+                    .keyswitch(pub_keys.ksk)?;]
+    );
+
+    Ok(res)
+}
+
+//
 //  X (positive half)
 //
 pub fn pos_id(
