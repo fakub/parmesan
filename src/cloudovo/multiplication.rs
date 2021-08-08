@@ -29,25 +29,31 @@ pub fn mul_lwe(
         "Multiplication one-word (LWE × LWE)",
         [
             //TODO these can be done in parallel
-            // x + y
-            let mut add_sub: LWE = x.clone();
-            add_sub.add_uint_inplace(y)?;
+            // tmp = x + y
+            let mut tmp: LWE = x.clone();
+            tmp.add_uint_inplace(y)?;
             let pos: LWE = pbs::a_2__pi_5(
                 pub_keys,
-                &add_sub,
+                &tmp,
             )?;
 
-            // x - y
-            add_sub = x.clone();
-            add_sub.sub_uint_inplace(y)?;
+            // tmp = x - y
+            tmp = x.clone();
+            tmp.sub_uint_inplace(y)?;
             let neg: LWE = pbs::a_2__pi_5(
                 pub_keys,
-                &add_sub,
+                &tmp,
             )?;
 
+            // z = pos - neg
             z = pos.clone();
             z.sub_uint_inplace(&neg)?;
-            //TODO additional identity bootstrapping?
+
+            //TODO additional identity bootstrapping .. needed?
+            //~ z = pbs::id(
+                //~ pub_keys,
+                //~ &tmp,   // pos - neg
+            //~ )?;
         ]
     );
 
@@ -105,7 +111,7 @@ fn mul_schoolbook_4word(
     mulary_4.iter().for_each(|x_yj| {
         x_yj.iter().for_each(|xi_yj| {
             let p = crate::userovo::encryption::parm_decr_nibble(params, priv_keys, &xi_yj).expect("parm_decr_nibble failed.");
-            dbgln!("    {}", p);
+            dbgln!("        {} (3-sigma: {} %)", p, 3. * xi_yj.variance.sqrt() * (1 << (xi_yj.encoder.nb_bit_precision+1)) as f64 * 100.);
         });
         dbgln!("----");
     });
@@ -132,7 +138,7 @@ fn mul_schoolbook_4word(
     mulary_2.iter().for_each(|x_yj| {
         x_yj.iter().for_each(|xi_yj| {
             let p = crate::userovo::encryption::parm_decr_nibble(params, priv_keys, &xi_yj).expect("parm_decr_nibble failed.");
-            dbgln!("    {}", p);
+            dbgln!("        {} (3-sigma: {} %)", p, 3. * xi_yj.variance.sqrt() * (1 << (xi_yj.encoder.nb_bit_precision+1)) as f64 * 100.);
         });
         dbgln!("----");
     });
@@ -154,7 +160,7 @@ fn mul_schoolbook_4word(
     dbgln!("result:");
     m.iter().for_each(|mi| {
         let p = crate::userovo::encryption::parm_decr_nibble(params, priv_keys, &mi).expect("parm_decr_nibble failed.");
-        dbgln!("    {}", p);
+            dbgln!("        {} (3-sigma: {} %)", p, 3. * mi.variance.sqrt() * (1 << (mi.encoder.nb_bit_precision+1)) as f64 * 100.);
     });
 
     Ok(m)
