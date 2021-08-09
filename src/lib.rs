@@ -280,8 +280,10 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     // print message
     let mut intro_text = format!("{} messages ({} bits taken)", String::from("User:").bold().yellow(), DEMO_BITLEN);
     for (i, (mi, mi_as)) in m.iter().zip(m_as.iter()).enumerate() {
-        intro_text = format!("{}\nm_{} = {}{:032b} ({})", intro_text, i, if *mi >= 0 {""} else {"-"}, mi.abs(), mi_as);
+        intro_text = format!("{}\nm_{} = {}{:032b} ({})", intro_text, i, if *mi >= 0 {" "} else {"-"}, mi.abs(), mi_as);
     }
+    intro_text = format!("{}\nx = {}{:04b}", intro_text, if m_x >= 0 {" "} else {"-"}, m_x.abs());
+    intro_text = format!("{}\ny = {}{:04b}", intro_text, if m_y >= 0 {" "} else {"-"}, m_y.abs());
     infoln!("{}", intro_text);
 
 
