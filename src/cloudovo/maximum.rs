@@ -50,10 +50,7 @@ pub fn max_impl(
             // Parallel
             #[cfg(not(feature = "sequential"))]
             {
-                let dim = x[0].dimension;
-                let encoder = &x[0].encoder;
-
-                m = vec![LWE::zero_with_encoder(dim, encoder)?; x.len()];
+                m = vec![LWE::zero(0)?; x.len()];
 
                 // calc x and y selectors
                 m.par_iter_mut().zip(x.par_iter().zip(y.par_iter())).for_each(| (mi, (xi, yi)) | {

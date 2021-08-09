@@ -260,9 +260,11 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
         -0b01000100001010010111100000010101,
     ];
     let mut m_as: [i32; DEMO_N_MSGS] = [0,0,0];
-    // for multiplication (so far only 4bit)
-    let m_x = 0b1110;   // 14
-    let m_y = 0b1001;   //  9
+    // for multiplication
+    let m_x4 = 0b1110;      //  14
+    let m_y4 = 0b1001;      //   9
+    let m_x8 = 0b10010111;  // 151
+    let m_y8 = 0b10111010;  // 186
 
     // encrypt all values
     let mut c: [ParmCiphertext; DEMO_N_MSGS] = [
@@ -274,16 +276,20 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
         *ci = pu.encrypt(*mi, DEMO_BITLEN)?;
         *mi_as = (*mi).signum() * ((*mi).abs() % (1 << DEMO_BITLEN));
     }
-    let cx = pu.encrypt(m_x, 4)?;
-    let cy = pu.encrypt(m_y, 4)?;
+    let cx4 = pu.encrypt(m_x4, 4)?;
+    let cy4 = pu.encrypt(m_y4, 4)?;
+    let cx8 = pu.encrypt(m_x8, 8)?;
+    let cy8 = pu.encrypt(m_y8, 8)?;
 
     // print message
     let mut intro_text = format!("{} messages ({} bits taken)", String::from("User:").bold().yellow(), DEMO_BITLEN);
     for (i, (mi, mi_as)) in m.iter().zip(m_as.iter()).enumerate() {
         intro_text = format!("{}\nm_{} = {}{:032b} ({})", intro_text, i, if *mi >= 0 {" "} else {"-"}, mi.abs(), mi_as);
     }
-    intro_text = format!("{}\nx = {}{:04b}", intro_text, if m_x >= 0 {" "} else {"-"}, m_x.abs());
-    intro_text = format!("{}\ny = {}{:04b}", intro_text, if m_y >= 0 {" "} else {"-"}, m_y.abs());
+    intro_text = format!("{}\nx_4 = {}{:04b} ({})", intro_text, if m_x4 >= 0 {" "} else {"-"}, m_x4.abs(), m_x4);
+    intro_text = format!("{}\ny_4 = {}{:04b} ({})", intro_text, if m_y4 >= 0 {" "} else {"-"}, m_y4.abs(), m_y4);
+    intro_text = format!("{}\nx_8 = {}{:08b} ({})", intro_text, if m_x8 >= 0 {" "} else {"-"}, m_x8.abs(), m_x8);
+    intro_text = format!("{}\ny_8 = {}{:08b} ({})", intro_text, if m_y8 >= 0 {" "} else {"-"}, m_y8.abs(), m_y8);
     infoln!("{}", intro_text);
 
 
@@ -294,7 +300,8 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     let c_sub = pc.sub(&c[1], &c[0])?;
     let c_sgn = pc.sgn(&c[2]       )?;
     let c_max = pc.max(&c[1], &c[0])?;
-    let c_xy  = pc.mul(&cx,   &cy  )?;
+    let c_xy4 = pc.mul(&cx4,  &cy4 )?;
+    let c_xy8 = pc.mul(&cx8,  &cy8 )?;
 
 
     // =================================
@@ -303,32 +310,38 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     let m_sub  = pu.decrypt(&c_sub)?;
     let m_sgn  = pu.decrypt(&c_sgn)?;
     let m_max  = pu.decrypt(&c_max)?;
-    let m_xy   = pu.decrypt(&c_xy )?;
+    let m_xy4  = pu.decrypt(&c_xy4)?;
+    let m_xy8  = pu.decrypt(&c_xy8)?;
 
     let mut summary_text = format!("{} results", String::from("User:").bold().yellow(),);
-    summary_text = format!("{}\nm_0 + m_1 = {} :: {} (exp. {} % {})", summary_text,
+    summary_text = format!("{}\nm_0 + m_1     = {:6} :: {} (exp. {} % {})", summary_text,
                             m_add,
                             if (m[0] as i64 + m[1] as i64 - m_add as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             (m_as[0] as i64 + m_as[1] as i64) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
     );
-    summary_text = format!("{}\nm_1 - m_0 = {} :: {} (exp. {} % {})", summary_text,
+    summary_text = format!("{}\nm_1 - m_0     = {:6} :: {} (exp. {} % {})", summary_text,
                             m_sub,
                             if (m[1] as i64 - m[0] as i64 - m_sub as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             (m_as[1] as i64 - m_as[0] as i64) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
     );
-    summary_text = format!("{}\nsgn(m_2) = {} :: {}", summary_text,
+    summary_text = format!("{}\nsgn(m_2)      = {:6} :: {}", summary_text,
                             m_sgn,
                             if m_sgn == m[2].signum() {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
     );
-    summary_text = format!("{}\nmax{{m_1, m_0}} = {} :: {} (exp. {} % {})", summary_text,
+    summary_text = format!("{}\nmax{{m_1, m_0}} = {:6} :: {} (exp. {} % {})", summary_text,
                             m_max,
                             if (std::cmp::max(m_as[1], m_as[0]) as i64 - m_max as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             std::cmp::max(m_as[1], m_as[0]), 1 << DEMO_BITLEN
     );
-    summary_text = format!("{}\nx × y = {} :: {} (exp. {})", summary_text,
-                            m_xy,
-                            if m_x * m_y == m_xy {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            m_x * m_y
+    summary_text = format!("{}\nx_4 × y_4     = {:6} :: {} (exp. {})", summary_text,
+                            m_xy4,
+                            if m_x4 * m_y4 == m_xy4 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x4 * m_y4
+    );
+    summary_text = format!("{}\nx_8 × y_8     = {:6} :: {} (exp. {})", summary_text,
+                            m_xy8,
+                            if m_x8 * m_y8 == m_xy8 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x8 * m_y8
     );
     infoln!("{}", summary_text);
 

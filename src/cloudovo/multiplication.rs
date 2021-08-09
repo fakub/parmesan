@@ -68,61 +68,162 @@ pub fn mul_impl(
     measure_duration!(
         "Multiplication",
         [
-            //TODO Karatsuba
-            p = mul_schoolbook_4word(
-                    pub_keys,
-                    x,
-                    y,
-            )?;
+            //TODO
+            //  General bit-len:
+            //      Karatsuba for == 14 or >= 16, otherwise schoolbook (< 14 or 15)
+            //
+            //  32-bit:
+            //                /  8
+            //          16  ---  8
+            //        /       \  9
+            //       /
+            //      /         /  8
+            //  32  --- 16  ---  8
+            //      \         \  9
+            //       \
+            //        \       /  8
+            //          17  ---  9
+            //                \ 10
+            //
+            p = if x.len() == 4 {
+                mul_4word(
+                        pub_keys,
+                        x,
+                        y,
+                )?
+            } else {
+                mul_8word(
+                        pub_keys,
+                        x,
+                        y,
+                )?
+            };
         ]
     );
 
     Ok(p)
 }
 
-/// Implementation of product of two ciphertexts using O(n^2) schoolbook multiplication
-fn mul_schoolbook_4word(
+/// Implementation of product of two 8-word ciphertexts using O(n^2) schoolbook multiplication
+fn mul_8word(
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
-    if x.len() != 4 || y.len() != 4 {
+    // set word-length
+    const L: usize = 8;
+
+    // check lengths
+    if x.len() != L || y.len() != L {
         //TODO ...
-        return Err("Multiplication: schoolbook multiplication is only intended for two 4-word integers.".into());
+        return Err(format!("Two {}-word integers expected.", L).into());
     }
 
-    let mut mulary_4 = vec![vec![LWE::zero(0)?; 8]; 4];
-
-    //TODO try different approaches and compare
-    mulary_4.par_iter_mut().zip(y.par_iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
-        &x_yj[j..j+4].par_iter_mut().zip(x.par_iter()).for_each(| (xi_yj, xi) | {
+    // fill multiplication array   //TODO check the size, it might grow outsite due to redundant representation
+    let mut mulary_main = vec![vec![LWE::zero(0)?; 2*L]; L];
+    mulary_main.par_iter_mut().zip(y.par_iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
+        &x_yj[j..j+L].par_iter_mut().zip(x.par_iter()).for_each(| (xi_yj, xi) | {
             *xi_yj = mul_lwe(pub_keys, &xi, &yj).expect("mul_lwe failed.");
         });
     });
 
-    let mut mulary_2 = vec![vec![LWE::zero(0)?; 8]; 2];
-
-    //TODO in parallel
-    // mulary_2.par_iter_mut()
-
-    mulary_2[0] = super::addition::add_sub_impl(
+    // reduce multiplication array
+    let mut mulary_half = vec![vec![LWE::zero(0)?; 2*L]; L >> 1];   // L / 2
+    mulary_half[0] = super::addition::add_sub_noise_refresh(
         true,
         pub_keys,
-        &mulary_4[0],
-        &mulary_4[1],
+        &mulary_main[0],
+        &mulary_main[1],
     )?;
-    mulary_2[1] = super::addition::add_sub_impl(
+    mulary_half[1] = super::addition::add_sub_noise_refresh(
         true,
         pub_keys,
-        &mulary_4[2],
-        &mulary_4[3],
+        &mulary_main[2],
+        &mulary_main[3],
+    )?;
+    mulary_half[2] = super::addition::add_sub_noise_refresh(
+        true,
+        pub_keys,
+        &mulary_main[4],
+        &mulary_main[5],
+    )?;
+    mulary_half[3] = super::addition::add_sub_noise_refresh(
+        true,
+        pub_keys,
+        &mulary_main[6],
+        &mulary_main[7],
+    )?;
+    let mut mulary_quater = vec![vec![LWE::zero(0)?; 2*L]; L >> 2];   // L / 4
+    mulary_quater[0] = super::addition::add_sub_noise_refresh(
+        true,
+        pub_keys,
+        &mulary_half[0],
+        &mulary_half[1],
+    )?;
+    mulary_quater[1] = super::addition::add_sub_noise_refresh(
+        true,
+        pub_keys,
+        &mulary_half[2],
+        &mulary_half[3],
     )?;
 
+    // final step & return
     Ok(super::addition::add_sub_impl(
         true,
         pub_keys,
-        &mulary_2[0],
-        &mulary_2[1],
+        &mulary_quater[0],
+        &mulary_quater[1],
+    )?)
+}
+
+/// Implementation of product of two 4-word ciphertexts using O(n^2) schoolbook multiplication
+fn mul_4word(
+    pub_keys: &PubKeySet,
+    x: &ParmCiphertext,
+    y: &ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
+
+    // set word-length
+    const L: usize = 4;
+
+    // check lengths
+    if x.len() != L || y.len() != L {
+        //TODO ...
+        return Err(format!("Two {}-word integers expected.", L).into());
+    }
+
+    // fill multiplication array   //TODO check the size, it might grow outsite due to redundant representation
+    //TODO try different approaches and compare
+    let mut mulary_main = vec![vec![LWE::zero(0)?; 2*L]; L];
+    mulary_main.par_iter_mut().zip(y.par_iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
+        &x_yj[j..j+L].par_iter_mut().zip(x.par_iter()).for_each(| (xi_yj, xi) | {
+            *xi_yj = mul_lwe(pub_keys, &xi, &yj).expect("mul_lwe failed.");
+        });
+    });
+
+    // reduce multiplication array
+    //TODO in parallel
+    // mulary_half.par_iter_mut()
+    let mut mulary_half = vec![vec![LWE::zero(0)?; 2*L]; L >> 1];   // L / 2
+    mulary_half[0] = super::addition::add_sub_noise_refresh(
+        true,
+        pub_keys,
+        &mulary_main[0],
+        &mulary_main[1],
+    )?;
+    mulary_half[1] = super::addition::add_sub_noise_refresh(
+        true,
+        pub_keys,
+        &mulary_main[2],
+        &mulary_main[3],
+    )?;
+
+    // final step & return
+    Ok(super::addition::add_sub_impl(
+        true,
+        pub_keys,
+        &mulary_half[0],
+        &mulary_half[1],
     )?)
 }

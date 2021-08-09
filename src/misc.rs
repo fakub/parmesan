@@ -22,7 +22,7 @@ macro_rules! measure_duration {   //WISH add ON/OFF feature
         } else if __time < 1_000_000. {
             String::from(format!("{} ms", __time / 1_000.    )).blue()
         } else {
-            String::from(format!("{} s",  __time / 1_000_000.)).cyan().bold()
+            String::from(format!("{:.3} s",  __time / 1_000_000.)).cyan().bold()
         };
         // decrease log level back
         unsafe {

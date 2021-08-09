@@ -59,82 +59,82 @@ pub fn sgn_recursion_raw(
     // Parallel
     #[cfg(not(feature = "sequential"))]
     {
-    measure_duration!(
-        "Signum recursion in parallel",
-        [
-            infoln!("length {} bits, groups by {} bits", x.len(), gamma);
+        measure_duration!(
+            "Signum recursion in parallel",
+            [
+                infoln!("length {} bits, groups by {} bits", x.len(), gamma);
 
-            let mut b: ParmCiphertext = vec![LWE::zero_with_encoder(dim, encoder)?; (x.len() - 1) / gamma + 1];
+                let mut b: ParmCiphertext = vec![LWE::zero_with_encoder(dim, encoder)?; (x.len() - 1) / gamma + 1];
 
-            // the thread needs to know the index j so that it can check against x.len()
-            b.par_iter_mut().enumerate().for_each(| (j, bj) | {
+                // the thread needs to know the index j so that it can check against x.len()
+                b.par_iter_mut().enumerate().for_each(| (j, bj) | {
 
-                let mut sj: ParmCiphertext = vec![LWE::zero_with_encoder(dim, encoder).expect("LWE::zero_with_encoder failed."); gamma];
+                    let mut sj: ParmCiphertext = vec![LWE::zero(0).expect("LWE::zero failed."); gamma];
 
-                sj.par_iter_mut().enumerate().for_each(| (i, sji) | {
-                    if gamma * j + i < x.len() {
-                        *sji = pbs::f_1__pi_5__with_val(
-                            pub_keys,
-                            &x[gamma * j + i],
-                            1 << i,
-                        ).expect("pbs::f_1__pi_5__with_val failed.");
+                    sj.par_iter_mut().enumerate().for_each(| (i, sji) | {
+                        if gamma * j + i < x.len() {
+                            *sji = pbs::f_1__pi_5__with_val(
+                                pub_keys,
+                                &x[gamma * j + i],
+                                1 << i,
+                            ).expect("pbs::f_1__pi_5__with_val failed.");
+                        }
+                    });
+
+                    // possibly exchange for parallel reduction (negligible effect expected)
+                    for sji in sj {
+                        bj.add_uint_inplace(&sji).expect("add_uint_inplace failed.");
                     }
                 });
 
-                // possibly exchange for parallel reduction (negligible effect expected)
-                for sji in sj {
-                    bj.add_uint_inplace(&sji).expect("add_uint_inplace failed.");
-                }
-            });
-
-            s = sgn_recursion_raw(
-                gamma,
-                pub_keys,
-                &b,
-            )?;
-        ]
-    );
+                s = sgn_recursion_raw(
+                    gamma,
+                    pub_keys,
+                    &b,
+                )?;
+            ]
+        );
     }
 
     // Sequential
     #[cfg(feature = "sequential")]
     {
-    measure_duration!(
-        "Signum recursion sequential",
-        [
-            infoln!("length {} bits, groups by {} bits", x.len(), gamma);
+        measure_duration!(
+            "Signum recursion sequential",
+            [
+                infoln!("length {} bits, groups by {} bits", x.len(), gamma);
 
-            let mut b: ParmCiphertext = Vec::new();
+                let mut b: ParmCiphertext = Vec::new();
 
-            for j in 0..((x.len() - 1) / gamma + 1) {
-                let mut bj: LWE = LWE::zero_with_encoder(dim, encoder)?;
+                for j in 0..((x.len() - 1) / gamma + 1) {
+                    let mut bj: LWE = LWE::zero_with_encoder(dim, encoder)?;
 
-                for i in 0..gamma {
-                    let si: LWE;
+                    for i in 0..gamma {
+                        let si: LWE;
 
-                    if gamma * j + i < x.len() {
-                        si = pbs::f_1__pi_5__with_val(
-                            pub_keys,
-                            &x[gamma * j + i],
-                            1 << i,
-                        )?;
-                    } else {
-                        si = LWE::zero_with_encoder(dim, encoder)?;
+                        if gamma * j + i < x.len() {
+                            si = pbs::f_1__pi_5__with_val(
+                                pub_keys,
+                                &x[gamma * j + i],
+                                1 << i,
+                            )?;
+                        } else {
+                            si = LWE::zero(0)?;
+                        }
+
+                        bj.add_uint_inplace(&si)?;
                     }
 
-                    bj.add_uint_inplace(&si)?;
+                    b.push(bj);
                 }
 
-                b.push(bj);
-            }
-
-            s = sgn_recursion_raw(
-                gamma,
-                pub_keys,
-                &b,
-            )?;
-        ]
-    );
+                s = sgn_recursion_raw(
+                    gamma,
+                    pub_keys,
+                    &b,
+                )?;
+            ]
+        );
     }
 
     Ok(s)
