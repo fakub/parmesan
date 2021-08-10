@@ -55,9 +55,9 @@ pub fn add_sub_impl(
                 // w = x + y
                 // -----------------------------------------------------------------
                 // sequential approach (6-bit: 50-70 us)
-                measure_duration!(
-                "w = x + y (seq)",
-                [
+                //~ measure_duration!(
+                //~ "w = x + y (seq)",
+                //~ [
                     if is_add {
                         for (wi, yi) in w.iter_mut().zip(y.iter()) {
                             wi.add_uint_inplace(&yi)?;
@@ -67,7 +67,7 @@ pub fn add_sub_impl(
                             wi.sub_uint_inplace(&yi)?;
                         }
                     }
-                ]);
+                //~ ]);
                 // parallel approach (6-bit: 110-130 us)
                 //~ measure_duration!(
                 //~ "w = x + y (par)",

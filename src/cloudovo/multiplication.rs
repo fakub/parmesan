@@ -480,9 +480,9 @@ fn mul_lwe(
     //~ let mut pos = &pos_neg[0];
     //~ let mut neg = &pos_neg[1];
 
-    measure_duration!(
-        "Multiplication one-word (LWE × LWE)",
-        [
+    //~ measure_duration!(
+        //~ "Multiplication LWE × LWE",
+        //~ [
             //TODO these can be done in parallel
             // tmp = x + y
             let mut tmp: LWE = x.clone();
@@ -509,8 +509,8 @@ fn mul_lwe(
                 //~ pub_keys,
                 //~ &tmp,   // pos - neg
             //~ )?;
-        ]
-    );
+        //~ ]
+    //~ );
 
     Ok(z)
 }
