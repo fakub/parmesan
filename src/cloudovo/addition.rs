@@ -40,7 +40,7 @@ pub fn add_sub_impl(
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
-    //WISH add ciphertexts with different lengths (fill with zeros)
+    //TODO add ciphertexts with different lengths & with overlap (in particular, right overlap can only be copied)
 
     let mut z: ParmCiphertext;
 
