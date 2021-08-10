@@ -65,45 +65,164 @@ pub fn mul_impl(
 
     let p: ParmCiphertext;
 
-    measure_duration!(
-        "Multiplication",
-        [
-            //TODO
-            //  General bit-len:
-            //      Karatsuba for == 14 or >= 16, otherwise schoolbook (< 14 or 15)
-            //
-            //  32-bit:
-            //                /  8
-            //          16  ---  8
-            //        /       \  9
-            //       /
-            //      /         /  8
-            //  32  --- 16  ---  8
-            //      \         \  9
-            //       \
-            //        \       /  8
-            //          17  ---  9
-            //                \ 10
-            //
+    //TODO
+    //  General bit-len:
+    //      Karatsuba for == 14 or >= 16, otherwise schoolbook (< 14 or 15)
+    //
+    //  32-bit:
+    //                /  8
+    //          16  ---  8
+    //        /       \  9
+    //       /
+    //      /         /  8
+    //  32  --- 16  ---  8
+    //      \         \  9
+    //       \
+    //        \       /  8
+    //          17  ---  9
+    //                \ 10
+    //
 
-            p = match x.len() {
-                l if l == 1 => mul_1word(
-                        pub_keys,
-                        x,
-                        y,
-                )?,
-                l if l > 1 => mul_multiword(
-                        l,
-                        pub_keys,
-                        x,
-                        y,
-                )?,
-                _ => return Err(format!("Multiplication for {}-word integers not implemented.", x.len()).into()),
-            };
+    p = match x.len() {
+        l if l == 1 => mul_1word(
+            pub_keys,
+            x,
+            y,
+        )?,
+        l if l < 14 || l == 15 => mul_multiword(
+            l,
+            pub_keys,
+            x,
+            y,
+        )?,
+        l if l == 16 => mul_karatsuba16(
+            pub_keys,
+            x,
+            y,
+        )?,
+        //~ l if l == 17 => mul_karatsuba17(
+            //~ pub_keys,
+            //~ x,
+            //~ y,
+        //~ )?,
+        //~ l if l == 32 => mul_karatsuba32(
+            //~ pub_keys,
+            //~ x,
+            //~ y,
+        //~ )?,
+        _ => return Err(format!("Multiplication for {}-word integers not implemented.", x.len()).into()),
+    };
+
+    Ok(p)
+}
+
+/// Implementation of product of two 4-word ciphertexts using O(n^2) schoolbook multiplication
+fn mul_karatsuba16(
+    pub_keys: &PubKeySet,
+    x: &ParmCiphertext,
+    y: &ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
+
+    assert_eq!(x.len(), 16);
+    assert_eq!(y.len(), 16);
+
+    //  x = | x_1 | x_0 |
+    //  y = | y_1 | y_0 |
+    let mut x0: ParmCiphertext = Vec::new();
+    let mut x1: ParmCiphertext = Vec::new();
+    let mut y0: ParmCiphertext = Vec::new();
+    let mut y1: ParmCiphertext = Vec::new();
+
+    for (i, (xi, yi)) in x.iter().zip(y.iter()).enumerate() {
+        if i < 8 {
+            x0.push(xi.clone());
+            y0.push(yi.clone());
+        } else {
+            x1.push(xi.clone());
+            y1.push(yi.clone());
+        }
+    }
+
+    measure_duration!(
+        "Multiplication Karatsuba 16-word",
+        [
+            //  A = x_1 * y_1                   .. 8-bit
+            let mut a = mul_impl(
+                pub_keys,
+                &x1,
+                &y1,
+            )?;
+
+            //  B = x_0 * y_0                   .. 8-bit
+            let mut b = mul_impl(
+                pub_keys,
+                &x0,
+                &y0,
+            )?;
+
+            //  C = (x_0 + x_1) * (y_0 + y_1)   .. 9-bit
+            x0.push(LWE::zero(0)?);
+            x1.push(LWE::zero(0)?);
+            y0.push(LWE::zero(0)?);
+            y1.push(LWE::zero(0)?);
+            let x01 = super::addition::add_sub_noise_refresh(
+                true,
+                pub_keys,
+                &x0,
+                &x1,
+            )?;
+            let y01 = super::addition::add_sub_noise_refresh(
+                true,
+                pub_keys,
+                &y0,
+                &y1,
+            )?;
+            let mut c = vec![LWE::zero(0)?; 8];
+            let mut c_plain = mul_impl(
+                pub_keys,
+                &x01,
+                &y01,
+            )?;
+            c.append(&mut c_plain);
+
+            //  A + B .. -A - B
+            let papb = super::addition::add_sub_noise_refresh(
+                true,
+                pub_keys,
+                &a,
+                &b,
+            )?;
+            let mut nanb = vec![LWE::zero(0)?; 8];
+            for abi in papb {
+                nanb.push(abi.opposite_uint()?);
+            }
+
+            //  B <- | A | B |
+            b.append(&mut a);
+
+            //  |   A   |   B   |   in b
+            //     |    C   |       in c
+            //      |  -A   |       in nanb
+            //      |  -B   |       -- " --
+
+            //  | A | B |   +   |  C |..
+            let abc = super::addition::add_sub_noise_refresh(
+                true,
+                pub_keys,
+                &b,
+                &c,
+            )?;
+
+            let res = super::addition::add_sub_impl(
+                true,
+                pub_keys,
+                &abc,
+                &nanb,
+            )?;
         ]
     );
 
-    Ok(p)
+    Ok(res)
 }
 
 /// Implementation of product of two 4-word ciphertexts using O(n^2) schoolbook multiplication
@@ -114,33 +233,38 @@ fn mul_multiword(
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
-    // calc multiplication array
-    let mulary_main = fill_mulary(
-        len,
-        pub_keys,
-        x,
-        y,
-    )?;
+    measure_duration!(
+        "Multiplication multi-word (schoolbook)",
+        [
+            // calc multiplication array
+            let mulary_main = fill_mulary(
+                len,
+                pub_keys,
+                x,
+                y,
+            )?;
 
-    // reduce multiplication array
-    let mut intmd = vec![vec![LWE::zero(0)?; 2*len]; 2];
-    let mut idx = 0usize;
-    intmd[idx] = super::addition::add_sub_noise_refresh(
-        true,
-        pub_keys,
-        &mulary_main[0],
-        &mulary_main[1],
-    )?;
+            // reduce multiplication array
+            let mut intmd = vec![vec![LWE::zero(0)?; 2*len]; 2];
+            let mut idx = 0usize;
+            intmd[idx] = super::addition::add_sub_noise_refresh(
+                true,
+                pub_keys,
+                &mulary_main[0],
+                &mulary_main[1],
+            )?;
 
-    for i in 2..len {
-        idx ^= 1;
-        intmd[idx] = super::addition::add_sub_noise_refresh(
-            true,
-            pub_keys,
-            &intmd[idx ^ 1],
-            &mulary_main[i],
-        )?;
-    }
+            for i in 2..len {
+                idx ^= 1;
+                intmd[idx] = super::addition::add_sub_noise_refresh(
+                    true,
+                    pub_keys,
+                    &intmd[idx ^ 1],
+                    &mulary_main[i],
+                )?;
+            }
+        ]
+    );
 
     Ok(intmd[idx].clone())
 }
@@ -155,13 +279,18 @@ fn mul_1word(
     // set word-length
     const L: usize = 1;
 
-    // calc multiplication array
-    let mulary_main = fill_mulary(
-        L,
-        pub_keys,
-        x,
-        y,
-    )?;
+    measure_duration!(
+        "Multiplication 1-word",
+        [
+            // calc multiplication array
+            let mulary_main = fill_mulary(
+                L,
+                pub_keys,
+                x,
+                y,
+            )?;
+        ]
+    );
 
     Ok(mulary_main[0].clone())
 }
