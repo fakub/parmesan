@@ -1,1 +1,1 @@
-reset ; cargo run | aha --black > ../parmesan/logs/<version>/<machine-type-processor>/<sequential|parallel>.html
+reset ; RUSTFLAGS="-C target-cpu=native" cargo run --release | aha --black > ../parmesan/logs/<version>/<machine-type-processor>/<sequential|parallel>.html

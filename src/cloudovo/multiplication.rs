@@ -58,15 +58,124 @@ pub fn mul_impl(
             x,
             y,
         )?,
-        //~ l if l == 32 => mul_karatsuba32(
-            //~ pub_keys,
-            //~ x,
-            //~ y,
-        //~ )?,
+        l if l == 32 => mul_karatsuba32(
+            pub_keys,
+            x,
+            y,
+        )?,
         _ => return Err(format!("Multiplication for {}-word integers not implemented.", x.len()).into()),
     };
 
     Ok(p)
+}
+
+/// Implementation of product of two 32-word ciphertexts using Karatsuba recursion
+fn mul_karatsuba32(
+    pub_keys: &PubKeySet,
+    x: &ParmCiphertext,
+    y: &ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
+
+    assert_eq!(x.len(), 32);
+    assert_eq!(y.len(), 32);
+
+    //  x = | x_1 | x_0 |
+    //  y = | y_1 | y_0 |
+    let mut x0: ParmCiphertext = Vec::new();
+    let mut x1: ParmCiphertext = Vec::new();
+    let mut y0: ParmCiphertext = Vec::new();
+    let mut y1: ParmCiphertext = Vec::new();
+
+    for (i, (xi, yi)) in x.iter().zip(y.iter()).enumerate() {
+        if i < 16 {
+            x0.push(xi.clone());
+            y0.push(yi.clone());
+        } else {
+            x1.push(xi.clone());
+            y1.push(yi.clone());
+        }
+    }
+
+    measure_duration!(
+        "Multiplication Karatsuba 32-word",
+        [
+            //  A = x_1 * y_1                   .. 16-bit
+            let mut a = mul_impl(
+                pub_keys,
+                &x1,
+                &y1,
+            )?;
+
+            //  B = x_0 * y_0                   .. 16-bit
+            let mut b = mul_impl(
+                pub_keys,
+                &x0,
+                &y0,
+            )?;
+
+            //  C = (x_0 + x_1) * (y_0 + y_1)   .. 17-bit
+            x0.push(LWE::zero(0)?);
+            x1.push(LWE::zero(0)?);
+            y0.push(LWE::zero(0)?);
+            y1.push(LWE::zero(0)?);
+            let x01 = super::addition::add_sub_noise_refresh(
+                true,
+                pub_keys,
+                &x0,
+                &x1,
+            )?;
+            let y01 = super::addition::add_sub_noise_refresh(
+                true,
+                pub_keys,
+                &y0,
+                &y1,
+            )?;
+            let mut c = vec![LWE::zero(0)?; 16];
+            let mut c_plain = mul_impl(
+                pub_keys,
+                &x01,
+                &y01,
+            )?;
+            c.append(&mut c_plain);
+
+            //  A + B .. -A - B
+            let papb = super::addition::add_sub_noise_refresh(
+                true,
+                pub_keys,
+                &a,
+                &b,
+            )?;
+            let mut nanb = vec![LWE::zero(0)?; 16];
+            for abi in papb {
+                nanb.push(abi.opposite_uint()?);
+            }
+
+            //  B <- | A | B |
+            b.append(&mut a);
+
+            //  |   A   |   B   |   in b
+            //     |    C   |       in c
+            //      |  -A   |       in nanb
+            //      |  -B   |       -- " --
+
+            //  | A | B |   +   |  C |..
+            let abc = super::addition::add_sub_noise_refresh(
+                true,
+                pub_keys,
+                &b,
+                &c,
+            )?;
+
+            let res = super::addition::add_sub_impl(
+                true,
+                pub_keys,
+                &abc,
+                &nanb,
+            )?;
+        ]
+    );
+
+    Ok(res)
 }
 
 /// Implementation of product of two 17-word ciphertexts using Karatsuba recursion

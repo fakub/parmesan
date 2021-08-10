@@ -245,13 +245,15 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     let m_x1 =  0b1;
     let m_y1 = -0b1;
     let m_x4 =  0b1110;                 //    14
-    let m_y4 =  0b1001;                 //     9    ->       126
+    let m_y4 =  0b1001;                 //     9    ->         126
     let m_x8 =  0b10010111;             //   151
-    let m_y8 =  0b10111010;             //   186    ->     28086
+    let m_y8 =  0b10111010;             //   186    ->       28086
     let m_x16=  0b110000101101011i64;   // 24939
-    let m_y16=  0b100011010100001i64;   // 18081    -> 450922059
+    let m_y16=  0b100011010100001i64;   // 18081    ->   450922059
     let m_x17=  0b1111011001001001i64;  // 63049
-    let m_y17=  0b1001000111110011i64;  // 37363    ->2355699787 which is more than 2^31 - 1
+    let m_y17=  0b1001000111110011i64;  // 37363    ->  2355699787 which is more than 2^31 - 1
+    let m_x32=  0b01100110010010111011011001100110i64;  // 1716237926
+    let m_y32=  0b01001011100111010100110001010100i64;  // 1268599892   ->  2177219247569903992 which fits 63 bits (i64)
 
     // encrypt all values
     let mut c: [ParmCiphertext; DEMO_N_MSGS] = [
@@ -273,6 +275,8 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     let cy16= pu.encrypt(m_y16 as i32, 16)?;
     let cx17= pu.encrypt(m_x17 as i32, 17)?;
     let cy17= pu.encrypt(m_y17 as i32, 17)?;
+    let cx32= pu.encrypt(m_x32 as i32, 32)?;
+    let cy32= pu.encrypt(m_y32 as i32, 32)?;
 
     // print message
     let mut intro_text = format!("{} messages ({} bits taken)", String::from("User:").bold().yellow(), DEMO_BITLEN);
@@ -289,79 +293,88 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     intro_text = format!("{}\ny_16 = {}{:016b} ({})", intro_text, if m_y16 >= 0 {" "} else {"-"}, m_y16.abs(), m_y16);
     intro_text = format!("{}\nx_17 = {}{:017b} ({})", intro_text, if m_x17 >= 0 {" "} else {"-"}, m_x17.abs(), m_x17);
     intro_text = format!("{}\ny_17 = {}{:017b} ({})", intro_text, if m_y17 >= 0 {" "} else {"-"}, m_y17.abs(), m_y17);
+    intro_text = format!("{}\nx_32 = {}{:032b} ({})", intro_text, if m_x32 >= 0 {" "} else {"-"}, m_x32.abs(), m_x32);
+    intro_text = format!("{}\ny_32 = {}{:032b} ({})", intro_text, if m_y32 >= 0 {" "} else {"-"}, m_y32.abs(), m_y32);
     infoln!("{}", intro_text);
 
 
     // =================================
     //  C: Evaluation
 
-    let c_add = pc.add(&c[0], &c[1])?;
-    let c_sub = pc.sub(&c[1], &c[0])?;
-    let c_sgn = pc.sgn(&c[2]       )?;
-    let c_max = pc.max(&c[1], &c[0])?;
-    let c_xy1  = pc.mul(&cx1,  &cy1 )?;
-    let c_xy4  = pc.mul(&cx4,  &cy4 )?;
-    let c_xy8  = pc.mul(&cx8,  &cy8 )?;
-    let c_xy16 = pc.mul(&cx16, &cy16)?;
-    let c_xy17 = pc.mul(&cx17, &cy17)?;
+    //~ let c_add = pc.add(&c[0], &c[1])?;
+    //~ let c_sub = pc.sub(&c[1], &c[0])?;
+    //~ let c_sgn = pc.sgn(&c[2]       )?;
+    //~ let c_max = pc.max(&c[1], &c[0])?;
+    //~ let c_xy1  = pc.mul(&cx1,  &cy1 )?;
+    //~ let c_xy4  = pc.mul(&cx4,  &cy4 )?;
+    //~ let c_xy8  = pc.mul(&cx8,  &cy8 )?;
+    //~ let c_xy16 = pc.mul(&cx16, &cy16)?;
+    //~ let c_xy17 = pc.mul(&cx17, &cy17)?;
+    let c_xy32 = pc.mul(&cx32, &cy32)?;
 
 
     // =================================
     //  U: Decryption
-    let m_add  = pu.decrypt(&c_add )? as i32;
-    let m_sub  = pu.decrypt(&c_sub )? as i32;
-    let m_sgn  = pu.decrypt(&c_sgn )? as i32;
-    let m_max  = pu.decrypt(&c_max )? as i32;
-    let m_xy1  = pu.decrypt(&c_xy1 )? as i32;
-    let m_xy4  = pu.decrypt(&c_xy4 )? as i32;
-    let m_xy8  = pu.decrypt(&c_xy8 )? as i32;
-    let m_xy16 = pu.decrypt(&c_xy16)?;
-    let m_xy17 = pu.decrypt(&c_xy17)?;
+    //~ let m_add  = pu.decrypt(&c_add )? as i32;
+    //~ let m_sub  = pu.decrypt(&c_sub )? as i32;
+    //~ let m_sgn  = pu.decrypt(&c_sgn )? as i32;
+    //~ let m_max  = pu.decrypt(&c_max )? as i32;
+    //~ let m_xy1  = pu.decrypt(&c_xy1 )? as i32;
+    //~ let m_xy4  = pu.decrypt(&c_xy4 )? as i32;
+    //~ let m_xy8  = pu.decrypt(&c_xy8 )? as i32;
+    //~ let m_xy16 = pu.decrypt(&c_xy16)?;
+    //~ let m_xy17 = pu.decrypt(&c_xy17)?;
+    let m_xy32 = pu.decrypt(&c_xy32)?;
 
     let mut summary_text = format!("{} results", String::from("User:").bold().yellow(),);
-    summary_text = format!("{}\nm_0 + m_1     = {:12} :: {} (exp. {} % {})", summary_text,
-                            m_add,
-                            if (m[0] as i64 + m[1] as i64 - m_add as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            (m_as[0] as i64 + m_as[1] as i64) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
-    );
-    summary_text = format!("{}\nm_1 - m_0     = {:12} :: {} (exp. {} % {})", summary_text,
-                            m_sub,
-                            if (m[1] as i64 - m[0] as i64 - m_sub as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            (m_as[1] as i64 - m_as[0] as i64) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
-    );
-    summary_text = format!("{}\nsgn(m_2)      = {:12} :: {}", summary_text,
-                            m_sgn,
-                            if m_sgn == m[2].signum() {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-    );
-    summary_text = format!("{}\nmax{{m_1, m_0}} = {:12} :: {} (exp. {} % {})", summary_text,
-                            m_max,
-                            if (std::cmp::max(m_as[1], m_as[0]) as i64 - m_max as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            std::cmp::max(m_as[1], m_as[0]), 1 << DEMO_BITLEN
-    );
-    summary_text = format!("{}\nx_1 × y_1     = {:12} :: {} (exp. {})", summary_text,
-                            m_xy1,
-                            if m_x1 * m_y1 == m_xy1 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            m_x1 * m_y1
-    );
-    summary_text = format!("{}\nx_4 × y_4     = {:12} :: {} (exp. {})", summary_text,
-                            m_xy4,
-                            if m_x4 * m_y4 == m_xy4 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            m_x4 * m_y4
-    );
-    summary_text = format!("{}\nx_8 × y_8     = {:12} :: {} (exp. {})", summary_text,
-                            m_xy8,
-                            if m_x8 * m_y8 == m_xy8 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            m_x8 * m_y8
-    );
-    summary_text = format!("{}\nx_16 × y_16   = {:12} :: {} (exp. {})", summary_text,
-                            m_xy16,
-                            if m_x16 * m_y16 == m_xy16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            m_x16 * m_y16
-    );
-    summary_text = format!("{}\nx_17 × y_17   = {:12} :: {} (exp. {})", summary_text,
-                            m_xy17,
-                            if m_x17 * m_y17 == m_xy17 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            m_x17 * m_y17
+    //~ summary_text = format!("{}\nm_0 + m_1     = {:12} :: {} (exp. {} % {})", summary_text,
+                            //~ m_add,
+                            //~ if (m[0] as i64 + m[1] as i64 - m_add as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            //~ (m_as[0] as i64 + m_as[1] as i64) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
+    //~ );
+    //~ summary_text = format!("{}\nm_1 - m_0     = {:12} :: {} (exp. {} % {})", summary_text,
+                            //~ m_sub,
+                            //~ if (m[1] as i64 - m[0] as i64 - m_sub as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            //~ (m_as[1] as i64 - m_as[0] as i64) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
+    //~ );
+    //~ summary_text = format!("{}\nsgn(m_2)      = {:12} :: {}", summary_text,
+                            //~ m_sgn,
+                            //~ if m_sgn == m[2].signum() {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+    //~ );
+    //~ summary_text = format!("{}\nmax{{m_1, m_0}} = {:12} :: {} (exp. {} % {})", summary_text,
+                            //~ m_max,
+                            //~ if (std::cmp::max(m_as[1], m_as[0]) as i64 - m_max as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            //~ std::cmp::max(m_as[1], m_as[0]), 1 << DEMO_BITLEN
+    //~ );
+    //~ summary_text = format!("{}\nx_1 × y_1     = {:12} :: {} (exp. {})", summary_text,
+                            //~ m_xy1,
+                            //~ if m_x1 * m_y1 == m_xy1 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            //~ m_x1 * m_y1
+    //~ );
+    //~ summary_text = format!("{}\nx_4 × y_4     = {:12} :: {} (exp. {})", summary_text,
+                            //~ m_xy4,
+                            //~ if m_x4 * m_y4 == m_xy4 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            //~ m_x4 * m_y4
+    //~ );
+    //~ summary_text = format!("{}\nx_8 × y_8     = {:12} :: {} (exp. {})", summary_text,
+                            //~ m_xy8,
+                            //~ if m_x8 * m_y8 == m_xy8 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            //~ m_x8 * m_y8
+    //~ );
+    //~ summary_text = format!("{}\nx_16 × y_16   = {:12} :: {} (exp. {})", summary_text,
+                            //~ m_xy16,
+                            //~ if m_x16 * m_y16 == m_xy16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            //~ m_x16 * m_y16
+    //~ );
+    //~ summary_text = format!("{}\nx_17 × y_17   = {:12} :: {} (exp. {})", summary_text,
+                            //~ m_xy17,
+                            //~ if m_x17 * m_y17 == m_xy17 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            //~ m_x17 * m_y17
+    //~ );
+    summary_text = format!("{}\nx_32 × y_32   = {:24} :: {} (exp. {})", summary_text,
+                            m_xy32,
+                            if m_x32 * m_y32 == m_xy32 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x32 * m_y32
     );
     infoln!("{}", summary_text);
 
