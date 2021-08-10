@@ -9,53 +9,6 @@ use crate::ciphertexts::ParmCiphertext;
 use crate::userovo::keys::PubKeySet;
 use super::pbs;
 
-/// Implementation of one-word multiplication
-pub fn mul_lwe(
-    pub_keys: &PubKeySet,
-    x: &LWE,
-    y: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
-
-    let mut z: LWE;
-    //~ let mut pos_neg = vec![LWE::zero(0)?; 2];
-    //~ let mut pos = &pos_neg[0];
-    //~ let mut neg = &pos_neg[1];
-
-    measure_duration!(
-        "Multiplication one-word (LWE × LWE)",
-        [
-            //TODO these can be done in parallel
-            // tmp = x + y
-            let mut tmp: LWE = x.clone();
-            tmp.add_uint_inplace(y)?;
-            let pos: LWE = pbs::a_2__pi_5(
-                pub_keys,
-                &tmp,
-            )?;
-
-            // tmp = x - y
-            tmp = x.clone();
-            tmp.sub_uint_inplace(y)?;
-            let neg: LWE = pbs::a_2__pi_5(
-                pub_keys,
-                &tmp,
-            )?;
-
-            // z = pos - neg
-            z = pos.clone();
-            z.sub_uint_inplace(&neg)?;
-
-            //TODO additional identity bootstrapping .. needed?
-            //~ z = pbs::id(
-                //~ pub_keys,
-                //~ &tmp,   // pos - neg
-            //~ )?;
-        ]
-    );
-
-    Ok(z)
-}
-
 /// Implementation of product of two ciphertexts using Karatsuba algorithm
 pub fn mul_impl(
     pub_keys: &PubKeySet,
@@ -100,11 +53,11 @@ pub fn mul_impl(
             x,
             y,
         )?,
-        //~ l if l == 17 => mul_karatsuba17(
-            //~ pub_keys,
-            //~ x,
-            //~ y,
-        //~ )?,
+        l if l == 17 => mul_karatsuba17(
+            pub_keys,
+            x,
+            y,
+        )?,
         //~ l if l == 32 => mul_karatsuba32(
             //~ pub_keys,
             //~ x,
@@ -116,7 +69,118 @@ pub fn mul_impl(
     Ok(p)
 }
 
-/// Implementation of product of two 4-word ciphertexts using O(n^2) schoolbook multiplication
+/// Implementation of product of two 17-word ciphertexts using Karatsuba recursion
+fn mul_karatsuba17(
+    pub_keys: &PubKeySet,
+    x: &ParmCiphertext,
+    y: &ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
+
+    assert_eq!(x.len(), 17);
+    assert_eq!(y.len(), 17);
+
+    //  x = | x_1 | x_0 |   ..   | 8- | 9-bit |
+    //  y = | y_1 | y_0 |
+    let mut x0: ParmCiphertext = Vec::new();
+    let mut x1: ParmCiphertext = Vec::new();
+    let mut y0: ParmCiphertext = Vec::new();
+    let mut y1: ParmCiphertext = Vec::new();
+
+    for (i, (xi, yi)) in x.iter().zip(y.iter()).enumerate() {
+        if i < 9 {
+            x0.push(xi.clone());
+            y0.push(yi.clone());
+        } else {
+            x1.push(xi.clone());
+            y1.push(yi.clone());
+        }
+    }
+
+    measure_duration!(
+        "Multiplication Karatsuba 17-word",
+        [
+            //  A = x_1 * y_1                   ..  8-bit
+            let mut a = mul_impl(
+                pub_keys,
+                &x1,
+                &y1,
+            )?;
+
+            //  B = x_0 * y_0                   ..  9-bit
+            let mut b = mul_impl(
+                pub_keys,
+                &x0,
+                &y0,
+            )?;
+
+            //  C = (x_0 + x_1) * (y_0 + y_1)   .. 10-bit
+            x0.push(LWE::zero(0)?);
+            x1.push(LWE::zero(0)?);
+            x1.push(LWE::zero(0)?);
+            y0.push(LWE::zero(0)?);     //  9 -> 10
+            y1.push(LWE::zero(0)?);     //  8 -> ..
+            y1.push(LWE::zero(0)?);     // .. -> 10
+            let x01 = super::addition::add_sub_noise_refresh(
+                true,
+                pub_keys,
+                &x0,
+                &x1,
+            )?;
+            let y01 = super::addition::add_sub_noise_refresh(
+                true,
+                pub_keys,
+                &y0,
+                &y1,
+            )?;
+            let mut c = vec![LWE::zero(0)?; 9];
+            let mut c_plain = mul_impl(
+                pub_keys,
+                &x01,
+                &y01,
+            )?;
+            c.append(&mut c_plain);
+
+            //  A + B .. -A - B
+            let papb = super::addition::add_sub_noise_refresh(
+                true,
+                pub_keys,
+                &a,
+                &b,
+            )?;
+            let mut nanb = vec![LWE::zero(0)?; 9];
+            for abi in papb {
+                nanb.push(abi.opposite_uint()?);
+            }
+
+            //  B <- | A | B |
+            b.append(&mut a);
+
+            //  |   A   |   B   |   in b
+            //     |    C   |       in c
+            //      |  -A   |       in nanb
+            //      |  -B   |       -- " --
+
+            //  | A | B |   +   |  C |..
+            let abc = super::addition::add_sub_noise_refresh(
+                true,
+                pub_keys,
+                &b,
+                &c,
+            )?;
+
+            let res = super::addition::add_sub_impl(
+                true,
+                pub_keys,
+                &abc,
+                &nanb,
+            )?;
+        ]
+    );
+
+    Ok(res)
+}
+
+/// Implementation of product of two 16-word ciphertexts using Karatsuba recursion
 fn mul_karatsuba16(
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
@@ -293,6 +357,53 @@ fn mul_1word(
     );
 
     Ok(mulary_main[0].clone())
+}
+
+/// Implementation of one-word multiplication
+fn mul_lwe(
+    pub_keys: &PubKeySet,
+    x: &LWE,
+    y: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+
+    let mut z: LWE;
+    //~ let mut pos_neg = vec![LWE::zero(0)?; 2];
+    //~ let mut pos = &pos_neg[0];
+    //~ let mut neg = &pos_neg[1];
+
+    measure_duration!(
+        "Multiplication one-word (LWE × LWE)",
+        [
+            //TODO these can be done in parallel
+            // tmp = x + y
+            let mut tmp: LWE = x.clone();
+            tmp.add_uint_inplace(y)?;
+            let pos: LWE = pbs::a_2__pi_5(
+                pub_keys,
+                &tmp,
+            )?;
+
+            // tmp = x - y
+            tmp = x.clone();
+            tmp.sub_uint_inplace(y)?;
+            let neg: LWE = pbs::a_2__pi_5(
+                pub_keys,
+                &tmp,
+            )?;
+
+            // z = pos - neg
+            z = pos.clone();
+            z.sub_uint_inplace(&neg)?;
+
+            //TODO additional identity bootstrapping .. needed?
+            //~ z = pbs::id(
+                //~ pub_keys,
+                //~ &tmp,   // pos - neg
+            //~ )?;
+        ]
+    );
+
+    Ok(z)
 }
 
 /// Fill multiplication array (in schoolbook multiplication)

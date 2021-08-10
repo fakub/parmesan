@@ -70,8 +70,8 @@ pub fn parm_decrypt(
     params: &Params,
     priv_keys: &PrivKeySet,
     pc: &ParmCiphertext,
-) -> Result<i32, Box<dyn Error>> {
-    let mut m = 0i32;
+) -> Result<i64, Box<dyn Error>> {
+    let mut m = 0i64;
 
     //~ measure_duration!(
         //~ "Decrypt",
@@ -80,10 +80,10 @@ pub fn parm_decrypt(
                 let mi = parm_decr_nibble(params, priv_keys, ct)?;
                 //~ infoln!("m[{}] = {} (pi = {})", i, mi, ct.encoder.nb_bit_precision);
                 m += match mi {
-                     1 => {1i32 << i},
-                     0 => {0i32},
-                    -1 => {-(1i32 << i)},
-                    _  => {0i32},   //WISH fail
+                     1 => {  1i64 << i},
+                     0 => {  0i64},
+                    -1 => {-(1i64 << i)},
+                     _ => {  0i64},   //WISH fail
                 };
             }
         //~ ]
