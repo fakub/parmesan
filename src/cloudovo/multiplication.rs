@@ -92,12 +92,8 @@ pub fn mul_impl(
                         x,
                         y,
                 )?,
-                l if l == 4 => mul_4word(
-                        pub_keys,
-                        x,
-                        y,
-                )?,
-                l if l == 8 => mul_8word(
+                l if l > 1 => mul_multiword(
+                        l,
                         pub_keys,
                         x,
                         y,
@@ -110,26 +106,24 @@ pub fn mul_impl(
     Ok(p)
 }
 
-/// Implementation of product of two 9-word ciphertexts using O(n^2) schoolbook multiplication
-fn mul_9word(
+/// Implementation of product of two 4-word ciphertexts using O(n^2) schoolbook multiplication
+fn mul_multiword(
+    len: usize,
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
-    // set word-length
-    const L: usize = 9;
-
     // calc multiplication array
     let mulary_main = fill_mulary(
-        L,
+        len,
         pub_keys,
         x,
         y,
     )?;
 
     // reduce multiplication array
-    let mut intmd = vec![vec![LWE::zero(0)?; 2*L]; 2];
+    let mut intmd = vec![vec![LWE::zero(0)?; 2*len]; 2];
     let mut idx = 0usize;
     intmd[idx] = super::addition::add_sub_noise_refresh(
         true,
@@ -137,131 +131,18 @@ fn mul_9word(
         &mulary_main[0],
         &mulary_main[1],
     )?;
-    idx ^= 1;
 
-    for i in (2..L) {
-        //
+    for i in 2..len {
+        idx ^= 1;
         intmd[idx] = super::addition::add_sub_noise_refresh(
             true,
             pub_keys,
             &intmd[idx ^ 1],
             &mulary_main[i],
         )?;
-        idx ^= 1;
     }
 
     Ok(intmd[idx].clone())
-}
-
-/// Implementation of product of two 8-word ciphertexts using O(n^2) schoolbook multiplication
-fn mul_8word(
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
-    y: &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
-
-    // set word-length
-    const L: usize = 8;
-
-    // calc multiplication array
-    let mulary_main = fill_mulary(
-        L,
-        pub_keys,
-        x,
-        y,
-    )?;
-
-    // reduce multiplication array
-    let mut mulary_half = vec![vec![LWE::zero(0)?; 2*L]; L >> 1];   // L / 2
-    mulary_half[0] = super::addition::add_sub_noise_refresh(
-        true,
-        pub_keys,
-        &mulary_main[0],
-        &mulary_main[1],
-    )?;
-    mulary_half[1] = super::addition::add_sub_noise_refresh(
-        true,
-        pub_keys,
-        &mulary_main[2],
-        &mulary_main[3],
-    )?;
-    mulary_half[2] = super::addition::add_sub_noise_refresh(
-        true,
-        pub_keys,
-        &mulary_main[4],
-        &mulary_main[5],
-    )?;
-    mulary_half[3] = super::addition::add_sub_noise_refresh(
-        true,
-        pub_keys,
-        &mulary_main[6],
-        &mulary_main[7],
-    )?;
-    let mut mulary_quater = vec![vec![LWE::zero(0)?; 2*L]; L >> 2];   // L / 4
-    mulary_quater[0] = super::addition::add_sub_noise_refresh(
-        true,
-        pub_keys,
-        &mulary_half[0],
-        &mulary_half[1],
-    )?;
-    mulary_quater[1] = super::addition::add_sub_noise_refresh(
-        true,
-        pub_keys,
-        &mulary_half[2],
-        &mulary_half[3],
-    )?;
-
-    // final step & return
-    Ok(super::addition::add_sub_impl(
-        true,
-        pub_keys,
-        &mulary_quater[0],
-        &mulary_quater[1],
-    )?)
-}
-
-/// Implementation of product of two 4-word ciphertexts using O(n^2) schoolbook multiplication
-fn mul_4word(
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
-    y: &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
-
-    // set word-length
-    const L: usize = 4;
-
-    // calc multiplication array
-    let mulary_main = fill_mulary(
-        L,
-        pub_keys,
-        x,
-        y,
-    )?;
-
-    // reduce multiplication array
-    //TODO in parallel
-    // mulary_half.par_iter_mut()...
-    let mut mulary_half = vec![vec![LWE::zero(0)?; 2*L]; L >> 1];   // L / 2
-    mulary_half[0] = super::addition::add_sub_noise_refresh(
-        true,
-        pub_keys,
-        &mulary_main[0],
-        &mulary_main[1],
-    )?;
-    mulary_half[1] = super::addition::add_sub_noise_refresh(
-        true,
-        pub_keys,
-        &mulary_main[2],
-        &mulary_main[3],
-    )?;
-
-    // final step & return
-    Ok(super::addition::add_sub_impl(
-        true,
-        pub_keys,
-        &mulary_half[0],
-        &mulary_half[1],
-    )?)
 }
 
 /// Product of two 1-word ciphertexts
