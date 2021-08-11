@@ -1,35 +1,45 @@
-// Credit: Demo Z/8Z by Zama (https://github.com/zama-ai/demo_z8z ; modified)
+// Credit: Demo Z/8Z by Zama (https://github.com/zama-ai/demo_z8z ; improved)
 // This macro allows to compute the duration of the execution of the expressions enclosed.
 // Note that the variables are not captured.
 #[macro_export]
-macro_rules! measure_duration {   //WISH add ON/OFF feature
-    ($title:literal, [$($block:tt)+]) => {
-        // write title
-        crate::infoln!("{} ... ", $title);
-        // increase log level
-        unsafe {
-            if crate::LOG_LVL < u8::MAX {crate::LOG_LVL += 1;}
+macro_rules! measure_duration {
+    ($title:literal, [$($block:tt)+]) => {    //TODO    $title:literal    ->    $($arg:tt)*
+        let __now: std::time::SystemTime;
+        //  Measurement ON
+        #[cfg(feature = "measure")]
+        {
+            // write title
+            crate::infoln!("{} ... ", $title);
+            // increase log level
+            unsafe {
+                if crate::LOG_LVL < u8::MAX {crate::LOG_LVL += 1;}
+            }
+            // run block
+            __now = std::time::SystemTime::now();
         }
-        // run block
-        let __now = std::time::SystemTime::now();
+
         $(
            $block
         )+
-        // get elapsed time
-        let __time = __now.elapsed().unwrap().as_micros() as f64;
-        let __s_time = if __time < 1_000. {
-            String::from(format!("{} μs", __time             )).purple()
-        } else if __time < 1_000_000. {
-            String::from(format!("{} ms", __time / 1_000.    )).blue()
-        } else {
-            String::from(format!("{:.3} s",  __time / 1_000_000.)).cyan().bold()
-        };
-        // decrease log level back
-        unsafe {
-            if crate::LOG_LVL > 0 {crate::LOG_LVL -= 1;}
-            let indent = format!("{}  └ ", "  │ ".repeat(crate::LOG_LVL as usize));
-            let status = String::from("OK").green().bold();   // can be other statuses
-            println!("{}{} {}: {} (in {})", indent, String::from("Finished").yellow().bold(), $title, status, __s_time);
+
+        #[cfg(feature = "measure")]
+        {
+            // get elapsed time
+            let __time = __now.elapsed().unwrap().as_micros() as f64;
+            let __s_time = if __time < 1_000. {
+                String::from(format!("{} μs", __time             )).purple()
+            } else if __time < 1_000_000. {
+                String::from(format!("{} ms", __time / 1_000.    )).blue()
+            } else {
+                String::from(format!("{:.3} s",  __time / 1_000_000.)).cyan().bold()
+            };
+            // decrease log level back
+            unsafe {
+                if crate::LOG_LVL > 0 {crate::LOG_LVL -= 1;}
+                let indent = format!("{}  └ ", "  │ ".repeat(crate::LOG_LVL as usize));
+                let status = String::from("OK").green().bold();   // can be other statuses
+                println!("{}{} {}: {} (in {})", indent, String::from("Finished").yellow().bold(), $title, status, __s_time);
+            }
         }
     }
 }
