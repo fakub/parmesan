@@ -1,6 +1,6 @@
 use std::error::Error;
 
-#[allow(unused_imports)]   //WISH only use when sequential feature is OFF
+#[cfg(not(feature = "sequential"))]
 use rayon::prelude::*;
 use concrete::LWE;
 #[allow(unused_imports)]
@@ -21,7 +21,7 @@ pub fn max_impl(
     let mut m: ParmCiphertext;
 
     measure_duration!(
-        "Maximum",
+        ["Maximum ({}-bit)", x.len()],
         [
             // r = x - y
             //WISH after I implement manual bootstrap after addition, here it can be customized to powers of two (then first layer of bootstraps can be omitted in signum)

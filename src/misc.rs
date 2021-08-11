@@ -3,13 +3,15 @@
 // Note that the variables are not captured.
 #[macro_export]
 macro_rules! measure_duration {
-    ($title:literal, [$($block:tt)+]) => {    //TODO    $title:literal    ->    $($arg:tt)*
+    ([$($arg:tt)*], [$($block:tt)+]) => {    //TODO    $title:literal    ->    $($arg:tt)*
         let __now: std::time::SystemTime;
+        let __msg: String;
         //  Measurement ON
         #[cfg(feature = "measure")]
         {
+            __msg = format!($($arg)*);
             // write title
-            crate::infoln!("{} ... ", $title);
+            crate::infoln!("{} ... ", __msg);
             // increase log level
             unsafe {
                 if crate::LOG_LVL < u8::MAX {crate::LOG_LVL += 1;}
@@ -38,7 +40,7 @@ macro_rules! measure_duration {
                 if crate::LOG_LVL > 0 {crate::LOG_LVL -= 1;}
                 let indent = format!("{}  └ ", "  │ ".repeat(crate::LOG_LVL as usize));
                 let status = String::from("OK").green().bold();   // can be other statuses
-                println!("{}{} {}: {} (in {})", indent, String::from("Finished").yellow().bold(), $title, status, __s_time);
+                println!("{}{} {}: {} (in {})", indent, String::from("Finished").yellow().bold(), __msg, status, __s_time);
             }
         }
     }

@@ -197,7 +197,7 @@ impl ParmesanCloudovo<'_> {
 //
 
 // -----------------------------------------------------------------------------
-//  Dev
+//  Demo
 
 pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
 

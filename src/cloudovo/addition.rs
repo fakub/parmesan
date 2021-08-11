@@ -1,6 +1,6 @@
 use std::error::Error;
 
-#[allow(unused_imports)]   //WISH only use when sequential feature is OFF
+#[cfg(not(feature = "sequential"))]
 use rayon::prelude::*;
 use concrete::LWE;
 #[allow(unused_imports)]
@@ -48,7 +48,7 @@ pub fn add_sub_impl(
     #[cfg(not(feature = "sequential"))]
     {
         measure_duration!(
-            "Parallel addition/subtraction",
+            ["Parallel {} ({}-bit)", if is_add {"addition"} else {"subtraction"}, x.len()],
             [
                 let mut w = x.clone();
 
@@ -56,7 +56,7 @@ pub fn add_sub_impl(
                 // -----------------------------------------------------------------
                 // sequential approach (6-bit: 50-70 us)
                 //~ measure_duration!(
-                //~ "w = x + y (seq)",
+                //~ ["w = x + y (seq)"],
                 //~ [
                     if is_add {
                         for (wi, yi) in w.iter_mut().zip(y.iter()) {
@@ -70,7 +70,7 @@ pub fn add_sub_impl(
                 //~ ]);
                 // parallel approach (6-bit: 110-130 us)
                 //~ measure_duration!(
-                //~ "w = x + y (par)",
+                //~ ["w = x + y (par)"],
                 //~ [
                     //~ if is_add {
                         //~ w.par_iter_mut().zip(y.par_iter()).for_each(|(wi,yi)| wi.add_uint_inplace(&yi).expect("add_uint_inplace failed.") );
@@ -109,7 +109,7 @@ pub fn add_sub_impl(
         let encoder = &x[0].encoder;
 
         measure_duration!(
-            "Sequential addition/subtraction (in redundant representation)",
+            ["Sequential {} ({}-bit; in redundant representation)", if is_add {"addition"} else {"subtraction"}, x.len()],
             [
                 let mut wi_1:   LWE = LWE::zero_with_encoder(dim, encoder)?;
                 let mut qi_1:   LWE = LWE::zero_with_encoder(dim, encoder)?;

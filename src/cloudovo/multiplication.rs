@@ -1,6 +1,6 @@
 use std::error::Error;
 
-#[allow(unused_imports)]   //WISH only use when sequential feature is OFF
+#[cfg(not(feature = "sequential"))]
 use rayon::prelude::*;
 use concrete::LWE;
 #[allow(unused_imports)]
@@ -15,8 +15,6 @@ pub fn mul_impl(
     x: &ParmCiphertext,
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
-
-    let p: ParmCiphertext;
 
     //  Karatsuba for lengths 14 or >= 16, otherwise schoolbook (i.e., lengths < 14 or 15)
     //
@@ -33,14 +31,17 @@ pub fn mul_impl(
     //          17  ---  9
     //                \ 10
 
-    p = match x.len() {
+    if x.len() != y.len() {
+        return Err(format!("Multiplication for integers of different lengths not implemented ({}- and {}-bit supplied).", x.len(), y.len()).into())
+    }
+
+    let p = match x.len() {
         l if l == 1 => mul_1word(
             pub_keys,
             x,
             y,
         )?,
         l if l < 14 || l == 15 => mul_schoolbook(
-            l,
             pub_keys,
             x,
             y,
@@ -90,7 +91,7 @@ fn mul_karatsuba(
     }
 
     measure_duration!(
-        "Multiplication Karatsuba",
+        ["Multiplication Karatsuba ({}-bit)", x.len()],
         [
             //  A = x_1 * y_1                   .. len1-bit
             let mut a = mul_impl(
@@ -177,18 +178,18 @@ fn mul_karatsuba(
 
 /// Schoolbook multiplication `O(n^2)`
 fn mul_schoolbook(
-    len: usize,
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
+    let len = x.len();
+
     measure_duration!(
-        "Multiplication multi-word (schoolbook)",
+        ["Multiplication schoolbook ({}-bit)", len],
         [
             // calc multiplication array
             let mulary_main = fill_mulary(
-                len,
                 pub_keys,
                 x,
                 y,
@@ -226,15 +227,11 @@ fn mul_1word(
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
-    // set word-length
-    const L: usize = 1;
-
     measure_duration!(
-        "Multiplication 1-word",
+        ["Multiplication 1-word"],
         [
             // calc multiplication array
             let mulary_main = fill_mulary(
-                L,
                 pub_keys,
                 x,
                 y,
@@ -295,25 +292,22 @@ fn mul_lwe(
 
 /// Fill multiplication array (for schoolbook multiplication)
 fn fill_mulary(
-    exp_len: usize,
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
     y: &ParmCiphertext,
 ) -> Result<Vec<ParmCiphertext>, Box<dyn Error>> {
 
-    // check lengths
-    if x.len() != exp_len || y.len() != exp_len {
-        //TODO ...
-        return Err(format!("Two {}-word integers expected.", exp_len).into());
-    }
+    assert_eq!(x.len(), y.len());
+
+    let len = x.len();
 
     // fill multiplication array
     //TODO check the size, it might grow outsite due to redundant representation
     //TODO try different approaches and compare
-    let mut mulary = vec![vec![LWE::zero(0)?; 2*exp_len]; exp_len];
+    let mut mulary = vec![vec![LWE::zero(0)?; 2*len]; len];
 
     mulary.par_iter_mut().zip(y.par_iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
-        &x_yj[j..j+exp_len].par_iter_mut().zip(x.par_iter()).for_each(| (xi_yj, xi) | {
+        &x_yj[j..j+len].par_iter_mut().zip(x.par_iter()).for_each(| (xi_yj, xi) | {
             *xi_yj = mul_lwe(pub_keys, &xi, &yj).expect("mul_lwe failed.");
         });
     });

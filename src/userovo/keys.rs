@@ -40,8 +40,8 @@ impl PrivKeySet {
             && Path::new(ksk_file.as_str()).is_file()
         {
             // load keys from files
-            crate::measure_duration!(
-                "Load PrivKeySet",
+            measure_duration!(
+                ["Load PrivKeySet"],
                 [
                     let keys = PrivKeySet {
                          sk: LWESecretKey::load( sk_file.as_str())?,
@@ -55,19 +55,19 @@ impl PrivKeySet {
             return Ok(keys);
         } else {
             // generate & save keys
-            crate::measure_duration!(
-                "Generate & Save PrivKeySet",
+            measure_duration!(
+                ["Generate & Save PrivKeySet"],
                 [
                     let keys = PrivKeySet::generate(params)?;
 
-                    crate::measure_duration!(
-                        "Saving  LWE secret key",
+                    measure_duration!(
+                        ["Saving  LWE secret key"],
                         [keys .sk.save( sk_file.as_str())?;]);
-                    crate::measure_duration!(
-                        "Saving bootstrapping keys",
+                    measure_duration!(
+                        ["Saving bootstrapping keys"],
                         [keys.bsk.save(bsk_file.as_str());]);
-                    crate::measure_duration!(
-                        "Saving key-switching keys",
+                    measure_duration!(
+                        ["Saving key-switching keys"],
                         [keys.ksk.save(ksk_file.as_str());]);
                 ]
             );
@@ -79,24 +79,24 @@ impl PrivKeySet {
     /// Generate a fresh TFHE key set
     fn generate(params: &params::Params) -> Result<PrivKeySet, Box<dyn Error>> {
         // generate LWE & RLWE secret keys
-        crate::measure_duration!(
-            "Generating  LWE secret key",   //TODO add formatting for: "{}-bit", params.lwe_params.dimension
+        measure_duration!(
+            ["Generating  LWE secret key"],   //TODO add formatting for: "{}-bit", params.lwe_params.dimension
             [let      sk:  LWESecretKey =  LWESecretKey::new(&params.lwe_params );]);
-        crate::measure_duration!(
-            "Generating RLWE secret key",
+        measure_duration!(
+            ["Generating RLWE secret key"],
             [let rlwe_sk: RLWESecretKey = RLWESecretKey::new(&params.rlwe_params);]);
 
         // calculate bootstrapping & key-switching keys
-        crate::measure_duration!(
-            "Calculating bootstrapping keys",
+        measure_duration!(
+            ["Calculating bootstrapping keys"],
             [let bsk: LWEBSK = LWEBSK::new(
                 &sk,
                 &rlwe_sk,
                 params.bs_base_log,
                 params.bs_level,
             );]);
-        crate::measure_duration!(
-            "Calculating key-switching keys",
+        measure_duration!(
+            ["Calculating key-switching keys"],
             [let ksk: LWEKSK = LWEKSK::new(
                 &rlwe_sk.to_lwe_secret_key(),
                 &sk,

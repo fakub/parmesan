@@ -74,7 +74,7 @@ pub fn parm_decrypt(
     let mut m = 0i64;
 
     //~ measure_duration!(
-        //~ "Decrypt",
+        //~ ["Decrypt"],
         //~ [
             for (i, ct) in pc.iter().enumerate() {
                 let mi = parm_decr_nibble(params, priv_keys, ct)?;

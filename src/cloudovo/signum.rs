@@ -1,6 +1,6 @@
 use std::error::Error;
 
-#[allow(unused_imports)]   //WISH only use when sequential feature is OFF
+#[cfg(not(feature = "sequential"))]
 use rayon::prelude::*;
 use concrete::LWE;
 #[allow(unused_imports)]
@@ -18,7 +18,7 @@ pub fn sgn_impl(
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     measure_duration!(
-        "Signum",
+        ["Signum ({}-bit)", x.len()],
         [
             // comment: it would be nice to skip the first-layer bootstrap and just add values with appropriate power of 2
             //          but this would make enormously large 2Delta (for pi = 5 -> gamma = 4, we have weights 8, 4, 2, 1 -> sum of quad weights = 85 ... that might be too much)
@@ -29,7 +29,6 @@ pub fn sgn_impl(
                 x,
             )?;
 
-            infoln!("length 1 bit (final signum bootstrap)");
             let s_lwe = pbs::f_1__pi_5__with_val(
                 pub_keys,
                 &s_raw[0],
@@ -60,10 +59,8 @@ pub fn sgn_recursion_raw(
     #[cfg(not(feature = "sequential"))]
     {
         measure_duration!(
-            "Signum recursion in parallel",
+            ["Signum recursion in parallel ({}-bit, groups by {})", x.len(), gamma],
             [
-                infoln!("length {} bits, groups by {} bits", x.len(), gamma);
-
                 let mut b: ParmCiphertext = vec![LWE::zero_with_encoder(dim, encoder)?; (x.len() - 1) / gamma + 1];
 
                 // the thread needs to know the index j so that it can check against x.len()
@@ -100,10 +97,8 @@ pub fn sgn_recursion_raw(
     #[cfg(feature = "sequential")]
     {
         measure_duration!(
-            "Signum recursion sequential",
+            ["Signum recursion sequential ({}-bit, groups by {})", x.len(), gamma],
             [
-                infoln!("length {} bits, groups by {} bits", x.len(), gamma);
-
                 let mut b: ParmCiphertext = Vec::new();
 
                 for j in 0..((x.len() - 1) / gamma + 1) {
