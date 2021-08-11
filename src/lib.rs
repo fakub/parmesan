@@ -40,9 +40,12 @@ pub use userovo::encryption;
 // Cloudovo modules
 pub mod cloudovo;
 pub use cloudovo::addition;
+pub use cloudovo::scalar_multiplication;
 pub use cloudovo::signum;
 pub use cloudovo::maximum;
 pub use cloudovo::multiplication;
+
+pub use cloudovo::neural_network;
 
 
 // =============================================================================
@@ -145,6 +148,20 @@ impl ParmesanCloudovo<'_> {
         )?)
     }
 
+    /// Scalar multiplication (by a known integer)
+    pub fn scalar_mul(
+        &self,
+        k: i32,
+        x: &ParmCiphertext,
+    ) -> Result<ParmCiphertext, Box<dyn Error>> {
+        Ok(scalar_multiplication::scalar_mul_impl(
+            self.params,
+            self.pub_keys,
+            k,
+            x,
+        )?)
+    }
+
     /// Signum of a ciphertext by parallel reduction
     pub fn sgn(
         &self,
@@ -197,9 +214,9 @@ impl ParmesanCloudovo<'_> {
 //
 
 // -----------------------------------------------------------------------------
-//  Demo
+//  Arithmetics Demo
 
-pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
+pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
     // move to Cloudovo initialization (makes no sense at user, but now I want to have it on the top)
     #[cfg(not(feature = "sequential"))]
@@ -281,7 +298,7 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     // print message
     let mut intro_text = format!("{} messages ({} bits taken)", String::from("User:").bold().yellow(), DEMO_BITLEN);
     for (i, (mi, mi_as)) in m.iter().zip(m_as.iter()).enumerate() {
-        intro_text = format!("{}\nm_{} = {}{:032b} ({})", intro_text, i, if *mi >= 0 {" "} else {"-"}, mi.abs(), mi_as);
+        intro_text = format!("{}\nm_{}  = {}{:032b} ({})", intro_text, i, if *mi >= 0 {" "} else {"-"}, mi.abs(), mi_as);
     }
     intro_text = format!("{}\nx_1  = {}{:01b} ({})",  intro_text, if m_x1  >= 0 {" "} else {"-"}, m_x1.abs(),  m_x1 );
     intro_text = format!("{}\ny_1  = {}{:01b} ({})",  intro_text, if m_y1  >= 0 {" "} else {"-"}, m_y1.abs(),  m_y1 );
@@ -382,6 +399,13 @@ pub fn parmesan_demo() -> Result<(), Box<dyn Error>> {
     // =================================
     infobox!("Demo END");
     // =================================
+
+    Ok(())
+}
+
+pub fn nn_demo() -> Result<(), Box<dyn Error>> {
+
+    //~ let nn_struct: NeuralNetwork;
 
     Ok(())
 }
