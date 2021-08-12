@@ -1,0 +1,1 @@
+reset ; RUSTFLAGS="-C target-cpu=native" cargo run --release | aha --black > logs/<version>/<machine-type-processor>/<sequential|parallel>.html
