@@ -3,7 +3,7 @@
 // Note that the variables are not captured.
 #[macro_export]
 macro_rules! measure_duration {
-    ([$($arg:tt)*], [$($block:tt)+]) => {    //TODO    $title:literal    ->    $($arg:tt)*
+    ([$($arg:tt)*], [$($block:tt)+]) => {
         let __now: std::time::SystemTime;
         let __msg: String;
         //  Measurement ON
@@ -16,13 +16,12 @@ macro_rules! measure_duration {
             unsafe {
                 if crate::LOG_LVL < u8::MAX {crate::LOG_LVL += 1;}
             }
-            // run block
+            // start timer
             __now = std::time::SystemTime::now();
         }
 
-        $(
-           $block
-        )+
+        // run block
+        $($block)+
 
         #[cfg(feature = "measure")]
         {
@@ -43,6 +42,30 @@ macro_rules! measure_duration {
                 println!("{}{} {}: {} (in {})", indent, String::from("Finished").yellow().bold(), __msg, status, __s_time);
             }
         }
+    }
+}
+
+#[macro_export]
+macro_rules! simple_duration {
+    ([$($arg:tt)*], [$($block:tt)+]) => {
+        // print msg
+        let __msg = format!($($arg)*);
+        println!(" {}  {} ... ", String::from("+").green().bold(), __msg);
+        // start timer
+        let __now = std::time::SystemTime::now();
+        // run block
+        $($block)+
+        // get elapsed time
+        let __time = __now.elapsed().unwrap().as_micros() as f64;
+        let __s_time = if __time < 1_000. {
+            String::from(format!("{} μs", __time             )).purple()
+        } else if __time < 1_000_000. {
+            String::from(format!("{} ms", __time / 1_000.    )).blue()
+        } else {
+            String::from(format!("{:.3} s",  __time / 1_000_000.)).cyan().bold()
+        };
+        // print result
+        println!(" {}  {} (in {})", String::from("—").red().bold(), __msg, __s_time);
     }
 }
 
