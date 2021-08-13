@@ -3,6 +3,8 @@ use std::error::Error;
 use concrete::LWE;
 #[allow(unused_imports)]
 use colored::Colorize;
+#[allow(unused_imports)]
+use rayon::prelude::*;
 use crate::params::Params;
 use crate::userovo::keys::PrivKeySet;
 use crate::ciphertexts::ParmCiphertext;
@@ -14,16 +16,15 @@ use crate::ciphertexts::ParmCiphertext;
 //  Encryption
 //
 
-/// Parmesan encryption
-/// * splits signed integer into nibbles (bits)
+/// Parmesan encryption of a 64-bit signed integer
+/// * splits signed integer into bits
 /// * encrypt one-by-one
 pub fn parm_encrypt(
     params: &Params,
     priv_keys: &PrivKeySet,
-    m: i32,
+    m: i64,
     bits: usize,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
-    //WISH some warning if bits is more than given type (-1 for signed)
     let mut res: ParmCiphertext = Vec::new();
     let m_abs = m.abs();
     let m_pos = m >= 0;
@@ -35,17 +36,38 @@ pub fn parm_encrypt(
         } else {
             if m_pos {1i32} else {-1i32}
         };
-        res.push(parm_encr_nibble(params, priv_keys, mi)?);
+        res.push(parm_encr_word(params, priv_keys, mi)?);
     }
 
     Ok(res)
 }
 
-fn parm_encr_nibble(
+/// Parmesan encryption of a vector of words from alphabet `{-1,0,1}`
+pub fn parm_encrypt_vec(
+    params: &Params,
+    priv_keys: &PrivKeySet,
+    mv: &Vec<i32>,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
+    let mut res = vec![LWE::zero(0)?; mv.len()];
+
+    res.par_iter_mut().zip(mv.par_iter()).for_each(| (ri, mi) | {
+        *ri = parm_encr_word(params, priv_keys, *mi).expect("parm_encr_word failed.");
+    });
+
+    Ok(res)
+}
+
+fn parm_encr_word(
     params: &Params,
     priv_keys: &PrivKeySet,
     mut mi: i32,
 ) -> Result<LWE, Box<dyn Error>> {
+
+    // check that mi is in alphabet
+    if mi < -1 || mi > 1 {
+        return Err("Word to be encrypted outside alphabet {-1,0,1}.".into());
+    }
+
     // little hack, how to bring mi into positive interval [0,2^pi)
     mi &= params.plaintext_mask();
 
@@ -77,13 +99,13 @@ pub fn parm_decrypt(
         //~ ["Decrypt"],
         //~ [
             for (i, ct) in pc.iter().enumerate() {
-                let mi = parm_decr_nibble(params, priv_keys, ct)?;
+                let mi = parm_decr_word(params, priv_keys, ct)?;
                 //~ infoln!("m[{}] = {} (pi = {})", i, mi, ct.encoder.nb_bit_precision);
                 m += match mi {
                      1 => {  1i64 << i},
                      0 => {  0i64},
                     -1 => {-(1i64 << i)},
-                     _ => {  0i64},   //WISH fail
+                     _ => {return Err(format!("Word out of alphabet: {}.", mi).into())},
                 };
             }
         //~ ]
@@ -92,11 +114,32 @@ pub fn parm_decrypt(
     Ok(m)
 }
 
-fn parm_decr_nibble(
+fn parm_decr_word(
     params: &Params,
     priv_keys: &PrivKeySet,
     ct: &LWE,
 ) -> Result<i32, Box<dyn Error>> {
     let mi = ct.decrypt_uint(&priv_keys.sk)? as i32;   // rounding included in Encoder
     if mi >= params.plaintext_pos_max() {Ok(mi - params.plaintext_space_size())} else {Ok(mi)}
+}
+
+
+
+// =============================================================================
+//
+//  Conversion
+//
+
+/// Conversion from redundant
+pub fn convert(mv: &Vec<i32>) -> Result<i64, Box<dyn Error>> {
+    let mut m = 0i64;
+    for (i, mi) in mv.iter().enumerate() {
+        m += match mi {
+             1 => {  1i64 << i},
+             0 => {  0i64},
+            -1 => {-(1i64 << i)},
+             _ => {return Err(format!("Word out of alphabet: {}.", mi).into())},
+        };
+    }
+    Ok(m)
 }

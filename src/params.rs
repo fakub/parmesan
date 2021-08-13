@@ -21,6 +21,7 @@ pub struct Params {
 }
 
 impl Params {
+
     /// Get mask of plaintext length, e.g., `0001'1111` for `pi = 5`
     /// * corresponds with -1 in plaintext space
     pub fn plaintext_mask(&self) -> i32 {

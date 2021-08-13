@@ -34,18 +34,12 @@ pub use ciphertexts::ParmCiphertext;
 
 // Userovo modules
 pub mod userovo;
+pub use userovo::*;
 pub use userovo::keys::{PrivKeySet,PubKeySet};
-pub use userovo::encryption;
 
 // Cloudovo modules
 pub mod cloudovo;
-pub use cloudovo::addition;
-pub use cloudovo::scalar_multiplication;
-pub use cloudovo::signum;
-pub use cloudovo::maximum;
-pub use cloudovo::multiplication;
-
-pub use cloudovo::neural_network;
+pub use cloudovo::*;
 
 
 // =============================================================================
@@ -82,18 +76,26 @@ impl ParmesanUserovo<'_> {
         }
     }
 
-    /// Encrypt a 32-bit signed integer
+    /// Encrypt a 64-bit signed integer
     /// * `bits` states how many bits of input `m` are to be encrypted, since this will be public
     /// * least significant bits, including sign, are taken
     pub fn encrypt(
         &self,
-        m: i32,
+        m: i64,
         bits: usize,
     ) -> Result<ParmCiphertext, Box<dyn Error>> {   //WISH change to a template for other integer types/lengths, too
         Ok(encryption::parm_encrypt(self.params, &self.priv_keys, m, bits)?)
     }
 
-    /// Decrypt a 32-bit signed integer
+    /// Encrypt a vector of words from alphabet `{-1,0,1}`
+    pub fn encrypt_vec(
+        &self,
+        mv: &Vec<i32>,
+    ) -> Result<ParmCiphertext, Box<dyn Error>> {   //WISH change to a template for other integer types/lengths, too
+        Ok(encryption::parm_encrypt_vec(self.params, &self.priv_keys, mv)?)
+    }
+
+    /// Decrypt ciphertext into a 64-bit signed integer
     pub fn decrypt(&self, c: &ParmCiphertext) -> Result<i64, Box<dyn Error>> {   //WISH change to a template for other integer types/lengths, too
         Ok(encryption::parm_decrypt(self.params, &self.priv_keys, c)?)
     }
@@ -252,25 +254,25 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     //  U: Encryption
 
     // for most operations
-    let m: [i32; DEMO_N_MSGS] = [
+    let m: [i64; DEMO_N_MSGS] = [
          0b01111110110010010011100110111011,
          0b00110010001111100110111100100000,
         -0b01000100001010010111100000010101,
     ];
-    let mut m_as: [i32; DEMO_N_MSGS] = [0,0,0];
+    let mut m_as: [i64; DEMO_N_MSGS] = [0,0,0];
     // for multiplication
-    let m_x1 =  0b1;
-    let m_y1 = -0b1;
-    let m_x4 =  0b1110;                 //    14
-    let m_y4 =  0b1001;                 //     9    ->         126
-    let m_x8 =  0b10010111;             //   151
-    let m_y8 =  0b10111010;             //   186    ->       28086
-    let m_x16=  0b110000101101011i64;   // 24939
-    let m_y16=  0b100011010100001i64;   // 18081    ->   450922059
-    let m_x17=  0b1111011001001001i64;  // 63049
-    let m_y17=  0b1001000111110011i64;  // 37363    ->  2355699787 which is more than 2^31 - 1
-    let m_x32=  0b01100110010010111011011001100110i64;  // 1716237926
-    let m_y32=  0b01001011100111010100110001010100i64;  // 1268599892   ->  2177219247569903992 which fits 63 bits (i64)
+    let m_x1 : i64 =  0b1;
+    let m_y1 : i64 = -0b1;
+    let m_x4 : i64 =  0b1110;                   //    14
+    let m_y4 : i64 =  0b1001;                   //     9    ->         126
+    let m_x8 : i64 =  0b10010111;               //   151
+    let m_y8 : i64 =  0b10111010;               //   186    ->       28086
+    let m_x16: i64 =  0b110000101101011;        // 24939
+    let m_y16: i64 =  0b100011010100001;        // 18081    ->   450922059
+    let m_x17: i64 =  0b1111011001001001;       // 63049
+    let m_y17: i64 =  0b1001000111110011;       // 37363    ->  2355699787 which is more than 2^31 - 1
+    let m_x32: i64 =  0b01100110010010111011011001100110;   // 1716237926
+    let m_y32: i64 =  0b01001011100111010100110001010100;   // 1268599892   ->  2177219247569903992 which fits 63 bits (i64)
 
     // encrypt all values
     let mut c: [ParmCiphertext; DEMO_N_MSGS] = [
@@ -288,12 +290,12 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let cy4 = pu.encrypt(m_y4,   4)?;
     let cx8 = pu.encrypt(m_x8,   8)?;
     let cy8 = pu.encrypt(m_y8,   8)?;
-    let cx16= pu.encrypt(m_x16 as i32, 16)?;
-    let cy16= pu.encrypt(m_y16 as i32, 16)?;
-    let cx17= pu.encrypt(m_x17 as i32, 17)?;
-    let cy17= pu.encrypt(m_y17 as i32, 17)?;
-    let cx32= pu.encrypt(m_x32 as i32, 32)?;
-    let cy32= pu.encrypt(m_y32 as i32, 32)?;
+    let cx16= pu.encrypt(m_x16, 16)?;
+    let cy16= pu.encrypt(m_y16, 16)?;
+    let cx17= pu.encrypt(m_x17, 17)?;
+    let cy17= pu.encrypt(m_y17, 17)?;
+    let cx32= pu.encrypt(m_x32, 32)?;
+    let cy32= pu.encrypt(m_y32, 32)?;
 
     // print message
     let mut intro_text = format!("{} messages ({} bits taken)", String::from("User:").bold().yellow(), DEMO_BITLEN);
@@ -318,10 +320,10 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     // =================================
     //  C: Evaluation
 
-    let c_add = pc.add(&c[0], &c[1])?;
-    let c_sub = pc.sub(&c[1], &c[0])?;
-    let c_sgn = pc.sgn(&c[2]       )?;
-    let c_max = pc.max(&c[1], &c[0])?;
+    let c_add  = pc.add(&c[0], &c[1])?;
+    let c_sub  = pc.sub(&c[1], &c[0])?;
+    let c_sgn  = pc.sgn(&c[2]       )?;
+    let c_max  = pc.max(&c[1], &c[0])?;
     let c_xy1  = pc.mul(&cx1,  &cy1 )?;
     let c_xy4  = pc.mul(&cx4,  &cy4 )?;
     let c_xy8  = pc.mul(&cx8,  &cy8 )?;
@@ -332,27 +334,27 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
     // =================================
     //  U: Decryption
-    let m_add  = pu.decrypt(&c_add )? as i32;
-    let m_sub  = pu.decrypt(&c_sub )? as i32;
-    let m_sgn  = pu.decrypt(&c_sgn )? as i32;
-    let m_max  = pu.decrypt(&c_max )? as i32;
-    let m_xy1  = pu.decrypt(&c_xy1 )? as i32;
-    let m_xy4  = pu.decrypt(&c_xy4 )? as i32;
-    let m_xy8  = pu.decrypt(&c_xy8 )? as i32;
+    let m_add  = pu.decrypt(&c_add )?;
+    let m_sub  = pu.decrypt(&c_sub )?;
+    let m_sgn  = pu.decrypt(&c_sgn )?;
+    let m_max  = pu.decrypt(&c_max )?;
+    let m_xy1  = pu.decrypt(&c_xy1 )?;
+    let m_xy4  = pu.decrypt(&c_xy4 )?;
+    let m_xy8  = pu.decrypt(&c_xy8 )?;
     let m_xy16 = pu.decrypt(&c_xy16)?;
     let m_xy17 = pu.decrypt(&c_xy17)?;
     let m_xy32 = pu.decrypt(&c_xy32)?;
 
-    let mut summary_text = format!("{} results", String::from("User:").bold().yellow(),);
+    let mut summary_text = format!("{} results", String::from("User:").bold().yellow());
     summary_text = format!("{}\nm_0 + m_1     = {:12} :: {} (exp. {} % {})", summary_text,
                             m_add,
-                            if (m[0] as i64 + m[1] as i64 - m_add as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            (m_as[0] as i64 + m_as[1] as i64) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
+                            if (m[0] + m[1] - m_add) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            (m_as[0] + m_as[1]) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
     );
     summary_text = format!("{}\nm_1 - m_0     = {:12} :: {} (exp. {} % {})", summary_text,
                             m_sub,
-                            if (m[1] as i64 - m[0] as i64 - m_sub as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            (m_as[1] as i64 - m_as[0] as i64) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
+                            if (m[1] - m[0] - m_sub) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            (m_as[1] - m_as[0]) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
     );
     summary_text = format!("{}\nsgn(m_2)      = {:12} :: {}", summary_text,
                             m_sgn,
@@ -360,7 +362,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     );
     summary_text = format!("{}\nmax{{m_1, m_0}} = {:12} :: {} (exp. {} % {})", summary_text,
                             m_max,
-                            if (std::cmp::max(m_as[1], m_as[0]) as i64 - m_max as i64) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            if (std::cmp::max(m_as[1], m_as[0]) - m_max) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             std::cmp::max(m_as[1], m_as[0]), 1 << DEMO_BITLEN
     );
     summary_text = format!("{}\nx_1 × y_1     = {:12} :: {} (exp. {})", summary_text,
