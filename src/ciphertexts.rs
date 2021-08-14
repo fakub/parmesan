@@ -9,7 +9,7 @@ pub type ParmCiphertext = Vec<LWE>;
 pub trait ParmCiphertextExt {
     fn triv(len: usize) -> Result<ParmCiphertext, Box<dyn Error>>;
 
-    fn empty() -> Result<ParmCiphertext, Box<dyn Error>>;
+    fn empty() -> ParmCiphertext;
 
     fn single(c: LWE) -> Result<ParmCiphertext, Box<dyn Error>>;
 }
@@ -19,8 +19,8 @@ impl ParmCiphertextExt for ParmCiphertext {
         Ok(vec![LWE::zero(0)?; len])
     }
 
-    fn empty() -> Result<ParmCiphertext, Box<dyn Error>> {
-        Ok(vec![LWE::zero(0)?; 0])
+    fn empty() -> ParmCiphertext {
+        Vec::new()
     }
 
     fn single(c: LWE) -> Result<ParmCiphertext, Box<dyn Error>> {

@@ -123,7 +123,7 @@ pub fn add_sub_impl(
             [
                 let mut wi_1:   LWE = LWE::zero_with_encoder(dim, encoder)?;
                 let mut qi_1:   LWE = LWE::zero_with_encoder(dim, encoder)?;
-                z = Vec::new();
+                z = ParmCiphertext::empty();
 
                 //TODO apply triv
                 for (xi, yi) in x.iter().zip(y.iter()) {

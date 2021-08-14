@@ -25,7 +25,7 @@ pub fn parm_encrypt(
     m: i64,
     bits: usize,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
-    let mut res: ParmCiphertext = Vec::new();
+    let mut res = ParmCiphertext::empty();
     let m_abs = m.abs();
     let m_pos = m >= 0;
 

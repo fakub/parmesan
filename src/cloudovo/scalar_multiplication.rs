@@ -21,7 +21,7 @@ pub fn scalar_mul_impl(
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     // move sign of k to x
-    let mut x_sgn = Vec::new();
+    let mut x_sgn = ParmCiphertext::empty();
     for xi in x {
         if k >= 0 {
             x_sgn.push(xi.clone());
@@ -45,7 +45,7 @@ pub fn scalar_mul_impl(
     for i in 2..31 {if k_abs & (1 << i) != 0 {k_len = i + 1;}}   //WISH as macro?
 
     // k_len ≥ 2
-    let mut mulary = Vec::new();
+    let mut mulary: Vec<ParmCiphertext> = Vec::new();
     for i in 0..k_len {
         if k_abs & (1 << i) != 0 {
             // shift x_sgn

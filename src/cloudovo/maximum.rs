@@ -70,7 +70,7 @@ pub fn max_impl(
             // Sequential
             #[cfg(feature = "sequential")]
             {
-                m = Vec::new();
+                m = ParmCiphertext::empty();
 
                 // calc x and y selectors
                 for (xi, yi) in x.iter().zip(y.iter()) {

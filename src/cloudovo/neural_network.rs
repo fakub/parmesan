@@ -64,7 +64,7 @@ pub struct Perceptron {
 /// Layer
 pub type Layer = Vec<Perceptron>;
 
-/// NeuralNetwork
+/// Neural Network
 pub struct NeuralNetwork {
     //  NN consists of layers, evaluated one after each other
     pub layers: Vec<Layer>,
@@ -79,7 +79,7 @@ impl NeuralNetwork {
     ) -> Vec<T> {   //TODO Result<Vec<T>, Box<dyn Error>>
 
         let mut il = inputs.clone();
-        let mut ol = Vec::new();
+        let mut ol: Vec<T> = Vec::new();
 
         for layer in &self.layers {
             eval_layer::<T>(layer, &il, &mut ol);
@@ -98,6 +98,7 @@ pub fn eval_layer<T: std::clone::Clone>(
 ) {
     output.clear();
 
+    // evaluate perceptron by type
     for perc in layer {
         match &perc.t {
             PercType::MAX => {

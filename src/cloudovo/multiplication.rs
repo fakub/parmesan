@@ -48,7 +48,6 @@ pub fn mul_impl(
             y,
         )?,
         l if l <= 32 => mul_karatsuba(
-            l,
             pub_keys,
             x,
             y,
@@ -61,25 +60,23 @@ pub fn mul_impl(
 
 /// Karatsuba multiplication
 fn mul_karatsuba(
-    len: usize,
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
-    assert_eq!(x.len(), len);
-    assert_eq!(y.len(), len);
+    assert_eq!(x.len(), y.len());
 
-    let len1 = len / 2;
-    let len0 = (len + 1) / 2;
+    let len1 = x.len() / 2;
+    let len0 = (x.len() + 1) / 2;
 
     //       len1  len0
     //  x = | x_1 | x_0 |
     //  y = | y_1 | y_0 |
-    let mut x0: ParmCiphertext = Vec::new();
-    let mut x1: ParmCiphertext = Vec::new();
-    let mut y0: ParmCiphertext = Vec::new();
-    let mut y1: ParmCiphertext = Vec::new();
+    let mut x0 = ParmCiphertext::empty();
+    let mut x1 = ParmCiphertext::empty();
+    let mut y0 = ParmCiphertext::empty();
+    let mut y1 = ParmCiphertext::empty();
 
     for (i, (xi, yi)) in x.iter().zip(y.iter()).enumerate() {
         if i < len0 {
@@ -184,10 +181,8 @@ fn mul_schoolbook(
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
-    let len = x.len();
-
     measure_duration!(
-        ["Multiplication schoolbook ({}-bit)", len],
+        ["Multiplication schoolbook ({}-bit)", x.len()],
         [
             // calc multiplication array
             let mulary = fill_mulary(
@@ -198,7 +193,7 @@ fn mul_schoolbook(
 
             // reduce multiplication array
             //TODO write a function that will be common with scalar_multiplication (if this is possible with strategies 2+)
-            let mut intmd = vec![ParmCiphertext::triv(2*len)?; 2];
+            let mut intmd = vec![ParmCiphertext::triv(2*x.len())?; 2];
             let mut idx = 0usize;
             intmd[idx] = super::addition::add_sub_noise_refresh(
                 true,
@@ -207,7 +202,7 @@ fn mul_schoolbook(
                 &mulary[1],
             )?;
 
-            for i in 2..len {
+            for i in 2..x.len() {
                 idx ^= 1;
                 intmd[idx] = super::addition::add_sub_noise_refresh(
                     true,
@@ -242,6 +237,31 @@ fn mul_1word(
     );
 
     Ok(mulary[0].clone())
+}
+
+/// Fill multiplication array (for schoolbook multiplication)
+fn fill_mulary(
+    pub_keys: &PubKeySet,
+    x: &ParmCiphertext,
+    y: &ParmCiphertext,
+) -> Result<Vec<ParmCiphertext>, Box<dyn Error>> {
+
+    assert_eq!(x.len(), y.len());
+
+    let len = x.len();
+
+    // fill multiplication array
+    //TODO check the size, it might grow outsite due to redundant representation
+    //TODO try different approaches and compare
+    let mut mulary = vec![ParmCiphertext::triv(2*len)?; len];
+
+    mulary.par_iter_mut().zip(y.par_iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
+        &x_yj[j..j+len].par_iter_mut().zip(x.par_iter()).for_each(| (xi_yj, xi) | {
+            *xi_yj = mul_lwe(pub_keys, &xi, &yj).expect("mul_lwe failed.");
+        });
+    });
+
+    Ok(mulary)
 }
 
 /// Implementation of LWE sample multiplication, where `x` and `y` encrypt
@@ -287,29 +307,4 @@ fn mul_lwe(
     //~ );
 
     Ok(z)
-}
-
-/// Fill multiplication array (for schoolbook multiplication)
-fn fill_mulary(
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
-    y: &ParmCiphertext,
-) -> Result<Vec<ParmCiphertext>, Box<dyn Error>> {
-
-    assert_eq!(x.len(), y.len());
-
-    let len = x.len();
-
-    // fill multiplication array
-    //TODO check the size, it might grow outsite due to redundant representation
-    //TODO try different approaches and compare
-    let mut mulary = vec![ParmCiphertext::triv(2*len)?; len];
-
-    mulary.par_iter_mut().zip(y.par_iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
-        &x_yj[j..j+len].par_iter_mut().zip(x.par_iter()).for_each(| (xi_yj, xi) | {
-            *xi_yj = mul_lwe(pub_keys, &xi, &yj).expect("mul_lwe failed.");
-        });
-    });
-
-    Ok(mulary)
 }

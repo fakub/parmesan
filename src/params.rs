@@ -7,7 +7,7 @@ use concrete::*;
 /// * plaintext precision
 /// * quadratic weights
 /// * THFE parameters
-#[derive(Clone, Debug)]   //WISH Serialize, Deserialize
+#[derive(Clone, Debug)]   //WISH Serialize, Deserialize (also elsewhere)
 pub struct Params {
     pub        maxlen:  usize,
     pub bit_precision:  usize,          // aka. pi

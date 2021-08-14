@@ -331,15 +331,9 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let c_xy17 = pc.mul(&cx17, &cy17)?;
     let c_xy32 = pc.mul(&cx32, &cy32)?;
 
-    let c_n161x16= pc.scalar_mul(-161, &cx16)?;
-    let c_n128x16= pc.scalar_mul(-128, &cx16)?;
-    let c_n3x16= pc.scalar_mul(-3, &cx16)?;
-    let c_n2x16= pc.scalar_mul(-2, &cx16)?;
-    let c_n1x16= pc.scalar_mul(-1, &cx16)?;
-    let c_p0x16= pc.scalar_mul( 0, &cx16)?;
-    let c_p1x16= pc.scalar_mul( 1, &cx16)?;
-    let c_p2x16= pc.scalar_mul( 2, &cx16)?;
-    let c_p3x16= pc.scalar_mul( 3, &cx16)?;
+    let c_n161x16 = pc.scalar_mul(-161, &cx16)?;
+    let c_n128x16 = pc.scalar_mul(-128, &cx16)?;
+    let c_p3x16   = pc.scalar_mul( 3, &cx16)?;
 
 
     // =================================
@@ -356,17 +350,12 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let m_xy17 = pu.decrypt(&c_xy17)?;
     let m_xy32 = pu.decrypt(&c_xy32)?;
 
-    let m_n128x16 = pu.decrypt(&c_n128x16)?;
     let m_n161x16 = pu.decrypt(&c_n161x16)?;
-    let m_n3x16   = pu.decrypt(&c_n3x16  )?;
-    let m_n2x16   = pu.decrypt(&c_n2x16  )?;
-    let m_n1x16   = pu.decrypt(&c_n1x16  )?;
-    let m_p0x16   = pu.decrypt(&c_p0x16  )?;
-    let m_p1x16   = pu.decrypt(&c_p1x16  )?;
-    let m_p2x16   = pu.decrypt(&c_p2x16  )?;
+    let m_n128x16 = pu.decrypt(&c_n128x16)?;
     let m_p3x16   = pu.decrypt(&c_p3x16  )?;
 
     let mut summary_text = format!("{} results", String::from("User:").bold().yellow());
+
     summary_text = format!("{}\nm_0 + m_1     = {:12} :: {} (exp. {} % {})", summary_text,
                             m_add,
                             if (m[0] + m[1] - m_add) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
@@ -426,41 +415,12 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
                             if -128 * m_x16 == m_n128x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             -128 * m_x16
     );
-    summary_text = format!("{}\n-3 × x_16     = {:12} :: {} (exp. {})", summary_text,
-                            m_n3x16,
-                            if -3 * m_x16 == m_n3x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            -3 * m_x16
-    );
-    summary_text = format!("{}\n-2 × x_16     = {:12} :: {} (exp. {})", summary_text,
-                            m_n2x16,
-                            if -2 * m_x16 == m_n2x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            -2 * m_x16
-    );
-    summary_text = format!("{}\n-1 × x_16     = {:12} :: {} (exp. {})", summary_text,
-                            m_n1x16,
-                            if -1 * m_x16 == m_n1x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            -1 * m_x16
-    );
-    summary_text = format!("{}\n 0 × x_16     = {:12} :: {} (exp. {})", summary_text,
-                            m_p0x16,
-                            if 0 == m_p0x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            0
-    );
-    summary_text = format!("{}\n 1 × x_16     = {:12} :: {} (exp. {})", summary_text,
-                            m_p1x16,
-                            if 1 * m_x16 == m_p1x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            1 * m_x16
-    );
-    summary_text = format!("{}\n 2 × x_16     = {:12} :: {} (exp. {})", summary_text,
-                            m_p2x16,
-                            if 2 * m_x16 == m_p2x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            2 * m_x16
-    );
     summary_text = format!("{}\n 3 × x_16     = {:12} :: {} (exp. {})", summary_text,
                             m_p3x16,
                             if 3 * m_x16 == m_p3x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             3 * m_x16
     );
+
     infoln!("{}", summary_text);
 
 

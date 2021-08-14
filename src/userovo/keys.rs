@@ -18,7 +18,7 @@ use crate::params::{self,Params};
 
 //WISH #[derive(Serialize, Deserialize)]
 pub struct PrivKeySet {
-    // keys   //TODO change to private
+    // keys
     pub  sk: LWESecretKey,
     pub bsk: LWEBSK,
     pub ksk: LWEKSK,
