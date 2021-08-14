@@ -1,0 +1,8 @@
+
+    TODO
+================================================================================
+
+* scalar multiplication
+* one more bit in multiplication (needed?)
+* make *everything* parallel (e.g., there are many pairs of operations)
+* speedup compared to standard 32-bit addition
