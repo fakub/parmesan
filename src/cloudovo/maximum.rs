@@ -6,7 +6,7 @@ use concrete::LWE;
 #[allow(unused_imports)]
 use colored::Colorize;
 use crate::params::Params;
-use crate::ciphertexts::ParmCiphertext;
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use crate::userovo::keys::PubKeySet;
 use super::pbs;
 
@@ -50,7 +50,7 @@ pub fn max_impl(
             // Parallel
             #[cfg(not(feature = "sequential"))]
             {
-                m = vec![LWE::zero(0)?; x.len()];
+                m = ParmCiphertext::triv(x.len())?;
 
                 // calc x and y selectors
                 m.par_iter_mut().zip(x.par_iter().zip(y.par_iter())).for_each(| (mi, (xi, yi)) | {

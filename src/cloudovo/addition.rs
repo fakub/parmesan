@@ -5,7 +5,7 @@ use rayon::prelude::*;
 use concrete::LWE;
 #[allow(unused_imports)]
 use colored::Colorize;
-use crate::ciphertexts::ParmCiphertext;
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use crate::userovo::keys::PubKeySet;
 use super::pbs;
 
@@ -23,7 +23,7 @@ pub fn add_sub_noise_refresh(
         y,
     )?;
 
-    let mut z = vec![LWE::zero(0)?; x.len()];
+    let mut z = ParmCiphertext::triv(x.len())?;
 
     z_noisy.par_iter().zip(z.par_iter_mut()).for_each(| (zni, zi) | {
         *zi = pbs::id(pub_keys, zni).expect("pbs::id failed.");
@@ -89,7 +89,7 @@ pub fn add_sub_impl(
                 //~ ]);
                 // -----------------------------------------------------------------
 
-                let mut q = vec![LWE::zero(0)?; x.len()];
+                let mut q = ParmCiphertext::triv(x.len())?;
                 z = w.clone();
 
                 q[triv..].par_iter_mut().zip(w[triv..].par_iter().enumerate()).for_each(| (qi, (i0, wi)) | {

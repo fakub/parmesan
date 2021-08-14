@@ -30,7 +30,7 @@ pub mod misc;
 pub mod params;
 pub use params::Params;
 pub mod ciphertexts;
-pub use ciphertexts::ParmCiphertext;
+pub use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 
 // Userovo modules
 pub mod userovo;
@@ -276,9 +276,9 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
     // encrypt all values
     let mut c: [ParmCiphertext; DEMO_N_MSGS] = [
-        vec![LWE::zero(0)?; DEMO_BITLEN],
-        vec![LWE::zero(0)?; DEMO_BITLEN],
-        vec![LWE::zero(0)?; DEMO_BITLEN],
+        ParmCiphertext::triv(DEMO_BITLEN)?,
+        ParmCiphertext::triv(DEMO_BITLEN)?,
+        ParmCiphertext::triv(DEMO_BITLEN)?,
     ];
     for (ci, (mi, mi_as)) in c.iter_mut().zip(m.iter().zip(m_as.iter_mut())) {
         *ci = pu.encrypt(*mi, DEMO_BITLEN)?;

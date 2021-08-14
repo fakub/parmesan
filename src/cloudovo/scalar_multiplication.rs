@@ -7,7 +7,7 @@ use concrete::LWE;
 use colored::Colorize;
 
 use crate::params::Params;
-use crate::ciphertexts::ParmCiphertext;
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use crate::userovo::keys::PubKeySet;
 use super::pbs;
 use super::addition;
@@ -32,7 +32,7 @@ pub fn scalar_mul_impl(
     let k_abs = k.abs() as u32;
 
     // resolve |k| < 2
-    if k_abs == 0 {return Ok(vec![LWE::zero(0)?; x_sgn.len()]);}
+    if k_abs == 0 {return Ok(ParmCiphertext::triv(x_sgn.len())?);}
     if k_abs == 1 {return Ok(x_sgn);}
 
     // 1: double-and-add (naive)
@@ -49,7 +49,7 @@ pub fn scalar_mul_impl(
     for i in 0..k_len {
         if k_abs & (1 << i) != 0 {
             // shift x_sgn
-            let mut x_shifted = vec![LWE::zero(0)?; i];
+            let mut x_shifted = ParmCiphertext::triv(i)?;
             let mut x_cl = x_sgn.clone();
             x_shifted.append(&mut x_cl);
             for _ in 0..(x_sgn.len() + k_len - i) {
@@ -68,7 +68,7 @@ pub fn scalar_mul_impl(
     }
 
     // reduce multiplication array (of length ≥ 2)
-    let mut intmd = vec![vec![LWE::zero(0)?; x_sgn.len() + k_len]; 2];
+    let mut intmd = vec![ParmCiphertext::triv(x_sgn.len() + k_len)?; 2];
     let mut idx = 0usize;
     intmd[idx] = super::addition::add_sub_noise_refresh(
         true,

@@ -6,7 +6,7 @@ use concrete::LWE;
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use crate::ciphertexts::ParmCiphertext;
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use crate::userovo::keys::PubKeySet;
 use super::pbs;
 
@@ -129,7 +129,7 @@ fn mul_karatsuba(
                 &y0,
                 &y1,
             )?;
-            let mut c = vec![LWE::zero(0)?; len0];
+            let mut c = ParmCiphertext::triv(len0)?;
             let mut c_plain = mul_impl(
                 pub_keys,
                 &x01,
@@ -144,7 +144,7 @@ fn mul_karatsuba(
                 &a,
                 &b,
             )?;
-            let mut nanb = vec![LWE::zero(0)?; len0];
+            let mut nanb = ParmCiphertext::triv(len0)?;
             for abi in papb {
                 nanb.push(abi.opposite_uint()?);
             }
@@ -198,7 +198,7 @@ fn mul_schoolbook(
 
             // reduce multiplication array
             //TODO write a function that will be common with scalar_multiplication (if this is possible with strategies 2+)
-            let mut intmd = vec![vec![LWE::zero(0)?; 2*len]; 2];
+            let mut intmd = vec![ParmCiphertext::triv(2*len)?; 2];
             let mut idx = 0usize;
             intmd[idx] = super::addition::add_sub_noise_refresh(
                 true,
@@ -253,9 +253,6 @@ fn mul_lwe(
 ) -> Result<LWE, Box<dyn Error>> {
 
     let mut z: LWE;
-    //~ let mut pos_neg = vec![LWE::zero(0)?; 2];
-    //~ let mut pos = &pos_neg[0];
-    //~ let mut neg = &pos_neg[1];
 
     //~ measure_duration!(
         //~ "Multiplication LWE × LWE",
@@ -306,7 +303,7 @@ fn fill_mulary(
     // fill multiplication array
     //TODO check the size, it might grow outsite due to redundant representation
     //TODO try different approaches and compare
-    let mut mulary = vec![vec![LWE::zero(0)?; 2*len]; len];
+    let mut mulary = vec![ParmCiphertext::triv(2*len)?; len];
 
     mulary.par_iter_mut().zip(y.par_iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
         &x_yj[j..j+len].par_iter_mut().zip(x.par_iter()).for_each(| (xi_yj, xi) | {

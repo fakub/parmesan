@@ -6,7 +6,7 @@ use concrete::LWE;
 #[allow(unused_imports)]
 use colored::Colorize;
 use crate::params::Params;
-use crate::ciphertexts::ParmCiphertext;
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use crate::userovo::keys::PubKeySet;
 use super::pbs;
 
@@ -37,7 +37,7 @@ pub fn sgn_impl(
         ]
     );
 
-    Ok(vec![s_lwe])
+    Ok(ParmCiphertext::single(s_lwe)?)
 }
 
 pub fn sgn_recursion_raw(
@@ -61,12 +61,12 @@ pub fn sgn_recursion_raw(
         measure_duration!(
             ["Signum recursion in parallel ({}-bit, groups by {})", x.len(), gamma],
             [
-                let mut b: ParmCiphertext = vec![LWE::zero_with_encoder(dim, encoder)?; (x.len() - 1) / gamma + 1];
+                let mut b = ParmCiphertext::triv((x.len() - 1) / gamma + 1)?;
 
                 // the thread needs to know the index j so that it can check against x.len()
                 b.par_iter_mut().enumerate().for_each(| (j, bj) | {
 
-                    let mut sj: ParmCiphertext = vec![LWE::zero(0).expect("LWE::zero failed."); gamma];
+                    let mut sj: ParmCiphertext = ParmCiphertext::triv(gamma).expect("LWE::zero failed.");
 
                     sj.par_iter_mut().enumerate().for_each(| (i, sji) | {
                         if gamma * j + i < x.len() {

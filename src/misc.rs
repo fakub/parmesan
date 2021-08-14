@@ -177,31 +177,3 @@ macro_rules! parm_format_err {
         }
     }}
 }
-
-
-
-// some examples of existing macros (modified):
-
-//~ macro_rules! format {
-    //~ ($($arg:tt)*) => {{
-        //~ let res = $crate::fmt::format($crate::__export::format_args!($($arg)*));
-        //~ res
-    //~ }}
-//~ }
-//~ macro_rules! println {;
-    //~ ($($arg:tt)*) => ({
-        //~ $crate::io::_print($crate::format_args_nl!($($arg)*));
-    //~ })
-//~ }
-
-//~ macro_rules! vec {
-    //~ ( $( $x:expr ),* ) => {
-        //~ {
-            //~ let mut temp_vec = Vec::new();
-            //~ $(
-                //~ temp_vec.push($x);
-            //~ )*
-            //~ temp_vec
-        //~ }
-    //~ };
-//~ }

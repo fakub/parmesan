@@ -7,7 +7,7 @@ use colored::Colorize;
 use rayon::prelude::*;
 use crate::params::Params;
 use crate::userovo::keys::PrivKeySet;
-use crate::ciphertexts::ParmCiphertext;
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 
 
 
@@ -48,7 +48,7 @@ pub fn parm_encrypt_vec(
     priv_keys: &PrivKeySet,
     mv: &Vec<i32>,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
-    let mut res = vec![LWE::zero(0)?; mv.len()];
+    let mut res = ParmCiphertext::triv(mv.len())?;
 
     res.par_iter_mut().zip(mv.par_iter()).for_each(| (ri, mi) | {
         *ri = parm_encr_word(params, priv_keys, *mi).expect("parm_encr_word failed.");

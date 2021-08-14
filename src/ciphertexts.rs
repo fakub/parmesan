@@ -1,15 +1,29 @@
-//~ use std::error::Error;
+use std::error::Error;
 
 use concrete::LWE;
 
-//TODO ciphertext should be more standalone type: it should hold a reference to its public keys & params to that operations can be done with only this type parameter
+//TODO  ciphertext should be more standalone type: it should hold a reference to its public keys & params so that operations can be done with only this type parameter
+//      ale je to: zasrane, zamrdane
 pub type ParmCiphertext = Vec<LWE>;
 
-//WISH add initialization of empty one: vec![LWE::zero_with_encoder(dim, encoder)?; len];
+pub trait ParmCiphertextExt {
+    fn triv(len: usize) -> Result<ParmCiphertext, Box<dyn Error>>;
 
-// this is not possible for type
-//~ impl ParmCiphertext {
-    //~ pub fn empty() -> Result<ParmCiphertext, Box<dyn Error>> {
-        //~ vec![LWE::zero(0)?; 0]
-    //~ }
-//~ }
+    fn empty() -> Result<ParmCiphertext, Box<dyn Error>>;
+
+    fn single(c: LWE) -> Result<ParmCiphertext, Box<dyn Error>>;
+}
+
+impl ParmCiphertextExt for ParmCiphertext {
+    fn triv(len: usize) -> Result<ParmCiphertext, Box<dyn Error>> {
+        Ok(vec![LWE::zero(0)?; len])
+    }
+
+    fn empty() -> Result<ParmCiphertext, Box<dyn Error>> {
+        Ok(vec![LWE::zero(0)?; 0])
+    }
+
+    fn single(c: LWE) -> Result<ParmCiphertext, Box<dyn Error>> {
+        Ok(vec![c])
+    }
+}
