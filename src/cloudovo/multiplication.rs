@@ -5,6 +5,7 @@ use rayon::prelude::*;
 use concrete::LWE;
 #[allow(unused_imports)]
 use colored::Colorize;
+
 use crate::ciphertexts::ParmCiphertext;
 use crate::userovo::keys::PubKeySet;
 use super::pbs;
@@ -189,20 +190,21 @@ fn mul_schoolbook(
         ["Multiplication schoolbook ({}-bit)", len],
         [
             // calc multiplication array
-            let mulary_main = fill_mulary(
+            let mulary = fill_mulary(
                 pub_keys,
                 x,
                 y,
             )?;
 
             // reduce multiplication array
+            //TODO write a function that will be common with scalar_multiplication (if this is possible with strategies 2+)
             let mut intmd = vec![vec![LWE::zero(0)?; 2*len]; 2];
             let mut idx = 0usize;
             intmd[idx] = super::addition::add_sub_noise_refresh(
                 true,
                 pub_keys,
-                &mulary_main[0],
-                &mulary_main[1],
+                &mulary[0],
+                &mulary[1],
             )?;
 
             for i in 2..len {
@@ -211,7 +213,7 @@ fn mul_schoolbook(
                     true,
                     pub_keys,
                     &intmd[idx ^ 1],
-                    &mulary_main[i],
+                    &mulary[i],
                 )?;
             }
         ]
@@ -231,7 +233,7 @@ fn mul_1word(
         ["Multiplication 1-word"],
         [
             // calc multiplication array
-            let mulary_main = fill_mulary(
+            let mulary = fill_mulary(
                 pub_keys,
                 x,
                 y,
@@ -239,7 +241,7 @@ fn mul_1word(
         ]
     );
 
-    Ok(mulary_main[0].clone())
+    Ok(mulary[0].clone())
 }
 
 /// Implementation of LWE sample multiplication, where `x` and `y` encrypt
