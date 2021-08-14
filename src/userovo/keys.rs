@@ -16,9 +16,10 @@ use crate::params::{self,Params};
 //  Private Keys
 //
 
-//WISH #[derive(Serialize, Deserialize)]
+//WISH #[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug)]
 pub struct PrivKeySet {
-    // keys   //TODO change to private
+    // keys
     pub  sk: LWESecretKey,
     pub bsk: LWEBSK,
     pub ksk: LWEKSK,
@@ -155,9 +156,10 @@ impl PrivKeySet {
 //  Public Keys
 //
 
-//WISH #[derive(Serialize, Deserialize)]
-pub struct PubKeySet<'a> {
-    pub bsk:     &'a LWEBSK,
-    pub ksk:     &'a LWEKSK,
-    pub encoder: &'a Encoder,
+//WISH #[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone, Debug)]
+pub struct PubKeySet {
+    pub bsk:     LWEBSK,
+    pub ksk:     LWEKSK,
+    pub encoder: Encoder,
 }

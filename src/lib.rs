@@ -13,7 +13,6 @@ use std::error::Error;
 
 #[allow(unused_imports)]
 use colored::Colorize;
-use concrete::LWE;
 
 /// Keeps log level for nested time measurements
 static mut LOG_LVL: u8 = 0;
@@ -54,6 +53,7 @@ pub use cloudovo::*;
 pub struct ParmesanUserovo<'a> {
     pub params: &'a Params,
     priv_keys: PrivKeySet,
+    pub pub_keys: PubKeySet,
 }
 
 impl ParmesanUserovo<'_> {
@@ -61,20 +61,35 @@ impl ParmesanUserovo<'_> {
     /// * save immutable reference to params
     /// * generate keys
     pub fn new(params: &Params) -> Result<ParmesanUserovo, Box<dyn Error>> {
+        let priv_keys = PrivKeySet::new(params)?;
+        let pub_keys = PubKeySet {
+            bsk: priv_keys.bsk.clone(),
+            ksk: priv_keys.ksk.clone(),
+            encoder: priv_keys.encoder.clone(),
+        };
+
         Ok(ParmesanUserovo {
             params,
-            priv_keys: PrivKeySet::new(params)?,
+            priv_keys,
+            pub_keys,
         })
     }
 
-    /// Get the Public Key Set
-    pub fn export_pub_keys(&self) -> PubKeySet {
-        PubKeySet {
-            bsk:     &self.priv_keys.bsk,
-            ksk:     &self.priv_keys.ksk,
-            encoder: &self.priv_keys.encoder,
-        }
-    }
+    //~ pub fn new<'a>(
+        //~ params: &'a Params,
+        //~ priv_keys: &'a PrivKeySet,
+        //~ // pub_keys: &PubKeySet,
+    //~ ) -> Result<ParmesanUserovo<'a>, Box<dyn Error>> {
+        //~ Ok(ParmesanUserovo {
+            //~ params,
+            //~ priv_keys,
+            //~ // pub_keys: PubKeySet {
+                //~ // bsk:     &priv_keys.bsk,
+                //~ // ksk:     &priv_keys.ksk,
+                //~ // encoder: &priv_keys.encoder,
+            //~ // },
+        //~ })
+    //~ }
 
     /// Encrypt a 64-bit signed integer
     /// * `bits` states how many bits of input `m` are to be encrypted, since this will be public
@@ -84,7 +99,13 @@ impl ParmesanUserovo<'_> {
         m: i64,
         bits: usize,
     ) -> Result<ParmCiphertext, Box<dyn Error>> {   //WISH change to a template for other integer types/lengths, too
-        Ok(encryption::parm_encrypt(self.params, &self.priv_keys, m, bits)?)
+        Ok(encryption::parm_encrypt(
+            self.params,
+            &self.priv_keys,
+            &self.pub_keys,
+            m,
+            bits,
+        )?)
     }
 
     /// Encrypt a vector of words from alphabet `{-1,0,1}`
@@ -92,7 +113,12 @@ impl ParmesanUserovo<'_> {
         &self,
         mv: &Vec<i32>,
     ) -> Result<ParmCiphertext, Box<dyn Error>> {   //WISH change to a template for other integer types/lengths, too
-        Ok(encryption::parm_encrypt_vec(self.params, &self.priv_keys, mv)?)
+        Ok(encryption::parm_encrypt_vec(
+            self.params,
+            &self.priv_keys,
+            &self.pub_keys,
+            mv
+        )?)
     }
 
     /// Decrypt ciphertext into a 64-bit signed integer
@@ -107,7 +133,7 @@ impl ParmesanUserovo<'_> {
 /// # Cloud-side Parmesan
 pub struct ParmesanCloudovo<'a> {
     pub params: &'a Params,
-    pub_keys: &'a PubKeySet<'a>,
+    pub_keys: &'a PubKeySet,
 }
 
 impl ParmesanCloudovo<'_> {
@@ -123,89 +149,61 @@ impl ParmesanCloudovo<'_> {
     }
 
     /// Add two ciphertexts in parallel
-    pub fn add(
+    pub fn add<'a>(
         &self,
-        x: &ParmCiphertext,
-        y: &ParmCiphertext,
-    ) -> Result<ParmCiphertext, Box<dyn Error>> {
-        Ok(addition::add_sub_impl(
-            true,
-            self.pub_keys,
-            x,
-            y,
-        )?)
+        x: &'a ParmCiphertext,
+        y: &'a ParmCiphertext,
+    ) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+        Ok(addition::add_sub_impl(true, x, y)?)
     }
 
     /// Subtract two ciphertexts in parallel
-    pub fn sub(
+    pub fn sub<'a>(
         &self,
-        x: &ParmCiphertext,
-        y: &ParmCiphertext,
-    ) -> Result<ParmCiphertext, Box<dyn Error>> {
-        Ok(addition::add_sub_impl(
-            false,
-            self.pub_keys,
-            x,
-            y,
-        )?)
+        x: &'a ParmCiphertext,
+        y: &'a ParmCiphertext,
+    ) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+        Ok(addition::add_sub_impl(false, x, y)?)
     }
 
     /// Scalar multiplication (by a known integer)
-    pub fn scalar_mul(
+    pub fn scalar_mul<'a>(
         &self,
         k: i32,
-        x: &ParmCiphertext,
-    ) -> Result<ParmCiphertext, Box<dyn Error>> {
-        Ok(scalar_multiplication::scalar_mul_impl(
-            self.params,
-            self.pub_keys,
-            k,
-            x,
-        )?)
+        x: &'a ParmCiphertext,
+    ) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+        Ok(scalar_multiplication::scalar_mul_impl(k, x)?)
     }
 
     /// Signum of a ciphertext by parallel reduction
-    pub fn sgn(
+    pub fn sgn<'a>(
         &self,
-        x: &ParmCiphertext,
-    ) -> Result<ParmCiphertext, Box<dyn Error>> {
-        Ok(signum::sgn_impl(
-            self.params,
-            self.pub_keys,
-            x,
-        )?)
+        x: &'a ParmCiphertext,
+    ) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+        Ok(signum::sgn_impl(x)?)
     }
 
     /// Maximum of two ciphertexts in parallel using signum
-    pub fn max(
+    pub fn max<'a>(
         &self,
-        x: &ParmCiphertext,
-        y: &ParmCiphertext,
-    ) -> Result<ParmCiphertext, Box<dyn Error>> {
-        Ok(maximum::max_impl(
-            self.params,
-            self.pub_keys,
-            x,
-            y,
-        )?)
+        x: &'a ParmCiphertext,
+        y: &'a ParmCiphertext,
+    ) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+        Ok(maximum::max_impl(x, y)?)
     }
 
     /// Product of two ciphertexts
-    pub fn mul(
+    pub fn mul<'a>(
         &self,
-        x: &ParmCiphertext,
-        y: &ParmCiphertext,
-    ) -> Result<ParmCiphertext, Box<dyn Error>> {
+        x: &'a ParmCiphertext,
+        y: &'a ParmCiphertext,
+    ) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
         if x.len() != y.len() {
-            //TODO ...
+            //TODO ... also add elsewhere
             return Err("Multiplication: Parmesan ciphertexts of equal length expected.".into());
         }
 
-        Ok(multiplication::mul_impl(
-            self.pub_keys,
-            x,
-            y,
-        )?)
+        Ok(multiplication::mul_impl(x, y)?)
     }
 }
 
@@ -237,7 +235,6 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     // ---------------------------------
     //  Userovo Scope
     let pu = ParmesanUserovo::new(par)?;
-    let pub_k = pu.export_pub_keys();
 
     const DEMO_BITLEN: usize = 12;
     const DEMO_N_MSGS: usize = 3;
@@ -246,7 +243,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     //  Cloudovo Scope
     let pc = ParmesanCloudovo::new(
         par,
-        &pub_k,
+        &pu.pub_keys,
     );
 
 
@@ -275,13 +272,9 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let m_y32: i64 =  0b01001011100111010100110001010100;   // 1268599892   ->  2177219247569903992 which fits 63 bits (i64)
 
     // encrypt all values
-    let mut c: [ParmCiphertext; DEMO_N_MSGS] = [
-        vec![LWE::zero(0)?; DEMO_BITLEN],
-        vec![LWE::zero(0)?; DEMO_BITLEN],
-        vec![LWE::zero(0)?; DEMO_BITLEN],
-    ];
-    for (ci, (mi, mi_as)) in c.iter_mut().zip(m.iter().zip(m_as.iter_mut())) {
-        *ci = pu.encrypt(*mi, DEMO_BITLEN)?;
+    let mut c = Vec::new();
+    for (mi, mi_as) in m.iter().zip(m_as.iter_mut()) {
+        c.push(pu.encrypt(*mi, DEMO_BITLEN)?);
         *mi_as = (*mi).signum() * ((*mi).abs() % (1 << DEMO_BITLEN));
     }
     let cx1 = pu.encrypt(m_x1,   1)?;
@@ -331,15 +324,9 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let c_xy17 = pc.mul(&cx17, &cy17)?;
     let c_xy32 = pc.mul(&cx32, &cy32)?;
 
-    let c_n161x16= pc.scalar_mul(-161, &cx16)?;
-    let c_n128x16= pc.scalar_mul(-128, &cx16)?;
-    let c_n3x16= pc.scalar_mul(-3, &cx16)?;
-    let c_n2x16= pc.scalar_mul(-2, &cx16)?;
-    let c_n1x16= pc.scalar_mul(-1, &cx16)?;
-    let c_p0x16= pc.scalar_mul( 0, &cx16)?;
-    let c_p1x16= pc.scalar_mul( 1, &cx16)?;
-    let c_p2x16= pc.scalar_mul( 2, &cx16)?;
-    let c_p3x16= pc.scalar_mul( 3, &cx16)?;
+    let c_n161x16 = pc.scalar_mul(-161, &cx16)?;
+    let c_n128x16 = pc.scalar_mul(-128, &cx16)?;
+    let c_p3x16   = pc.scalar_mul( 3, &cx16)?;
 
 
     // =================================
@@ -356,17 +343,12 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let m_xy17 = pu.decrypt(&c_xy17)?;
     let m_xy32 = pu.decrypt(&c_xy32)?;
 
-    let m_n128x16 = pu.decrypt(&c_n128x16)?;
     let m_n161x16 = pu.decrypt(&c_n161x16)?;
-    let m_n3x16   = pu.decrypt(&c_n3x16  )?;
-    let m_n2x16   = pu.decrypt(&c_n2x16  )?;
-    let m_n1x16   = pu.decrypt(&c_n1x16  )?;
-    let m_p0x16   = pu.decrypt(&c_p0x16  )?;
-    let m_p1x16   = pu.decrypt(&c_p1x16  )?;
-    let m_p2x16   = pu.decrypt(&c_p2x16  )?;
+    let m_n128x16 = pu.decrypt(&c_n128x16)?;
     let m_p3x16   = pu.decrypt(&c_p3x16  )?;
 
     let mut summary_text = format!("{} results", String::from("User:").bold().yellow());
+
     summary_text = format!("{}\nm_0 + m_1     = {:12} :: {} (exp. {} % {})", summary_text,
                             m_add,
                             if (m[0] + m[1] - m_add) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
@@ -426,41 +408,12 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
                             if -128 * m_x16 == m_n128x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             -128 * m_x16
     );
-    summary_text = format!("{}\n-3 × x_16     = {:12} :: {} (exp. {})", summary_text,
-                            m_n3x16,
-                            if -3 * m_x16 == m_n3x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            -3 * m_x16
-    );
-    summary_text = format!("{}\n-2 × x_16     = {:12} :: {} (exp. {})", summary_text,
-                            m_n2x16,
-                            if -2 * m_x16 == m_n2x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            -2 * m_x16
-    );
-    summary_text = format!("{}\n-1 × x_16     = {:12} :: {} (exp. {})", summary_text,
-                            m_n1x16,
-                            if -1 * m_x16 == m_n1x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            -1 * m_x16
-    );
-    summary_text = format!("{}\n 0 × x_16     = {:12} :: {} (exp. {})", summary_text,
-                            m_p0x16,
-                            if 0 == m_p0x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            0
-    );
-    summary_text = format!("{}\n 1 × x_16     = {:12} :: {} (exp. {})", summary_text,
-                            m_p1x16,
-                            if 1 * m_x16 == m_p1x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            1 * m_x16
-    );
-    summary_text = format!("{}\n 2 × x_16     = {:12} :: {} (exp. {})", summary_text,
-                            m_p2x16,
-                            if 2 * m_x16 == m_p2x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            2 * m_x16
-    );
     summary_text = format!("{}\n 3 × x_16     = {:12} :: {} (exp. {})", summary_text,
                             m_p3x16,
                             if 3 * m_x16 == m_p3x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             3 * m_x16
     );
+
     infoln!("{}", summary_text);
 
 

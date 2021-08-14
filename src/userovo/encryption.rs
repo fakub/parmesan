@@ -6,7 +6,7 @@ use colored::Colorize;
 #[allow(unused_imports)]
 use rayon::prelude::*;
 use crate::params::Params;
-use crate::userovo::keys::PrivKeySet;
+use crate::userovo::keys::{PrivKeySet, PubKeySet};
 use crate::ciphertexts::ParmCiphertext;
 
 
@@ -19,13 +19,14 @@ use crate::ciphertexts::ParmCiphertext;
 /// Parmesan encryption of a 64-bit signed integer
 /// * splits signed integer into bits
 /// * encrypt one-by-one
-pub fn parm_encrypt(
-    params: &Params,
-    priv_keys: &PrivKeySet,
+pub fn parm_encrypt<'a>(
+    params: &'a Params,
+    priv_keys: &'a PrivKeySet,
+    pub_keys: &'a PubKeySet,
     m: i64,
     bits: usize,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
-    let mut res: ParmCiphertext = Vec::new();
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+    let mut res = ParmCiphertext::triv(params, pub_keys, 0)?;
     let m_abs = m.abs();
     let m_pos = m >= 0;
 
@@ -36,23 +37,24 @@ pub fn parm_encrypt(
         } else {
             if m_pos {1i32} else {-1i32}
         };
-        res.push(parm_encr_word(params, priv_keys, mi)?);
+        res.c.push(parm_encr_word(params, priv_keys, mi)?);
     }
 
     Ok(res)
 }
 
 /// Parmesan encryption of a vector of words from alphabet `{-1,0,1}`
-pub fn parm_encrypt_vec(
-    params: &Params,
-    priv_keys: &PrivKeySet,
+pub fn parm_encrypt_vec<'a>(
+    params: &'a Params,
+    priv_keys: &'a PrivKeySet,
+    pub_keys: &'a PubKeySet,
     mv: &Vec<i32>,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
-    let mut res = vec![LWE::zero(0)?; mv.len()];
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+    let mut res = ParmCiphertext::triv(params, pub_keys, 0)?;
 
-    res.par_iter_mut().zip(mv.par_iter()).for_each(| (ri, mi) | {
-        *ri = parm_encr_word(params, priv_keys, *mi).expect("parm_encr_word failed.");
-    });
+    for mi in mv {
+        res.c.push(parm_encr_word(params, priv_keys, *mi)?);
+    }
 
     Ok(res)
 }
@@ -98,7 +100,7 @@ pub fn parm_decrypt(
     //~ measure_duration!(
         //~ ["Decrypt"],
         //~ [
-            for (i, ct) in pc.iter().enumerate() {
+            for (i, ct) in pc.c.iter().enumerate() {
                 let mi = parm_decr_word(params, priv_keys, ct)?;
                 //~ infoln!("m[{}] = {} (pi = {})", i, mi, ct.encoder.nb_bit_precision);
                 m += match mi {

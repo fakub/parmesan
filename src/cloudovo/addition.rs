@@ -2,51 +2,42 @@ use std::error::Error;
 
 #[cfg(not(feature = "sequential"))]
 use rayon::prelude::*;
-use concrete::LWE;
 #[allow(unused_imports)]
 use colored::Colorize;
 use crate::ciphertexts::ParmCiphertext;
-use crate::userovo::keys::PubKeySet;
 use super::pbs;
 
 /// Parallel addition/subtraction followed by noise refreshal
-pub fn add_sub_noise_refresh(
+pub fn add_sub_noise_refresh<'a>(
     is_add: bool,
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
-    y: &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
-    let z_noisy = add_sub_impl(
-        is_add,
-        pub_keys,
-        x,
-        y,
-    )?;
+    x: &'a ParmCiphertext,
+    y: &'a ParmCiphertext,
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+    let z_noisy = add_sub_impl(is_add, x, y)?;
 
-    let mut z = vec![LWE::zero(0)?; x.len()];
+    let mut z = ParmCiphertext::triv(z_noisy.params, z_noisy.pub_keys, z_noisy.len())?;
 
-    z_noisy.par_iter().zip(z.par_iter_mut()).for_each(| (zni, zi) | {
-        *zi = pbs::id(pub_keys, zni).expect("pbs::id failed.");
+    z_noisy.c.par_iter().zip(z.c.par_iter_mut()).for_each(| (zni, zi) | {
+        *zi = pbs::id(z_noisy.pub_keys, zni).expect("pbs::id failed.");
     });
 
     Ok(z)
 }
 
 /// Implementation of parallel addition/subtraction
-pub fn add_sub_impl(
+pub fn add_sub_impl<'a>(
     is_add: bool,
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
-    y: &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
+    x: &'a ParmCiphertext,
+    y: &'a ParmCiphertext,
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
 
     // calculate right overlap ov trivial samples
     let mut x_triv = 0usize;
     let mut y_triv = 0usize;
-    for xi in x {
+    for xi in &x.c {
         if xi.dimension == 0 {x_triv += 1;} else {break;}
     }
-    for yi in y {
+    for yi in &y.c {
         if yi.dimension == 0 {y_triv += 1;} else {break;}
     }
     let triv = std::cmp::max(x_triv, y_triv);
@@ -68,11 +59,11 @@ pub fn add_sub_impl(
                 //~ ["w = x + y (seq)"],
                 //~ [
                     if is_add {
-                        for (wi, yi) in w.iter_mut().zip(y.iter()) {
+                        for (wi, yi) in w.c.iter_mut().zip(y.c.iter()) {
                             wi.add_uint_inplace(&yi)?;
                         }
                     } else {
-                        for (wi, yi) in w.iter_mut().zip(y.iter()) {
+                        for (wi, yi) in w.c.iter_mut().zip(y.c.iter()) {
                             wi.sub_uint_inplace(&yi)?;
                         }
                     }
@@ -82,29 +73,29 @@ pub fn add_sub_impl(
                 //~ ["w = x + y (par)"],
                 //~ [
                     //~ if is_add {
-                        //~ w.par_iter_mut().zip(y.par_iter()).for_each(|(wi,yi)| wi.add_uint_inplace(&yi).expect("add_uint_inplace failed.") );
+                        //~ w.c.par_iter_mut().zip(y.c.par_iter()).for_each(|(wi,yi)| wi.add_uint_inplace(&yi).expect("add_uint_inplace failed.") );
                     //~ } else {
-                        //~ w.par_iter_mut().zip(y.par_iter()).for_each(|(wi,yi)| wi.sub_uint_inplace(&yi).expect("sub_uint_inplace failed.") );
+                        //~ w.c.par_iter_mut().zip(y.c.par_iter()).for_each(|(wi,yi)| wi.sub_uint_inplace(&yi).expect("sub_uint_inplace failed.") );
                     //~ }
                 //~ ]);
                 // -----------------------------------------------------------------
 
-                let mut q = vec![LWE::zero(0)?; x.len()];
+                let mut q = ParmCiphertext::triv(x.params, x.pub_keys, x.len())?;
                 z = w.clone();
 
-                q[triv..].par_iter_mut().zip(w[triv..].par_iter().enumerate()).for_each(| (qi, (i0, wi)) | {
+                q.c[triv..].par_iter_mut().zip(w.c[triv..].par_iter().enumerate()).for_each(| (qi, (i0, wi)) | {
                     let i = i0 + triv;
                     // calc   3 w_i + w_i-1
                     let mut wi_3 = wi.mul_uint_constant(3).expect("mul_uint_constant failed.");
-                    if i0 > 0 { wi_3.add_uint_inplace(&w[i-1]).expect("add_uint_inplace failed."); }
-                    *qi = pbs::f_4__pi_5(pub_keys, &wi_3).expect("f_4__pi_5 failed.");
+                    if i0 > 0 { wi_3.add_uint_inplace(&w.c[i-1]).expect("add_uint_inplace failed."); }
+                    *qi = pbs::f_4__pi_5(x.pub_keys, &wi_3).expect("f_4__pi_5 failed.");
                 });
 
-                z.par_iter_mut().zip(q.par_iter().enumerate()).for_each(| (zi, (i, qi)) | {
+                z.c.par_iter_mut().zip(q.c.par_iter().enumerate()).for_each(| (zi, (i, qi)) | {
                     // calc   2 q_i
                     let qi_2 = qi.mul_uint_constant(2).expect("mul_uint_constant failed.");
                     zi.sub_uint_inplace(&qi_2).expect("sub_uint_inplace failed.");
-                    if i > 0 { zi.add_uint_inplace(&q[i-1]).expect("add_uint_inplace failed."); }
+                    if i > 0 { zi.add_uint_inplace(&q.c[i-1]).expect("add_uint_inplace failed."); }
                 });
                 //TODO add one more bootstrap with identity (or leave it for user? in some cases BS could be saved)
                 //TODO add one more thread if < maxlen
@@ -126,7 +117,7 @@ pub fn add_sub_impl(
                 z = Vec::new();
 
                 //TODO apply triv
-                for (xi, yi) in x.iter().zip(y.iter()) {
+                for (xi, yi) in x.c.iter().zip(y.c.iter()) {
                     let mut wi_0    = xi.clone();
                     if is_add {
                         wi_0.add_uint_inplace(&yi)?;
@@ -136,7 +127,7 @@ pub fn add_sub_impl(
                     let mut wi_0_3  = wi_0.mul_uint_constant(3)?;
                                       wi_0_3.add_uint_inplace(&wi_1)?;
 
-                    let     qi_0    = pbs::f_4__pi_5(pub_keys, &wi_0_3)?;
+                    let     qi_0    = pbs::f_4__pi_5(x.pub_keys, &wi_0_3)?;
                     let     qi_0_2  = qi_0.mul_uint_constant(2)?;
 
                     let mut zi      = wi_0.clone();
