@@ -65,7 +65,7 @@ macro_rules! simple_duration {
             String::from(format!("{:.3} s",  __time / 1_000_000.)).cyan().bold()
         };
         // print result
-        println!(" {}  {} (in {})", String::from("—").red().bold(), __msg, __s_time);
+        println!(" {}  {} (in {})\n", String::from("—").red().bold(), __msg, __s_time);
     }
 }
 

@@ -105,7 +105,7 @@ pub fn parm_decrypt(
                      1 => {  1i64 << i},
                      0 => {  0i64},
                     -1 => {-(1i64 << i)},
-                     _ => {return Err(format!("Word out of alphabet: {}.", mi).into())},
+                     _ => {return Err(format!("Word m_[{}] out of alphabet: {}.", i, mi).into())},
                 };
             }
         //~ ]
