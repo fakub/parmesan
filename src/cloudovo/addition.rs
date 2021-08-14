@@ -40,7 +40,16 @@ pub fn add_sub_impl(
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
-    //TODO add ciphertexts with different lengths & with overlap (in particular, right overlap can only be copied)
+    // calculate right overlap ov trivial samples
+    let mut x_triv = 0usize;
+    let mut y_triv = 0usize;
+    for xi in x {
+        if xi.dimension == 0 {x_triv += 1;} else {break;}
+    }
+    for yi in y {
+        if yi.dimension == 0 {y_triv += 1;} else {break;}
+    }
+    let triv = std::cmp::max(x_triv, y_triv);
 
     let mut z: ParmCiphertext;
 
@@ -83,10 +92,11 @@ pub fn add_sub_impl(
                 let mut q = vec![LWE::zero(0)?; x.len()];
                 z = w.clone();
 
-                q.par_iter_mut().zip(w.par_iter().enumerate()).for_each(| (qi, (i, wi)) | {
+                q[triv..].par_iter_mut().zip(w[triv..].par_iter().enumerate()).for_each(| (qi, (i0, wi)) | {
+                    let i = i0 + triv;
                     // calc   3 w_i + w_i-1
                     let mut wi_3 = wi.mul_uint_constant(3).expect("mul_uint_constant failed.");
-                    if i > 0 { wi_3.add_uint_inplace(&w[i-1]).expect("add_uint_inplace failed."); }
+                    if i0 > 0 { wi_3.add_uint_inplace(&w[i-1]).expect("add_uint_inplace failed."); }
                     *qi = pbs::f_4__pi_5(pub_keys, &wi_3).expect("f_4__pi_5 failed.");
                 });
 
@@ -115,6 +125,7 @@ pub fn add_sub_impl(
                 let mut qi_1:   LWE = LWE::zero_with_encoder(dim, encoder)?;
                 z = Vec::new();
 
+                //TODO apply triv
                 for (xi, yi) in x.iter().zip(y.iter()) {
                     let mut wi_0    = xi.clone();
                     if is_add {
