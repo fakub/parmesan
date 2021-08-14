@@ -37,6 +37,10 @@
 //!                 o-----------o
 //!```
 
+use crate::ParmesanCloudovo;
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+use crate::ParmArithmetic;
+
 /// Perceptron type:
 /// * maximum,
 /// * linear combination,
@@ -65,15 +69,16 @@ pub struct Perceptron {
 pub type Layer = Vec<Perceptron>;
 
 /// Neural Network
-pub struct NeuralNetwork {
+pub struct NeuralNetwork<'a> {
     //  NN consists of layers, evaluated one after each other
     pub layers: Vec<Layer>,
+    pub pc: &'a ParmesanCloudovo<'a>,
 }
 
-impl NeuralNetwork {
+impl NeuralNetwork<'_> {
 
     /// Evaluate Neural Network
-    pub fn eval<T: std::clone::Clone>( // T is either i32, or ParmCiphertext
+    pub fn eval<T: Clone + ParmArithmetic>( // T is either i32, or ParmCiphertext
         &self,
         inputs: &Vec<T>,
     ) -> Vec<T> {   //TODO Result<Vec<T>, Box<dyn Error>>
@@ -82,95 +87,105 @@ impl NeuralNetwork {
         let mut ol: Vec<T> = Vec::new();
 
         for layer in &self.layers {
-            eval_layer::<T>(layer, &il, &mut ol);
+            self.eval_layer::<T>(layer, &il, &mut ol);
             // last output is next input
             il = ol.clone();
         }
 
         ol
     }
-}
 
-pub fn eval_layer<T: std::clone::Clone>(
-    layer: &Layer,
-    input: &Vec<T>,
-    output: &mut Vec<T>,
-) {
-    output.clear();
+    /// Evaluate a layer of NN
+    pub fn eval_layer<T: Clone + ParmArithmetic>(
+        &self,
+        layer: &Layer,
+        input: &Vec<T>,
+        output: &mut Vec<T>,
+    ) {
+        output.clear();
 
-    // evaluate perceptron by type
-    for perc in layer {
-        match &perc.t {
-            PercType::MAX => {
-                let max = max_pool::<T>(&perc.w, input, perc.b);
-                output.push(max);
-            },
-            PercType::LIN => {
-                let aff = affine_pool::<T>(&perc.w, input, perc.b);
-                output.push(aff);
-            },
-            PercType::ACT => {
-                let aff = affine_pool::<T>(&perc.w, input, perc.b);
-                output.push(act_fn::<T>(aff));
-            },
+        // evaluate perceptron by type
+        for perc in layer {
+            match &perc.t {
+                PercType::MAX => {
+                    let max = self.max_pool::<T>(&perc.w, input, perc.b);
+                    output.push(max);
+                },
+                PercType::LIN => {
+                    let aff = self.affine_pool::<T>(&perc.w, input, perc.b);
+                    output.push(aff);
+                },
+                PercType::ACT => {
+                    let aff = self.affine_pool::<T>(&perc.w, input, perc.b);
+                    output.push(self.act_fn::<T>(aff));
+                },
+            }
         }
     }
-}
 
-pub fn affine_pool<T: std::clone::Clone>(
-    w: &Vec<i32>,
-    a: &Vec<T>,
-    b: i32,
-) -> T {        //TODO Result<...>
+    pub fn affine_pool<T: Clone + ParmArithmetic>(
+        &self,
+        w: &Vec<i32>,
+        a: &Vec<T>,
+        b: i32,
+    ) -> T {        //TODO Result<...>
 
-    //~ let mut res: T = 0 as T;
+        //~ let mut res: T = 0 as T;
 
-    for (wi, ai) in w.iter().zip(a.iter()) {
-        //TODO res += scalar_mul(wi, ai);
-    }
-    // res += b;
+        for (wi, ai) in w.iter().zip(a.iter()) {
+            //TODO res += scalar_mul(wi, ai);
+        }
+        // res += b;
 
-    a[0].clone()
-    //~ res
-}
+        //~ a[0].clone();
+        //~ res
 
-pub fn max_pool<T: std::clone::Clone>(
-    w: &Vec<i32>,
-    a: &Vec<T>,
-    b: i32,
-) -> T {        //TODO Result<...>
-
-    let mut wa: Vec<T> = Vec::new();
-
-    for (wi, ai) in w.iter().zip(a.iter()) {
-        //TODO wa.push(scalar_mul(wi, ai));
+        ParmArithmetic::add_tr(self.pc, &a[0], &a[1])
     }
 
-    //~ max_pool_recursion::<T>(wa) + b;
+    pub fn max_pool<T: Clone + ParmArithmetic>(
+        &self,
+        w: &Vec<i32>,
+        a: &Vec<T>,
+        b: i32,
+    ) -> T {        //TODO Result<...>
 
-    a[0].clone()
-    //~ res
-}
+        let mut wa: Vec<T> = Vec::new();
 
-fn max_pool_recursion<T: std::clone::Clone>(
-    a: &Vec<T>,
-) -> T {
+        for (wi, ai) in w.iter().zip(a.iter()) {
+            //TODO wa.push(scalar_mul(wi, ai));
+        }
 
-    //TODO
-    if a.len() == 0 {
-        // return MAX_NEG
-    } else if a.len() == 1 {
-        return a[0].clone();
+        //~ self.max_pool_recursion::<T>(wa) + b;
+
+        a[0].clone()
+        //~ res
     }
 
-    let mut a_half: Vec<T> = Vec::new();
-    // a_half.push(super::max_impl(each pair))
-    // return max_pool_recursion::<T>(a_half);
+    fn max_pool_recursion<T: Clone + ParmArithmetic>(
+        &self,
+        a: &Vec<T>,
+    ) -> T {
 
-    a[0].clone()
-}
+        //TODO
+        if a.len() == 0 {
+            // return MAX_NEG
+        } else if a.len() == 1 {
+            return a[0].clone();
+        }
 
-pub fn act_fn<T>(lc: T) -> T {
-    //TODO signum(lc)
-    lc
+        let mut a_half: Vec<T> = Vec::new();
+        // a_half.push(super::max_impl(each pair))
+        // return max_pool_recursion::<T>(a_half);
+
+        a[0].clone()
+    }
+
+    pub fn act_fn<T: ParmArithmetic>(
+        &self,
+        lc: T,
+    ) -> T {
+        //TODO signum(lc)
+        lc
+    }
 }
