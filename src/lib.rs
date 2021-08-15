@@ -393,7 +393,7 @@ pub fn nn_demo() -> Result<(), Box<dyn Error>> {
     //  U: Encryption
 
     // NN input layer
-    let m_in: [i32; INPUT_SIZE] = [
+    let m_in: Vec<i64> = vec![
          0b11011000,
         -0b01000110,
         -0b10000100,
@@ -403,7 +403,7 @@ pub fn nn_demo() -> Result<(), Box<dyn Error>> {
     ];
 
     // encrypt all values
-    let mut c_in: [ParmCiphertext; INPUT_SIZE] = [
+    let mut c_in: Vec<ParmCiphertext> = vec![
         ParmCiphertext::empty(),
         ParmCiphertext::empty(),
         ParmCiphertext::empty(),
@@ -412,13 +412,13 @@ pub fn nn_demo() -> Result<(), Box<dyn Error>> {
         ParmCiphertext::empty(),
     ];
     for (ci, mi) in c_in.iter_mut().zip(m_in.iter()) {
-        *ci = pu.encrypt(*mi as i64, INPUT_BITLEN)?;
+        *ci = pu.encrypt(*mi, INPUT_BITLEN)?;
     }
 
     // print input layer
     let mut intro_text = format!("{}: input layer ({} elements)", String::from("User").bold().yellow(), INPUT_SIZE);
     for (i, mi) in m_in.iter().enumerate() {
-        intro_text = format!("{}\nIN[{}] = {}{:08b} ({:4})", intro_text, i, if *mi >= 0 {" "} else {"-"}, mi.abs(), mi);
+        intro_text = format!("{}\nIN[{}] = {}{:08b} ({:4})", intro_text, i, if *mi >= 0 {" "} else {"-"}, (*mi).abs(), mi);
     }
     infoln!("{}", intro_text);
 
@@ -426,7 +426,7 @@ pub fn nn_demo() -> Result<(), Box<dyn Error>> {
     // =================================
     //  C: Evaluation
 
-    let _nn_struct = NeuralNetwork {
+    let nn = NeuralNetwork {
         layers: vec![
             vec![
                 Perceptron {
@@ -439,22 +439,30 @@ pub fn nn_demo() -> Result<(), Box<dyn Error>> {
         pc: &pc,
     };
 
+    let c_out = nn.eval(&c_in);
+    let m_out_plain = nn.eval(&m_in);
+
     //TODO plain & homomorphic evaluation
 
 
     // =================================
     //  U: Decryption
 
-    //~ let m_add  = pu.decrypt(&c_add )?;
+    let mut m_out_homo = Vec::new();
+    for ci in c_out {
+        m_out_homo.push(pu.decrypt(&ci)?);
+    }
 
     let mut summary_text = format!("{}: output layer ({} elements)", String::from("User").bold().yellow(), -42);
 
-    summary_text = format!("{}\nOUT[-] = ...", summary_text);   // deleteme
-    //~ summary_text = format!("{}\nOUT[{}] = {:12} :: {} (exp. {} % {})", summary_text,
-                            //~ i, m_add,
-                            //~ if (m[0] + m[1] - m_add) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ (m_as[0] + m_as[1]) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
-    //~ );
+    summary_text = format!("{}\nPlain vs. homomorphic processing:", summary_text);
+    for (i, (mhi, mpi)) in m_out_homo.iter().zip(m_out_plain.iter()).enumerate() {
+        summary_text = format!("{}\nOUT[{}] = {:12} :: {} (exp. {})", summary_text,
+                                i, mhi,
+                                if mhi == mpi {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                                mpi
+        );
+    }
 
     infoln!("{}", summary_text);
 
