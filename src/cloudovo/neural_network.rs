@@ -140,7 +140,7 @@ impl NeuralNetwork<'_> {
         //~ a[0].clone();
         //~ res
 
-        ParmArithmetic::add_tr(self.pc, &a[0], &a[1])
+        ParmArithmetic::add(self.pc, &a[0], &a[1])
     }
 
     pub fn max_pool<T: Clone + ParmArithmetic>(
