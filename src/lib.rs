@@ -30,7 +30,9 @@ pub mod misc;
 pub mod params;
 pub use params::Params;
 pub mod ciphertexts;
-pub use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+pub use ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+pub mod arithmetics;
+pub use arithmetics::ParmArithmetics;
 
 // Userovo modules
 pub mod userovo;
@@ -121,170 +123,6 @@ impl ParmesanCloudovo<'_> {
             params,
             pub_keys,
         }
-    }
-}
-
-
-// =============================================================================
-//
-//  Parmesan Arithmetics
-//
-
-/// Parmesan Arithmetic Trait
-pub trait ParmArithmetic {
-    /// Addition: `X + Y`
-    fn add(
-        pc: &ParmesanCloudovo,
-        x: &Self,
-        y: &Self,
-    ) -> Self;
-
-    /// Subtraction: `X - Y`
-    fn sub(
-        pc: &ParmesanCloudovo,
-        x: &Self,
-        y: &Self,
-    ) -> Self;
-
-    /// Scalar multiplication (by an integer): `k·X`
-    fn scalar_mul(
-        pc: &ParmesanCloudovo,
-        k: i32,
-        x: &Self,
-    ) -> Self;
-
-    /// Signum: `sgn(X)`
-    fn sgn(
-        pc: &ParmesanCloudovo,
-        x: &Self,
-    ) -> Self;
-
-    /// Maximum: `max{X, Y}`
-    fn max(
-        pc: &ParmesanCloudovo,
-        x: &Self,
-        y: &Self,
-    ) -> Self;
-
-    /// Multiplication: `X × Y`
-    fn mul(
-        pc: &ParmesanCloudovo,
-        x: &Self,
-        y: &Self,
-    ) -> Self;
-}
-
-impl ParmArithmetic for i32 {
-    fn add(
-        pc: &ParmesanCloudovo,
-        x: &i32,
-        y: &i32,
-    ) -> i32 {x + y}
-
-    fn sub(
-        pc: &ParmesanCloudovo,
-        x: &i32,
-        y: &i32,
-    ) -> i32 {x - y}
-
-    fn scalar_mul(
-        pc: &ParmesanCloudovo,
-        k: i32,
-        x: &i32,
-    ) -> i32 {k * x}
-
-    fn sgn(
-        pc: &ParmesanCloudovo,
-        x: &i32,
-    ) -> i32 {x.signum()}
-
-    fn max(
-        pc: &ParmesanCloudovo,
-        x: &i32,
-        y: &i32,
-    ) -> i32 {std::cmp::max(*x, *y)}
-
-    fn mul(
-        pc: &ParmesanCloudovo,
-        x: &i32,
-        y: &i32,
-    ) -> i32 {x * y}
-}
-
-impl ParmArithmetic for ParmCiphertext {
-    fn add(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
-        y: &ParmCiphertext,
-    ) -> ParmCiphertext {
-        addition::add_sub_impl(
-            true,
-            pc.pub_keys,
-            x,
-            y,
-        ).expect("ParmArithmetic::add failed.")
-    }
-
-    fn sub(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
-        y: &ParmCiphertext,
-    ) -> ParmCiphertext {
-        addition::add_sub_impl(
-            false,
-            pc.pub_keys,
-            x,
-            y,
-        ).expect("ParmArithmetic::sub failed.")
-    }
-
-    fn scalar_mul(
-        pc: &ParmesanCloudovo,
-        k: i32,
-        x: &ParmCiphertext,
-    ) -> ParmCiphertext {
-        scalar_multiplication::scalar_mul_impl(
-            pc.params,
-            pc.pub_keys,
-            k,
-            x,
-        ).expect("ParmArithmetic::scalar_mul failed.")
-    }
-
-    fn sgn(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
-    ) -> ParmCiphertext {
-        signum::sgn_impl(
-            pc.params,
-            pc.pub_keys,
-            x,
-        ).expect("ParmArithmetic::sgn failed.")
-    }
-
-    fn max(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
-        y: &ParmCiphertext,
-    ) -> ParmCiphertext {
-        maximum::max_impl(
-            pc.params,
-            pc.pub_keys,
-            x,
-            y,
-        ).expect("ParmArithmetic::max failed.")
-    }
-
-    fn mul(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
-        y: &ParmCiphertext,
-    ) -> ParmCiphertext {
-        multiplication::mul_impl(
-            pc.pub_keys,
-            x,
-            y,
-        ).expect("ParmArithmetic::mul failed.")
     }
 }
 
@@ -399,20 +237,20 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     // =================================
     //  C: Evaluation
 
-    let c_add  = ParmArithmetic::add(&pc, &c[0], &c[1]);
-    let c_sub  = ParmArithmetic::sub(&pc, &c[1], &c[0]);
-    let c_sgn  = ParmArithmetic::sgn(&pc, &c[2]       );
-    let c_max  = ParmArithmetic::max(&pc, &c[1], &c[0]);
-    let c_xy1  = ParmArithmetic::mul(&pc, &cx1,  &cy1 );
-    let c_xy4  = ParmArithmetic::mul(&pc, &cx4,  &cy4 );
-    let c_xy8  = ParmArithmetic::mul(&pc, &cx8,  &cy8 );
-    let c_xy16 = ParmArithmetic::mul(&pc, &cx16, &cy16);
-    let c_xy17 = ParmArithmetic::mul(&pc, &cx17, &cy17);
-    let c_xy32 = ParmArithmetic::mul(&pc, &cx32, &cy32);
+    let c_add  = ParmArithmetics::add(&pc, &c[0], &c[1]);
+    let c_sub  = ParmArithmetics::sub(&pc, &c[1], &c[0]);
+    let c_sgn  = ParmArithmetics::sgn(&pc, &c[2]       );
+    let c_max  = ParmArithmetics::max(&pc, &c[1], &c[0]);
+    let c_xy1  = ParmArithmetics::mul(&pc, &cx1,  &cy1 );
+    let c_xy4  = ParmArithmetics::mul(&pc, &cx4,  &cy4 );
+    //~ let c_xy8  = ParmArithmetics::mul(&pc, &cx8,  &cy8 );
+    //~ let c_xy16 = ParmArithmetics::mul(&pc, &cx16, &cy16);
+    //~ let c_xy17 = ParmArithmetics::mul(&pc, &cx17, &cy17);
+    //~ let c_xy32 = ParmArithmetics::mul(&pc, &cx32, &cy32);
 
-    let c_n161x16 = ParmArithmetic::scalar_mul(&pc, -161, &cx16);
-    let c_n128x16 = ParmArithmetic::scalar_mul(&pc, -128, &cx16);
-    let c_p3x16   = ParmArithmetic::scalar_mul(&pc,    3, &cx16);
+    let c_n161x16 = ParmArithmetics::scalar_mul(&pc, -161, &cx16);
+    let c_n128x16 = ParmArithmetics::scalar_mul(&pc, -128, &cx16);
+    let c_p3x16   = ParmArithmetics::scalar_mul(&pc,    3, &cx16);
 
 
     // =================================
@@ -424,10 +262,10 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let m_max  = pu.decrypt(&c_max )?;
     let m_xy1  = pu.decrypt(&c_xy1 )?;
     let m_xy4  = pu.decrypt(&c_xy4 )?;
-    let m_xy8  = pu.decrypt(&c_xy8 )?;
-    let m_xy16 = pu.decrypt(&c_xy16)?;
-    let m_xy17 = pu.decrypt(&c_xy17)?;
-    let m_xy32 = pu.decrypt(&c_xy32)?;
+    //~ let m_xy8  = pu.decrypt(&c_xy8 )?;
+    //~ let m_xy16 = pu.decrypt(&c_xy16)?;
+    //~ let m_xy17 = pu.decrypt(&c_xy17)?;
+    //~ let m_xy32 = pu.decrypt(&c_xy32)?;
 
     let m_n161x16 = pu.decrypt(&c_n161x16)?;
     let m_n128x16 = pu.decrypt(&c_n128x16)?;
@@ -464,26 +302,26 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
                             if m_x4 * m_y4 == m_xy4 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             m_x4 * m_y4
     );
-    summary_text = format!("{}\nx_8 × y_8     = {:12} :: {} (exp. {})", summary_text,
-                            m_xy8,
-                            if m_x8 * m_y8 == m_xy8 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            m_x8 * m_y8
-    );
-    summary_text = format!("{}\nx_16 × y_16   = {:12} :: {} (exp. {})", summary_text,
-                            m_xy16,
-                            if m_x16 * m_y16 == m_xy16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            m_x16 * m_y16
-    );
-    summary_text = format!("{}\nx_17 × y_17   = {:12} :: {} (exp. {})", summary_text,
-                            m_xy17,
-                            if m_x17 * m_y17 == m_xy17 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            m_x17 * m_y17
-    );
-    summary_text = format!("{}\nx_32 × y_32   = {:24} :: {} (exp. {})", summary_text,
-                            m_xy32,
-                            if m_x32 * m_y32 == m_xy32 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            m_x32 * m_y32
-    );
+    //~ summary_text = format!("{}\nx_8 × y_8     = {:12} :: {} (exp. {})", summary_text,
+                            //~ m_xy8,
+                            //~ if m_x8 * m_y8 == m_xy8 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            //~ m_x8 * m_y8
+    //~ );
+    //~ summary_text = format!("{}\nx_16 × y_16   = {:12} :: {} (exp. {})", summary_text,
+                            //~ m_xy16,
+                            //~ if m_x16 * m_y16 == m_xy16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            //~ m_x16 * m_y16
+    //~ );
+    //~ summary_text = format!("{}\nx_17 × y_17   = {:12} :: {} (exp. {})", summary_text,
+                            //~ m_xy17,
+                            //~ if m_x17 * m_y17 == m_xy17 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            //~ m_x17 * m_y17
+    //~ );
+    //~ summary_text = format!("{}\nx_32 × y_32   = {:24} :: {} (exp. {})", summary_text,
+                            //~ m_xy32,
+                            //~ if m_x32 * m_y32 == m_xy32 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            //~ m_x32 * m_y32
+    //~ );
     summary_text = format!("{}\n-161 × x_16   = {:12} :: {} (exp. {})", summary_text,
                             m_n161x16,
                             if -161 * m_x16 == m_n161x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},

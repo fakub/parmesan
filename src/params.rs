@@ -34,7 +34,7 @@ impl Params {
         1i32 << (self.bit_precision - 1)
     }
 
-    /// Get size of plaintext space
+    /// Get size of plaintext space, e.g., `0010'0000` for `pi = 5`
     pub fn plaintext_space_size(&self) -> i32 {
         1i32 << self.bit_precision
     }

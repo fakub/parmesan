@@ -39,7 +39,7 @@
 
 use crate::ParmesanCloudovo;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
-use crate::ParmArithmetic;
+use crate::arithmetics::ParmArithmetics;
 
 /// Perceptron type:
 /// * maximum,
@@ -78,7 +78,7 @@ pub struct NeuralNetwork<'a> {
 impl NeuralNetwork<'_> {
 
     /// Evaluate Neural Network
-    pub fn eval<T: Clone + ParmArithmetic>( // T is either i32, or ParmCiphertext
+    pub fn eval<T: Clone + ParmArithmetics>( // T is either i32, or ParmCiphertext
         &self,
         inputs: &Vec<T>,
     ) -> Vec<T> {   //TODO Result<Vec<T>, Box<dyn Error>>
@@ -96,7 +96,7 @@ impl NeuralNetwork<'_> {
     }
 
     /// Evaluate a layer of NN
-    pub fn eval_layer<T: Clone + ParmArithmetic>(
+    pub fn eval_layer<T: Clone + ParmArithmetics>(
         &self,
         layer: &Layer,
         input: &Vec<T>,
@@ -123,7 +123,7 @@ impl NeuralNetwork<'_> {
         }
     }
 
-    pub fn affine_pool<T: Clone + ParmArithmetic>(
+    pub fn affine_pool<T: Clone + ParmArithmetics>(
         &self,
         w: &Vec<i32>,
         a: &Vec<T>,
@@ -140,10 +140,10 @@ impl NeuralNetwork<'_> {
         //~ a[0].clone();
         //~ res
 
-        ParmArithmetic::add(self.pc, &a[0], &a[1])
+        ParmArithmetics::add(self.pc, &a[0], &a[1])
     }
 
-    pub fn max_pool<T: Clone + ParmArithmetic>(
+    pub fn max_pool<T: Clone + ParmArithmetics>(
         &self,
         w: &Vec<i32>,
         a: &Vec<T>,
@@ -162,7 +162,7 @@ impl NeuralNetwork<'_> {
         //~ res
     }
 
-    fn max_pool_recursion<T: Clone + ParmArithmetic>(
+    fn max_pool_recursion<T: Clone + ParmArithmetics>(
         &self,
         a: &Vec<T>,
     ) -> T {
@@ -181,7 +181,7 @@ impl NeuralNetwork<'_> {
         a[0].clone()
     }
 
-    pub fn act_fn<T: ParmArithmetic>(
+    pub fn act_fn<T: ParmArithmetics>(
         &self,
         lc: T,
     ) -> T {
