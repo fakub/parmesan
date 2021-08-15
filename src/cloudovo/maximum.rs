@@ -47,13 +47,23 @@ pub fn max_impl(
                 2,
             )?;
 
+            // align inputs
+            let mut xa = x.clone();
+            let mut ya = y.clone();
+            for _ in 0..((y.len() as i64) - (x.len() as i64)) {
+                xa.push(LWE::zero(0)?);
+            }
+            for _ in 0..((x.len() as i64) - (y.len() as i64)) {
+                ya.push(LWE::zero(0)?);
+            }
+
             // Parallel
             #[cfg(not(feature = "sequential"))]
             {
-                m = ParmCiphertext::triv(x.len())?;
+                m = ParmCiphertext::triv(xa.len())?;
 
                 // calc x and y selectors
-                m.par_iter_mut().zip(x.par_iter().zip(y.par_iter())).for_each(| (mi, (xi, yi)) | {
+                m.par_iter_mut().zip(xa.par_iter().zip(ya.par_iter())).for_each(| (mi, (xi, yi)) | {
                     // xi + 2s
                     let xi_p2s: LWE = xi.add_uint(&s_2).expect("add_uint failed.");
                     // yi - 2s

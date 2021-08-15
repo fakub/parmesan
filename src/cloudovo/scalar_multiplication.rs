@@ -16,6 +16,8 @@ pub fn scalar_mul_impl(
     x: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
+    println!("DBG >>> x.len = {}, |k| = {:b}", x.len(), k.abs());
+
     // move sign of k to x
     let mut x_sgn = ParmCiphertext::empty();
     for xi in x {
@@ -39,19 +41,24 @@ pub fn scalar_mul_impl(
     // |k| < 2 already resolved, first to try is 1 << 2 (which is 0b100 = 4)
     let mut k_len = 2usize;
     for i in 2..31 {if k_abs & (1 << i) != 0 {k_len = i + 1;}}   //WISH as macro?
+    println!("DBG >>> k_len = {}", k_len);
 
     // k_len ≥ 2
     let mut mulary: Vec<ParmCiphertext> = Vec::new();
     for i in 0..k_len {
         if k_abs & (1 << i) != 0 {
+            println!("DBG >>> shift by {}", i);
             // shift x_sgn
             let mut x_shifted = ParmCiphertext::triv(i)?;
             let mut x_cl = x_sgn.clone();
             x_shifted.append(&mut x_cl);
-            for _ in 0..(x_sgn.len() + k_len - i) {
+            println!("DBG >>> x_sh w/o leading zeros .. {}", x_shifted.len());
+            //FIXME why is this needed once addition has been fixed for different lengths??
+            for _ in 0..(k_len - i) {
                 // leading zeros to length   x_sgn.len() + k_len
                 x_shifted.push(LWE::zero(0)?);
             }
+            println!("DBG >>> x_sh with leading zeros .. {} (to be pushed)", x_shifted.len());
 
             // push shifted x_sgn to mulary
             mulary.push(x_shifted);

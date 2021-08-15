@@ -41,7 +41,7 @@ pub fn add_sub_impl(
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
-    // calculate right overlap of trivial zero samples
+    // calculate right overlap of trivial zero samples (any)
     let mut x_triv = 0usize;
     let mut y_triv = 0usize;
     for xi in x {
@@ -52,7 +52,7 @@ pub fn add_sub_impl(
     }
     let triv = std::cmp::max(x_triv, y_triv);
 
-    //TODO fill with preceeding zeros
+    //FIXME calculate left overlap of trivial zero samples (BOTH!!)
 
     let mut z: ParmCiphertext;
 
