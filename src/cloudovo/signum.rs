@@ -102,7 +102,7 @@ pub fn sgn_recursion_raw(
                 let mut b = ParmCiphertext::empty();
 
                 for j in 0..((x.len() - 1) / gamma + 1) {
-                    let mut bj: LWE = LWE::zero_with_encoder(dim, encoder)?;
+                    let mut bj: LWE = LWE::zero(0)?;
 
                     for i in 0..gamma {
                         let si: LWE;

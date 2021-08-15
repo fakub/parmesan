@@ -63,6 +63,10 @@ pub fn add_sub_impl(
             ["Parallel {} ({}-bit)", if is_add {"addition"} else {"subtraction"}, x.len()],
             [
                 let mut w = x.clone();
+                // let length of w be the same of the longer ciphertext + 1 for "carry"
+                for _ in 0..((y.len() as i64) - (x.len() as i64) + 1) {
+                    w.push(LWE::zero(0)?);
+                }
 
                 // w = x + y
                 // -----------------------------------------------------------------
@@ -124,8 +128,8 @@ pub fn add_sub_impl(
         measure_duration!(
             ["Sequential {} ({}-bit; in redundant representation)", if is_add {"addition"} else {"subtraction"}, x.len()],
             [
-                let mut wi_1:   LWE = LWE::zero_with_encoder(dim, encoder)?;
-                let mut qi_1:   LWE = LWE::zero_with_encoder(dim, encoder)?;
+                let mut wi_1:   LWE = LWE::zero(0)?;
+                let mut qi_1:   LWE = LWE::zero(0)?;
                 z = ParmCiphertext::empty();
 
                 //TODO apply triv

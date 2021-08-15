@@ -430,8 +430,8 @@ pub fn nn_demo() -> Result<(), Box<dyn Error>> {
         layers: vec![
             vec![
                 Perceptron {
-                    t: PercType::MAX,
-                    w: vec![-1,2,6],
+                    t: PercType::ACT,
+                    w: vec![1,-2,3,],
                     b: 2,
                 },
             ],
@@ -453,11 +453,10 @@ pub fn nn_demo() -> Result<(), Box<dyn Error>> {
         m_out_homo.push(pu.decrypt(&ci)?);
     }
 
-    let mut summary_text = format!("{}: output layer ({} elements)", String::from("User").bold().yellow(), -42);
+    let mut summary_text = format!("{}: output layer ({} elements)", String::from("User").bold().yellow(), m_out_homo.len());
 
-    summary_text = format!("{}\nPlain vs. homomorphic processing:", summary_text);
     for (i, (mhi, mpi)) in m_out_homo.iter().zip(m_out_plain.iter()).enumerate() {
-        summary_text = format!("{}\nOUT[{}] = {:12} :: {} (exp. {})", summary_text,
+        summary_text = format!("{}\nOUT[{}] = {:6} :: {} (exp. {})", summary_text,
                                 i, mhi,
                                 if mhi == mpi {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                                 mpi
