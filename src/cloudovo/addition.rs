@@ -7,6 +7,7 @@ use concrete::LWE;
 use colored::Colorize;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use crate::userovo::keys::PubKeySet;
+use crate::params::Params;
 use super::pbs;
 
 /// Parallel addition/subtraction followed by noise refreshal
@@ -170,4 +171,44 @@ pub fn opposite_impl(
     }
 
     Ok(nx)
+}
+
+pub fn add_const_impl(
+    params: &Params,
+    pub_keys: &PubKeySet,
+    x: &ParmCiphertext,
+    k: i32,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
+    // resolve k == 0
+    if k == 0 {
+        return Ok(x.clone());
+    }
+
+    let k_abs = (k as i64).abs() as u32;   // deal with -2^31, for which abs() panics, because it does not fit i32
+    let k_pos = k >= 0;
+
+    let mut k_len = 0usize;
+    for i in 0..31 {if k_abs & (1 << i) != 0 {k_len = i + 1;}}
+
+    let mut ck = ParmCiphertext::empty();
+
+    for i in 0..k_len {
+        // calculate i-th bit with sign
+        let mut ki = if ((k_abs >> i) & 1) == 0 {
+            0u32
+        } else {
+            if k_pos {1u32} else {params.plaintext_mask() as u32}
+        };
+
+        //~ let cti = LWE::encrypt_uint_triv(
+            //~ params.lwe_params.dimension,
+            //~ ki,
+            //~ &priv_keys.encoder,
+        //~ )?;
+        let cti = LWE::zero(0)?;
+
+        ck.push(cti);
+    }
+
+    Ok(ck)
 }

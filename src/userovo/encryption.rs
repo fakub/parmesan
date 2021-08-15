@@ -68,7 +68,7 @@ fn parm_encr_word(
         return Err("Word to be encrypted outside alphabet {-1,0,1}.".into());
     }
 
-    // little hack, how to bring mi into positive interval [0,2^pi)
+    // little hack, how to bring mi into positive interval [0, 2^pi)
     mi &= params.plaintext_mask();
 
     Ok(LWE::encrypt_uint(
