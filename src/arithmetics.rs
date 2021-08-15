@@ -11,9 +11,7 @@ use super::cloudovo::*;
 /// Parmesan Arithmetics Trait
 pub trait ParmArithmetics {
     /// Zero: `0`
-    fn zero(
-        pc: &ParmesanCloudovo,
-    ) -> Self;
+    fn zero() -> Self;
 
     // needed?
     //~ /// Const: `k`
@@ -23,10 +21,7 @@ pub trait ParmArithmetics {
     //~ ) -> Self;
 
     /// Opposite: `-X`
-    fn opp(
-        pc: &ParmesanCloudovo,
-        x: &Self,
-    ) -> Self;
+    fn opp(x: &Self) -> Self;
 
     /// Addition: `X + Y`
     fn add(
@@ -78,68 +73,58 @@ pub trait ParmArithmetics {
 }
 
 impl ParmArithmetics for i64 {
-    fn zero(
-        pc: &ParmesanCloudovo,
-    ) -> i64 {0i64}
+    fn zero() -> i64 {0i64}
 
-    fn opp(
-        pc: &ParmesanCloudovo,
-        x: &i64,
-    ) -> i64 {-x}
+    fn opp(x: &i64) -> i64 {-x}
 
     fn add(
-        pc: &ParmesanCloudovo,
+        _pc: &ParmesanCloudovo,
         x: &i64,
         y: &i64,
     ) -> i64 {x + y}
 
     fn sub(
-        pc: &ParmesanCloudovo,
+        _pc: &ParmesanCloudovo,
         x: &i64,
         y: &i64,
     ) -> i64 {x - y}
 
     fn add_const(
-        pc: &ParmesanCloudovo,
+        _pc: &ParmesanCloudovo,
         x: &i64,
         k: i32,
     ) -> i64 {x + (k as i64)}
 
     fn scalar_mul(
-        pc: &ParmesanCloudovo,
+        _pc: &ParmesanCloudovo,
         k: i32,
         x: &i64,
     ) -> i64 {(k as i64) * x}
 
     fn sgn(
-        pc: &ParmesanCloudovo,
+        _pc: &ParmesanCloudovo,
         x: &i64,
     ) -> i64 {x.signum()}
 
     fn max(
-        pc: &ParmesanCloudovo,
+        _pc: &ParmesanCloudovo,
         x: &i64,
         y: &i64,
     ) -> i64 {std::cmp::max(*x, *y)}
 
     fn mul(
-        pc: &ParmesanCloudovo,
+        _pc: &ParmesanCloudovo,
         x: &i64,
         y: &i64,
     ) -> i64 {x * y}
 }
 
 impl ParmArithmetics for ParmCiphertext {
-    fn zero(
-        pc: &ParmesanCloudovo,
-    ) -> ParmCiphertext {
+    fn zero() -> ParmCiphertext {
         ParmCiphertext::empty()
     }
 
-    fn opp(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
-    ) -> ParmCiphertext {
+    fn opp(x: &ParmCiphertext) -> ParmCiphertext {
         addition::opposite_impl(x).expect("ParmArithmetics::opp failed.")
     }
 
@@ -188,7 +173,6 @@ impl ParmArithmetics for ParmCiphertext {
         x: &ParmCiphertext,
     ) -> ParmCiphertext {
         scalar_multiplication::scalar_mul_impl(
-            pc.params,
             pc.pub_keys,
             k,
             x,

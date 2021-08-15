@@ -2,7 +2,6 @@ use std::error::Error;
 
 #[cfg(not(feature = "sequential"))]
 use rayon::prelude::*;
-use concrete::LWE;
 #[allow(unused_imports)]
 use colored::Colorize;
 use crate::params::Params;
@@ -50,9 +49,6 @@ pub fn sgn_recursion_raw(
         return Ok(x.clone());
     }
 
-    let dim = x[0].dimension;
-    let encoder = &x[0].encoder;
-
     let s: ParmCiphertext;
 
     // Parallel
@@ -99,6 +95,10 @@ pub fn sgn_recursion_raw(
         measure_duration!(
             ["Signum recursion sequential ({}-bit, groups by {})", x.len(), gamma],
             [
+                //TODO get rid of this shit
+                let dim = x[0].dimension;
+                let encoder = &x[0].encoder;
+
                 let mut b = ParmCiphertext::empty();
 
                 for j in 0..((x.len() - 1) / gamma + 1) {

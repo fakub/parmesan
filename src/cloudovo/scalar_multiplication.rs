@@ -1,20 +1,16 @@
 use std::error::Error;
 
 #[cfg(not(feature = "sequential"))]
-use rayon::prelude::*;
+//~ use rayon::prelude::*;   //TODO
 use concrete::LWE;
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use crate::params::Params;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use crate::userovo::keys::PubKeySet;
-use super::pbs;
-use super::addition;
 
 /// Implementation of signum via parallel reduction
 pub fn scalar_mul_impl(
-    params: &Params,
     pub_keys: &PubKeySet,
     k: i32,
     x: &ParmCiphertext,

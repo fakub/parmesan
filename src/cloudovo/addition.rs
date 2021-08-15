@@ -194,7 +194,7 @@ pub fn add_const_impl(
 
     for i in 0..k_len {
         // calculate i-th bit with sign
-        let mut ki = if ((k_abs >> i) & 1) == 0 {
+        let ki = if ((k_abs >> i) & 1) == 0 {
             0u32
         } else {
             if k_pos {1u32} else {params.plaintext_mask() as u32}

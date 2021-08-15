@@ -13,7 +13,7 @@ use std::error::Error;
 
 #[allow(unused_imports)]
 use colored::Colorize;
-use concrete::LWE;
+//~ use concrete::LWE;
 
 /// Keeps log level for nested time measurements
 static mut LOG_LVL: u8 = 0;
@@ -42,6 +42,7 @@ pub use userovo::keys::{PrivKeySet,PubKeySet};
 // Cloudovo modules
 pub mod cloudovo;
 pub use cloudovo::*;
+pub use cloudovo::neural_network::{Perceptron, PercType, NeuralNetwork};
 
 
 // =============================================================================
@@ -139,9 +140,9 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
     // move to Cloudovo initialization (makes no sense at user, but now I want to have it on the top)
     #[cfg(not(feature = "sequential"))]
-    infobox!("Parallel ({} threads)", rayon::current_num_threads());
+    infobox!("Parallel Arithmetics DEMO ({} threads)", rayon::current_num_threads());
     #[cfg(feature = "sequential")]
-    infobox!("Sequential");
+    infobox!("Sequential Arithmetics DEMO");
 
 
     // =================================
@@ -158,7 +159,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
     const DEMO_BITLEN: usize = 12;
     const DEMO_N_MSGS: usize = 3;
-    const DEMO_ADC:    i32   = -5;
+    const DEMO_ADC:    i32   = -20;
 
     // ---------------------------------
     //  Cloudovo Scope
@@ -170,26 +171,6 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
     // =================================
     //  U: Encryption
-
-    //~ //DBG
-    //~ for i in [0,1,31] {
-        //~ let cc: ParmCiphertext = vec![LWE::encrypt_uint_triv(i, pc.pub_keys.encoder)?];
-        //~ let mm = pu.decrypt(&cc)?;
-        //~ infoln!(">>> decrypted: {}", mm);
-
-        //~ if i == 1 {
-            //~ let j = 0;
-            //~ let cnt = pu.encrypt(j, 1)?;
-            //~ let csub = addition::add_sub_impl(
-                //~ false,
-                //~ &pub_k,
-                //~ &cnt,
-                //~ &cc,
-            //~ )?;
-            //~ let msub = pu.decrypt(&csub)?;
-            //~ infoln!("    >>> sum: {} - 1 = {}", j, msub);
-        //~ }
-    //~ }
 
     // for most operations
     let m: [i64; DEMO_N_MSGS] = [
@@ -214,9 +195,9 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
     // encrypt all values
     let mut c: [ParmCiphertext; DEMO_N_MSGS] = [
-        ParmCiphertext::triv(DEMO_BITLEN)?,
-        ParmCiphertext::triv(DEMO_BITLEN)?,
-        ParmCiphertext::triv(DEMO_BITLEN)?,
+        ParmCiphertext::empty(),
+        ParmCiphertext::empty(),
+        ParmCiphertext::empty(),
     ];
     for (ci, (mi, mi_as)) in c.iter_mut().zip(m.iter().zip(m_as.iter_mut())) {
         *ci = pu.encrypt(*mi, DEMO_BITLEN)?;
@@ -265,10 +246,10 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let c_max  = ParmArithmetics::max(&pc, &c[1], &c[0]);
     let c_xy1  = ParmArithmetics::mul(&pc, &cx1,  &cy1 );
     let c_xy4  = ParmArithmetics::mul(&pc, &cx4,  &cy4 );
-    //~ let c_xy8  = ParmArithmetics::mul(&pc, &cx8,  &cy8 );
-    //~ let c_xy16 = ParmArithmetics::mul(&pc, &cx16, &cy16);
-    //~ let c_xy17 = ParmArithmetics::mul(&pc, &cx17, &cy17);
-    //~ let c_xy32 = ParmArithmetics::mul(&pc, &cx32, &cy32);
+    let c_xy8  = ParmArithmetics::mul(&pc, &cx8,  &cy8 );
+    let c_xy16 = ParmArithmetics::mul(&pc, &cx16, &cy16);
+    let c_xy17 = ParmArithmetics::mul(&pc, &cx17, &cy17);
+    let c_xy32 = ParmArithmetics::mul(&pc, &cx32, &cy32);
 
     let c_n161x16 = ParmArithmetics::scalar_mul(&pc, -161, &cx16);
     let c_n128x16 = ParmArithmetics::scalar_mul(&pc, -128, &cx16);
@@ -285,10 +266,10 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let m_max  = pu.decrypt(&c_max )?;
     let m_xy1  = pu.decrypt(&c_xy1 )?;
     let m_xy4  = pu.decrypt(&c_xy4 )?;
-    //~ let m_xy8  = pu.decrypt(&c_xy8 )?;
-    //~ let m_xy16 = pu.decrypt(&c_xy16)?;
-    //~ let m_xy17 = pu.decrypt(&c_xy17)?;
-    //~ let m_xy32 = pu.decrypt(&c_xy32)?;
+    let m_xy8  = pu.decrypt(&c_xy8 )?;
+    let m_xy16 = pu.decrypt(&c_xy16)?;
+    let m_xy17 = pu.decrypt(&c_xy17)?;
+    let m_xy32 = pu.decrypt(&c_xy32)?;
 
     let m_n161x16 = pu.decrypt(&c_n161x16)?;
     let m_n128x16 = pu.decrypt(&c_n128x16)?;
@@ -330,26 +311,26 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
                             if m_x4 * m_y4 == m_xy4 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             m_x4 * m_y4
     );
-    //~ summary_text = format!("{}\nx_8 × y_8     = {:12} :: {} (exp. {})", summary_text,
-                            //~ m_xy8,
-                            //~ if m_x8 * m_y8 == m_xy8 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ m_x8 * m_y8
-    //~ );
-    //~ summary_text = format!("{}\nx_16 × y_16   = {:12} :: {} (exp. {})", summary_text,
-                            //~ m_xy16,
-                            //~ if m_x16 * m_y16 == m_xy16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ m_x16 * m_y16
-    //~ );
-    //~ summary_text = format!("{}\nx_17 × y_17   = {:12} :: {} (exp. {})", summary_text,
-                            //~ m_xy17,
-                            //~ if m_x17 * m_y17 == m_xy17 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ m_x17 * m_y17
-    //~ );
-    //~ summary_text = format!("{}\nx_32 × y_32   = {:24} :: {} (exp. {})", summary_text,
-                            //~ m_xy32,
-                            //~ if m_x32 * m_y32 == m_xy32 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ m_x32 * m_y32
-    //~ );
+    summary_text = format!("{}\nx_8 × y_8     = {:12} :: {} (exp. {})", summary_text,
+                            m_xy8,
+                            if m_x8 * m_y8 == m_xy8 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x8 * m_y8
+    );
+    summary_text = format!("{}\nx_16 × y_16   = {:12} :: {} (exp. {})", summary_text,
+                            m_xy16,
+                            if m_x16 * m_y16 == m_xy16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x16 * m_y16
+    );
+    summary_text = format!("{}\nx_17 × y_17   = {:12} :: {} (exp. {})", summary_text,
+                            m_xy17,
+                            if m_x17 * m_y17 == m_xy17 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x17 * m_y17
+    );
+    summary_text = format!("{}\nx_32 × y_32   = {:24} :: {} (exp. {})", summary_text,
+                            m_xy32,
+                            if m_x32 * m_y32 == m_xy32 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x32 * m_y32
+    );
     summary_text = format!("{}\n-161 × x_16   = {:12} :: {} (exp. {})", summary_text,
                             m_n161x16,
                             if -161 * m_x16 == m_n161x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
@@ -370,7 +351,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
 
     // =================================
-    infobox!("Demo END");
+    infobox!("Finished Arithmetics DEMO");
     // =================================
 
     Ok(())
@@ -378,7 +359,109 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
 pub fn nn_demo() -> Result<(), Box<dyn Error>> {
 
-    //~ let nn_struct: NeuralNetwork;
+    // move to Cloudovo initialization (makes no sense at user, but now I want to have it on the top)
+    #[cfg(not(feature = "sequential"))]
+    infobox!("Parallel Neural Network DEMO ({} threads)", rayon::current_num_threads());
+    #[cfg(feature = "sequential")]
+    infobox!("Sequential Neural Network DEMO");
+
+
+    // =================================
+    //  Initialization
+
+    // ---------------------------------
+    //  Global Scope
+    let par = &params::PARM90__PI_5__D_20__LEN_32;   //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+
+    // ---------------------------------
+    //  Userovo Scope
+    let pu = ParmesanUserovo::new(par)?;
+    let pub_k = pu.export_pub_keys();
+
+    const INPUT_BITLEN: usize =   8;
+    const INPUT_SIZE:   usize =   6;
+
+    // ---------------------------------
+    //  Cloudovo Scope
+    let pc = ParmesanCloudovo::new(
+        par,
+        &pub_k,
+    );
+
+
+    // =================================
+    //  U: Encryption
+
+    // NN input layer
+    let m_in: [i32; INPUT_SIZE] = [
+         0b11011000,
+        -0b01000110,
+        -0b10000100,
+         0b01110011,
+        -0b11011110,
+         0b11110001,
+    ];
+
+    // encrypt all values
+    let mut c_in: [ParmCiphertext; INPUT_SIZE] = [
+        ParmCiphertext::empty(),
+        ParmCiphertext::empty(),
+        ParmCiphertext::empty(),
+        ParmCiphertext::empty(),
+        ParmCiphertext::empty(),
+        ParmCiphertext::empty(),
+    ];
+    for (ci, mi) in c_in.iter_mut().zip(m_in.iter()) {
+        *ci = pu.encrypt(*mi as i64, INPUT_BITLEN)?;
+    }
+
+    // print input layer
+    let mut intro_text = format!("{}: input layer ({} elements)", String::from("User").bold().yellow(), INPUT_SIZE);
+    for (i, mi) in m_in.iter().enumerate() {
+        intro_text = format!("{}\nIN[{}] = {}{:08b} ({:4})", intro_text, i, if *mi >= 0 {" "} else {"-"}, mi.abs(), mi);
+    }
+    infoln!("{}", intro_text);
+
+
+    // =================================
+    //  C: Evaluation
+
+    let _nn_struct = NeuralNetwork {
+        layers: vec![
+            vec![
+                Perceptron {
+                    t: PercType::MAX,
+                    w: vec![-1,2,6],
+                    b: 2,
+                },
+            ],
+        ],
+        pc: &pc,
+    };
+
+    //TODO plain & homomorphic evaluation
+
+
+    // =================================
+    //  U: Decryption
+
+    //~ let m_add  = pu.decrypt(&c_add )?;
+
+    let mut summary_text = format!("{}: output layer ({} elements)", String::from("User").bold().yellow(), -42);
+
+    summary_text = format!("{}\nOUT[-] = ...", summary_text);   // deleteme
+    //~ summary_text = format!("{}\nOUT[{}] = {:12} :: {} (exp. {} % {})", summary_text,
+                            //~ i, m_add,
+                            //~ if (m[0] + m[1] - m_add) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            //~ (m_as[0] + m_as[1]) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
+    //~ );
+
+    infoln!("{}", summary_text);
+
+
+    // =================================
+    infobox!("Finished Neural Network DEMO");
+    // =================================
 
     Ok(())
 }

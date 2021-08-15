@@ -38,7 +38,6 @@
 //!```
 
 use crate::ParmesanCloudovo;
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use crate::arithmetics::ParmArithmetics;
 
 /// Perceptron type:
@@ -58,11 +57,11 @@ pub enum PercType {
 /// Perceptron
 pub struct Perceptron {
     // perceptron type
-    t: PercType,
+    pub t: PercType,
     // weights to perceptrons in the preceeding layer
-    w: Vec<i32>,
+    pub w: Vec<i32>,
     // bias
-    b: i32,
+    pub b: i32,
 }
 
 /// Layer
@@ -81,7 +80,7 @@ impl NeuralNetwork<'_> {
     pub fn eval<T: Clone + ParmArithmetics>( // T is either i32, or ParmCiphertext
         &self,
         inputs: &Vec<T>,
-    ) -> Vec<T> {   //TODO Result<Vec<T>, Box<dyn Error>>
+    ) -> Vec<T> {
 
         let mut il = inputs.clone();
         let mut ol: Vec<T> = Vec::new();
@@ -128,12 +127,13 @@ impl NeuralNetwork<'_> {
         w: &Vec<i32>,
         a: &Vec<T>,
         b: i32,
-    ) -> T {        //TODO Result<...>
+    ) -> T {
 
-        let mut res: T = ParmArithmetics::zero(self.pc);
+        let mut res: T = ParmArithmetics::zero();
         let mut agg: T;
         let mut scm: T;
 
+        // dot product
         for (wi, ai) in w.iter().zip(a.iter()) {
             scm = ParmArithmetics::scalar_mul(self.pc, *wi, ai);
             agg = ParmArithmetics::add(self.pc, &res, &scm);
@@ -141,11 +141,8 @@ impl NeuralNetwork<'_> {
             res = agg.clone();
         }
 
-        //TODO add b to ciphertext
-        //~ ParmArithmetics::add_const(self.pc, &res, b)   // return
-
-        // remove:
-        res
+        // + bias
+        ParmArithmetics::add_const(self.pc, &res, b)
     }
 
     pub fn max_pool<T: Clone + ParmArithmetics>(
@@ -153,31 +150,29 @@ impl NeuralNetwork<'_> {
         w: &Vec<i32>,
         a: &Vec<T>,
         b: i32,
-    ) -> T {        //TODO Result<...>
+    ) -> T {
 
         let mut wa: Vec<T> = Vec::new();
 
+        // apply weights
         for (wi, ai) in w.iter().zip(a.iter()) {
             wa.push(ParmArithmetics::scalar_mul(self.pc, *wi, ai));
         }
 
+        // locate maximum
         let res = self.max_pool_recursion::<T>(&wa);
 
-        //TODO add b to ciphertext
-        //~ ParmArithmetics::add_const(self.pc, &res, b)   // return
-
-        // remove:
-        res
+        // + bias
+        ParmArithmetics::add_const(self.pc, &res, b)
     }
 
     fn max_pool_recursion<T: Clone + ParmArithmetics>(
         &self,
         a: &Vec<T>,
     ) -> T {
-
         if a.len() == 0 {
             //TODO return MAX_NEG .. should be returned from mathematical point of view .. write a macro for its behavior?
-            return ParmArithmetics::zero(self.pc);
+            return ParmArithmetics::zero();
         } else if a.len() == 1 {
             return a[0].clone();
         }
@@ -196,7 +191,7 @@ impl NeuralNetwork<'_> {
 
     pub fn act_fn<T: ParmArithmetics>(
         &self,
-        lc: &T,   // for linear combination
+        lc: &T,   // lc .. for linear combination
     ) -> T {
         ParmArithmetics::sgn(self.pc, lc)
     }
