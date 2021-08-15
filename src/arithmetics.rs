@@ -10,6 +10,24 @@ use super::cloudovo::*;
 
 /// Parmesan Arithmetics Trait
 pub trait ParmArithmetics {
+    /// Zero: `0`
+    fn zero(
+        pc: &ParmesanCloudovo,
+    ) -> Self;
+
+    // needed?
+    //~ /// Const: `k`
+    //~ fn constant(
+        //~ pc: &ParmesanCloudovo,
+        //~ k: i32,
+    //~ ) -> Self;
+
+    /// Opposite: `-X`
+    fn opp(
+        pc: &ParmesanCloudovo,
+        x: &Self,
+    ) -> Self;
+
     /// Addition: `X + Y`
     fn add(
         pc: &ParmesanCloudovo,
@@ -23,6 +41,14 @@ pub trait ParmArithmetics {
         x: &Self,
         y: &Self,
     ) -> Self;
+
+    //TODO
+    //~ /// Add constant: `X + k`
+    //~ fn add_const(
+        //~ pc: &ParmesanCloudovo,
+        //~ x: &Self,
+        //~ k: i32,
+    //~ ) -> Self;
 
     /// Scalar multiplication (by an integer): `k·X`
     fn scalar_mul(
@@ -53,6 +79,15 @@ pub trait ParmArithmetics {
 }
 
 impl ParmArithmetics for i64 {
+    fn zero(
+        pc: &ParmesanCloudovo,
+    ) -> i64 {0i64}
+
+    fn opp(
+        pc: &ParmesanCloudovo,
+        x: &i64,
+    ) -> i64 {-x}
+
     fn add(
         pc: &ParmesanCloudovo,
         x: &i64,
@@ -90,6 +125,19 @@ impl ParmArithmetics for i64 {
 }
 
 impl ParmArithmetics for ParmCiphertext {
+    fn zero(
+        pc: &ParmesanCloudovo,
+    ) -> ParmCiphertext {
+        ParmCiphertext::empty()
+    }
+
+    fn opp(
+        pc: &ParmesanCloudovo,
+        x: &ParmCiphertext,
+    ) -> ParmCiphertext {
+        addition::opposite_impl(x).expect("ParmArithmetics::opp failed.")
+    }
+
     fn add(
         pc: &ParmesanCloudovo,
         x: &ParmCiphertext,

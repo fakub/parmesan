@@ -117,7 +117,7 @@ impl NeuralNetwork<'_> {
                 },
                 PercType::ACT => {
                     let aff = self.affine_pool::<T>(&perc.w, input, perc.b);
-                    output.push(self.act_fn::<T>(aff));
+                    output.push(self.act_fn::<T>(&aff));
                 },
             }
         }
@@ -130,17 +130,22 @@ impl NeuralNetwork<'_> {
         b: i32,
     ) -> T {        //TODO Result<...>
 
-        //~ let mut res: T = 0 as T;
+        let mut res: T = ParmArithmetics::zero(self.pc);
+        let mut agg: T;
+        let mut scm: T;
 
         for (wi, ai) in w.iter().zip(a.iter()) {
-            //TODO res += scalar_mul(wi, ai);
+            scm = ParmArithmetics::scalar_mul(self.pc, *wi, ai);
+            agg = ParmArithmetics::add(self.pc, &res, &scm);
+            //TODO try directly to res, or implement add_inplace? (rather not..)
+            res = agg.clone();
         }
-        // res += b;
 
-        //~ a[0].clone();
-        //~ res
+        //TODO add b to ciphertext
+        //~ ParmArithmetics::add_const(self.pc, &res, b)   // return
 
-        ParmArithmetics::add(self.pc, &a[0], &a[1])
+        // remove:
+        res
     }
 
     pub fn max_pool<T: Clone + ParmArithmetics>(
@@ -153,13 +158,16 @@ impl NeuralNetwork<'_> {
         let mut wa: Vec<T> = Vec::new();
 
         for (wi, ai) in w.iter().zip(a.iter()) {
-            //TODO wa.push(scalar_mul(wi, ai));
+            wa.push(ParmArithmetics::scalar_mul(self.pc, *wi, ai));
         }
 
-        //~ self.max_pool_recursion::<T>(wa) + b;
+        let res = self.max_pool_recursion::<T>(&wa);
 
-        a[0].clone()
-        //~ res
+        //TODO add b to ciphertext
+        //~ ParmArithmetics::add_const(self.pc, &res, b)   // return
+
+        // remove:
+        res
     }
 
     fn max_pool_recursion<T: Clone + ParmArithmetics>(
@@ -167,25 +175,29 @@ impl NeuralNetwork<'_> {
         a: &Vec<T>,
     ) -> T {
 
-        //TODO
         if a.len() == 0 {
-            // return MAX_NEG
+            //TODO return MAX_NEG .. should be returned from mathematical point of view .. write a macro for its behavior?
+            return ParmArithmetics::zero(self.pc);
         } else if a.len() == 1 {
             return a[0].clone();
         }
 
         let mut a_half: Vec<T> = Vec::new();
-        // a_half.push(super::max_impl(each pair))
-        // return max_pool_recursion::<T>(a_half);
+        for aic in a.chunks(2) {
+            if aic.len() == 2 {
+                a_half.push(ParmArithmetics::max(self.pc, &aic[0], &aic[1]));
+            } else {
+                a_half.push(aic[0].clone())
+            }
+        }
 
-        a[0].clone()
+        return self.max_pool_recursion::<T>(&a_half);
     }
 
     pub fn act_fn<T: ParmArithmetics>(
         &self,
-        lc: T,
+        lc: &T,   // for linear combination
     ) -> T {
-        //TODO signum(lc)
-        lc
+        ParmArithmetics::sgn(self.pc, lc)
     }
 }

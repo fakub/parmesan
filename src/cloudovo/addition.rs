@@ -51,6 +51,8 @@ pub fn add_sub_impl(
     }
     let triv = std::cmp::max(x_triv, y_triv);
 
+    //TODO fill with preceeding zeros
+
     let mut z: ParmCiphertext;
 
     // Parallel
@@ -156,4 +158,16 @@ pub fn add_sub_impl(
     }
 
     Ok(z)
+}
+
+pub fn opposite_impl(
+    x: &ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
+    let mut nx = ParmCiphertext::empty();
+
+    for xi in x {
+        nx.push(xi.opposite_uint()?);
+    }
+
+    Ok(nx)
 }
