@@ -171,6 +171,26 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     // =================================
     //  U: Encryption
 
+    //~ //DBG
+    //~ for i in [0,1,31] {
+        //~ let cc: ParmCiphertext = vec![LWE::encrypt_uint_triv(i, pc.pub_keys.encoder)?];
+        //~ let mm = pu.decrypt(&cc)?;
+        //~ infoln!(">>> decrypted: {}", mm);
+
+        //~ if i == 1 {
+            //~ let j = 0;
+            //~ let cnt = pu.encrypt(j, 1)?;
+            //~ let csub = addition::add_sub_impl(
+                //~ false,
+                //~ &pub_k,
+                //~ &cnt,
+                //~ &cc,
+            //~ )?;
+            //~ let msub = pu.decrypt(&csub)?;
+            //~ infoln!("    >>> sum: {} - 1 = {}", j, msub);
+        //~ }
+    //~ }
+
     // for most operations
     let m: [i64; DEMO_N_MSGS] = [
          0b01111110110010010011100110111011,

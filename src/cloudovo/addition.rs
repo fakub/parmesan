@@ -41,14 +41,14 @@ pub fn add_sub_impl(
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
-    // calculate right overlap ov trivial samples
+    // calculate right overlap of trivial zero samples
     let mut x_triv = 0usize;
     let mut y_triv = 0usize;
     for xi in x {
-        if xi.dimension == 0 {x_triv += 1;} else {break;}   //FIXME wherever dimension == 0 .. does not mean the ciphertext == 0 (from now on)
+        if xi.dimension == 0 && xi.ciphertext.get_body().0 == 0 {x_triv += 1;} else {break;}
     }
     for yi in y {
-        if yi.dimension == 0 {y_triv += 1;} else {break;}
+        if yi.dimension == 0 && yi.ciphertext.get_body().0 == 0 {y_triv += 1;} else {break;}
     }
     let triv = std::cmp::max(x_triv, y_triv);
 
