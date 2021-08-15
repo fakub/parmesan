@@ -45,7 +45,7 @@ pub fn add_sub_impl(
     let mut x_triv = 0usize;
     let mut y_triv = 0usize;
     for xi in x {
-        if xi.dimension == 0 {x_triv += 1;} else {break;}
+        if xi.dimension == 0 {x_triv += 1;} else {break;}   //FIXME wherever dimension == 0 .. does not mean the ciphertext == 0 (from now on)
     }
     for yi in y {
         if yi.dimension == 0 {y_triv += 1;} else {break;}
@@ -210,5 +210,10 @@ pub fn add_const_impl(
         ck.push(cti);
     }
 
-    Ok(ck)
+    Ok(add_sub_impl(
+        true,
+        pub_keys,
+        x,
+        &ck,
+    )?)
 }
