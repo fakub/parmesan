@@ -200,12 +200,11 @@ pub fn add_const_impl(
             if k_pos {1u32} else {params.plaintext_mask() as u32}
         };
 
-        //~ let cti = LWE::encrypt_uint_triv(
-            //~ params.lwe_params.dimension,
-            //~ ki,
-            //~ &priv_keys.encoder,
-        //~ )?;
-        let cti = LWE::zero(0)?;
+        // encrypt as trivial sample
+        let cti = LWE::encrypt_uint_triv(
+            ki,
+            &pub_keys.encoder,
+        )?;
 
         ck.push(cti);
     }

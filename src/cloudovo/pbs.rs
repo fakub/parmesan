@@ -5,6 +5,8 @@ use concrete::LWE;
 use colored::Colorize;
 use crate::userovo::keys::PubKeySet;
 
+//TODO implement evaluation for dimension == 0 (should not be needed at the moment)
+
 //
 //  X (around zero)
 //
