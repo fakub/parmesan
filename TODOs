@@ -2,6 +2,7 @@
     TODO
 ================================================================================
 
+* add Makefile
 * make *everything* parallel (e.g., there are many pairs of operations)
 * one more bit in multiplication (needed?)
 * speedup compared to standard 32-bit addition
