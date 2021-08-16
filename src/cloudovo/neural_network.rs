@@ -37,6 +37,9 @@
 //!                 o-----------o
 //!```
 
+#[allow(unused_imports)]
+use colored::Colorize;
+
 use crate::ParmesanCloudovo;
 use crate::arithmetics::ParmArithmetics;
 
@@ -85,11 +88,21 @@ impl NeuralNetwork<'_> {
         let mut il = inputs.clone();
         let mut ol: Vec<T> = Vec::new();
 
-        for layer in &self.layers {
-            self.eval_layer::<T>(layer, &il, &mut ol);
-            // last output is next input
-            il = ol.clone();
-        }
+        measure_duration!(
+            ["Neural Network evaluation over {}", std::any::type_name::<T>()],
+            [
+                for (li, layer) in self.layers.iter().enumerate() {
+                    measure_duration!(
+                        ["{}. layer evaluation", li],
+                        [
+                            self.eval_layer::<T>(layer, &il, &mut ol);
+                            // last output is next input
+                            il = ol.clone();
+                        ]
+                    );
+                }
+            ]
+        );
 
         ol
     }
@@ -104,21 +117,26 @@ impl NeuralNetwork<'_> {
         output.clear();
 
         // evaluate perceptron by type
-        for perc in layer {
-            match &perc.t {
-                PercType::MAX => {
-                    let max = self.max_pool::<T>(&perc.w, input, perc.b);
-                    output.push(max);
-                },
-                PercType::LIN => {
-                    let aff = self.affine_pool::<T>(&perc.w, input, perc.b);
-                    output.push(aff);
-                },
-                PercType::ACT => {
-                    let aff = self.affine_pool::<T>(&perc.w, input, perc.b);
-                    output.push(self.act_fn::<T>(&aff));
-                },
-            }
+        for (ip, perc) in layer.iter().enumerate() {
+            measure_duration!(
+                ["{}. perceptron evaluation", ip],
+                [
+                    match &perc.t {
+                        PercType::MAX => {
+                            let max = self.max_pool::<T>(&perc.w, input, perc.b);
+                            output.push(max);
+                        },
+                        PercType::LIN => {
+                            let aff = self.affine_pool::<T>(&perc.w, input, perc.b);
+                            output.push(aff);
+                        },
+                        PercType::ACT => {
+                            let aff = self.affine_pool::<T>(&perc.w, input, perc.b);
+                            output.push(self.act_fn::<T>(&aff));
+                        },
+                    }
+                ]
+            );
         }
     }
 

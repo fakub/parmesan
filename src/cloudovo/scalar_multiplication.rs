@@ -58,25 +58,30 @@ pub fn scalar_mul_impl(
         return Ok(mulary[0].clone());
     }
 
-    // reduce multiplication array (of length ≥ 2)
-    let mut intmd = vec![ParmCiphertext::empty(); 2];
-    let mut idx = 0usize;
-    intmd[idx] = super::addition::add_sub_noise_refresh(
-        true,
-        pub_keys,
-        &mulary[0],
-        &mulary[1],
-    )?;
+    measure_duration!(
+        ["Scalar multiplication (non-triv ±{} · {}-bit)", k_abs, x.len()],
+        [
+            // reduce multiplication array (of length ≥ 2)
+            let mut intmd = vec![ParmCiphertext::empty(); 2];
+            let mut idx = 0usize;
+            intmd[idx] = super::addition::add_sub_noise_refresh(
+                true,
+                pub_keys,
+                &mulary[0],
+                &mulary[1],
+            )?;
 
-    for i in 2..mulary.len() {
-        idx ^= 1;
-        intmd[idx] = super::addition::add_sub_noise_refresh(
-            true,
-            pub_keys,
-            &intmd[idx ^ 1],
-            &mulary[i],
-        )?;
-    }
+            for i in 2..mulary.len() {
+                idx ^= 1;
+                intmd[idx] = super::addition::add_sub_noise_refresh(
+                    true,
+                    pub_keys,
+                    &intmd[idx ^ 1],
+                    &mulary[i],
+                )?;
+            }
+        ]
+    );
 
     Ok(intmd[idx].clone())
 }
