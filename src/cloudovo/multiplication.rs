@@ -67,7 +67,7 @@ fn mul_karatsuba(
 
     assert_eq!(x.len(), y.len());
 
-    let len1 = x.len() / 2;
+    // not needed: let len1 = x.len() / 2;
     let len0 = (x.len() + 1) / 2;
 
     //       len1  len0
@@ -106,14 +106,6 @@ fn mul_karatsuba(
             )?;
 
             //  C = (x_0 + x_1) * (y_0 + y_1)   .. (len0 + 1)-bit
-            x0.push(LWE::zero(0)?);
-            y0.push(LWE::zero(0)?);
-            x1.push(LWE::zero(0)?);
-            y1.push(LWE::zero(0)?);
-            if len0 > len1 {
-                x1.push(LWE::zero(0)?);
-                y1.push(LWE::zero(0)?);
-            }
             let x01 = super::addition::add_sub_noise_refresh(
                 true,
                 pub_keys,
@@ -155,19 +147,23 @@ fn mul_karatsuba(
             //      |  -B   |       -- " --
 
             //  | A | B |   +   |  C |..
-            let abc = super::addition::add_sub_noise_refresh(
+            let mut abc = super::addition::add_sub_noise_refresh(
                 true,
                 pub_keys,
                 &b,
                 &c,
             )?;
+            // remove last element (guaranteed to be zero)
+            abc.pop();
 
-            let res = super::addition::add_sub_impl(
+            let mut res = super::addition::add_sub_impl(
                 true,
                 pub_keys,
                 &abc,
                 &nanb,
             )?;
+            // remove last element (guaranteed to be zero)
+            res.pop();
         ]
     );
 
@@ -193,7 +189,7 @@ fn mul_schoolbook(
 
             // reduce multiplication array
             //TODO write a function that will be common with scalar_multiplication (if this is possible with strategies 2+)
-            let mut intmd = vec![ParmCiphertext::triv(2*x.len())?; 2];
+            let mut intmd = vec![ParmCiphertext::empty(); 2];
             let mut idx = 0usize;
             intmd[idx] = super::addition::add_sub_noise_refresh(
                 true,

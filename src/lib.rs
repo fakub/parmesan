@@ -157,8 +157,8 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let pu = ParmesanUserovo::new(par)?;
     let pub_k = pu.export_pub_keys();
 
-    const DEMO_BITLEN: usize = 12;
-    const DEMO_N_MSGS: usize = 3;
+    const DEMO_BITLEN: usize =  28;
+    const DEMO_N_MSGS: usize =   3;
     const DEMO_ADC:    i32   = -20;
 
     // ---------------------------------
@@ -244,6 +244,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let c_adc  = ParmArithmetics::add_const(&pc,  &c[0], DEMO_ADC);
     let c_sgn  = ParmArithmetics::sgn(&pc, &c[2]       );
     let c_max  = ParmArithmetics::max(&pc, &c[1], &c[0]);
+
     let c_xy1  = ParmArithmetics::mul(&pc, &cx1,  &cy1 );
     let c_xy4  = ParmArithmetics::mul(&pc, &cx4,  &cy4 );
     let c_xy8  = ParmArithmetics::mul(&pc, &cx8,  &cy8 );
@@ -277,30 +278,31 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
     let mut summary_text = format!("{} results", String::from("User:").bold().yellow());
 
-    summary_text = format!("{}\nm_0 + m_1     = {:12} :: {} (exp. {} % {})", summary_text,
+    summary_text = format!("{}\nm_0 + m_1     = {:12} :: {} (exp. {})", summary_text,
                             m_add,
-                            if (m[0] + m[1] - m_add) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            (m_as[0] + m_as[1]) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
+                            if m_as[0] + m_as[1] == m_add {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_as[0] + m_as[1]
     );
-    summary_text = format!("{}\nm_1 - m_0     = {:12} :: {} (exp. {} % {})", summary_text,
+    summary_text = format!("{}\nm_1 - m_0     = {:12} :: {} (exp. {})", summary_text,
                             m_sub,
-                            if (m[1] - m[0] - m_sub) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            (m_as[1] - m_as[0]) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
+                            if m_as[1] - m_as[0] == m_sub {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_as[1] - m_as[0]
     );
-    summary_text = format!("{}\nm_0 + {:3}     = {:12} :: {} (exp. {} % {})", summary_text,
+    summary_text = format!("{}\nm_0 + {:3}     = {:12} :: {} (exp. {})", summary_text,
                             DEMO_ADC, m_adc,
-                            if (m[0] + (DEMO_ADC as i64) - m_adc) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            (m_as[0] + (DEMO_ADC as i64)) % (1 << DEMO_BITLEN), 1 << DEMO_BITLEN
+                            if m_as[0] + (DEMO_ADC as i64) == m_adc {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_as[0] + (DEMO_ADC as i64)
     );
     summary_text = format!("{}\nsgn(m_2)      = {:12} :: {}", summary_text,
                             m_sgn,
-                            if m_sgn == m[2].signum() {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            if m_as[2].signum() == m_sgn {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
     );
-    summary_text = format!("{}\nmax{{m_1, m_0}} = {:12} :: {} (exp. {} % {})", summary_text,
+    summary_text = format!("{}\nmax{{m_1, m_0}} = {:12} :: {} (exp. {})", summary_text,
                             m_max,
-                            if (std::cmp::max(m_as[1], m_as[0]) - m_max) % (1 << DEMO_BITLEN) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            std::cmp::max(m_as[1], m_as[0]), 1 << DEMO_BITLEN
+                            if std::cmp::max(m_as[1], m_as[0]) == m_max {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            std::cmp::max(m_as[1], m_as[0])
     );
+
     summary_text = format!("{}\nx_1 × y_1     = {:12} :: {} (exp. {})", summary_text,
                             m_xy1,
                             if m_x1 * m_y1 == m_xy1 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
@@ -331,6 +333,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
                             if m_x32 * m_y32 == m_xy32 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             m_x32 * m_y32
     );
+
     summary_text = format!("{}\n-161 × x_16   = {:12} :: {} (exp. {})", summary_text,
                             m_n161x16,
                             if -161 * m_x16 == m_n161x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
@@ -430,9 +433,19 @@ pub fn nn_demo() -> Result<(), Box<dyn Error>> {
         layers: vec![
             vec![
                 Perceptron {
-                    t: PercType::ACT,
-                    w: vec![1,-2,3,],
+                    t: PercType::MAX,
+                    w: vec![1,-2,-2,],
                     b: 2,
+                },
+                Perceptron {
+                    t: PercType::LIN,
+                    w: vec![1,3,-1,],
+                    b: -5,
+                },
+                Perceptron {
+                    t: PercType::ACT,
+                    w: vec![1,3,-1,],
+                    b: 3,
                 },
             ],
         ],
@@ -441,8 +454,6 @@ pub fn nn_demo() -> Result<(), Box<dyn Error>> {
 
     let c_out = nn.eval(&c_in);
     let m_out_plain = nn.eval(&m_in);
-
-    //TODO plain & homomorphic evaluation
 
 
     // =================================

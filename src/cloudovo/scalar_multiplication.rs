@@ -2,7 +2,6 @@ use std::error::Error;
 
 #[cfg(not(feature = "sequential"))]
 //~ use rayon::prelude::*;   //TODO
-use concrete::LWE;
 #[allow(unused_imports)]
 use colored::Colorize;
 
