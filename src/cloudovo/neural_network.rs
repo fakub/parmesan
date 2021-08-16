@@ -20,16 +20,16 @@
 //!          |  |                           |       +B  | -------->  ...  --------> OUTPUT
 //!          |  |   o-- LIN ----o     ----> |   Wi      |
 //!          |  |   |           |    |      |           |
-//!     I3 --(--o-> |   Wi      | ----      o-----------o
+//!     I3 --(--o-> |   Wi      | ---       o-----------o
 //!          |      |           |
 //!     I4 --(----> |   Wi  +B  |
 //!          |      |           |
-//!          |   -> |   Wi      |
-//!          |  |   |           |
-//!          |  |   o-----------o
-//!          |  |
-//!          |  |   o-- ACT ----o
-//!          |  |   |           |
+//!          |   -> |   Wi      | ---
+//!          |  |   |           |    |
+//!          |  |   o-----------o    |
+//!          |  |                    |
+//!          |  |   o-- ACT ----o    |
+//!          |  |   |           |     ----> ...
 //!     I5 --o--o-> |   Wi      |
 //!                 |       +B  | --------> ...
 //!     I6 -------> |   Wi      |
@@ -91,9 +91,9 @@ impl NeuralNetwork<'_> {
         measure_duration!(
             ["Neural Network evaluation over {}", std::any::type_name::<T>()],
             [
-                for (li, layer) in self.layers.iter().enumerate() {
+                for (_li, layer) in self.layers.iter().enumerate() {
                     measure_duration!(
-                        ["{}. layer evaluation", li],
+                        ["{}. layer evaluation", _li],
                         [
                             self.eval_layer::<T>(layer, &il, &mut ol);
                             // last output is next input
@@ -117,9 +117,9 @@ impl NeuralNetwork<'_> {
         output.clear();
 
         // evaluate perceptron by type
-        for (ip, perc) in layer.iter().enumerate() {
+        for (_ip, perc) in layer.iter().enumerate() {
             measure_duration!(
-                ["{}. perceptron evaluation", ip],
+                ["{}. perceptron evaluation", _ip],
                 [
                     match &perc.t {
                         PercType::MAX => {
