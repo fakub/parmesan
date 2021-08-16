@@ -24,7 +24,7 @@ pub fn add_sub_noise_refresh(
         y,
     )?;
 
-    let mut z = ParmCiphertext::triv(x.len())?;
+    let mut z = ParmCiphertext::triv(z_noisy.len())?;
 
     z_noisy.par_iter().zip(z.par_iter_mut()).for_each(| (zni, zi) | {
         *zi = pbs::id(pub_keys, zni).expect("pbs::id failed.");
@@ -42,17 +42,34 @@ pub fn add_sub_impl(
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     // calculate right overlap of trivial zero samples (any)
-    let mut x_triv = 0usize;
-    let mut y_triv = 0usize;
+    //             ____
+    //  001001███010000
+    //     0010█████100
+    //
+    let mut x_rzero = 0usize;
+    let mut y_rzero = 0usize;
     for xi in x {
-        if xi.dimension == 0 && xi.ciphertext.get_body().0 == 0 {x_triv += 1;} else {break;}
+        if xi.dimension == 0 && xi.ciphertext.get_body().0 == 0 {x_rzero += 1;} else {break;}
     }
     for yi in y {
-        if yi.dimension == 0 && yi.ciphertext.get_body().0 == 0 {y_triv += 1;} else {break;}
+        if yi.dimension == 0 && yi.ciphertext.get_body().0 == 0 {y_rzero += 1;} else {break;}
     }
-    let triv = std::cmp::max(x_triv, y_triv);
+    let r_triv = std::cmp::max(x_rzero, y_rzero);
 
-    //FIXME calculate left overlap of trivial zero samples (BOTH!!)
+    // calculate length of w that is to be calculated (incl. right zeros)
+    //    _____________
+    //  001001███010000
+    //     0010█████100
+    //
+    let mut x_lzero  = 0usize;
+    let mut y_lzero  = 0usize;
+    for xi in x.iter().rev() {
+        if xi.dimension == 0 && xi.ciphertext.get_body().0 == 0 {x_lzero += 1;} else {break;}
+    }
+    for yi in y.iter().rev() {
+        if yi.dimension == 0 && yi.ciphertext.get_body().0 == 0 {y_lzero += 1;} else {break;}
+    }
+    let wlen = std::cmp::max(x.len() - x_lzero, y.len() - y_lzero);
 
     let mut z: ParmCiphertext;
 
@@ -60,13 +77,19 @@ pub fn add_sub_impl(
     #[cfg(not(feature = "sequential"))]
     {
         measure_duration!(
-            ["Parallel {} ({}-bit)", if is_add {"addition"} else {"subtraction"}, x.len()],
+            ["Parallel {} ({}-bit, {} active)", if is_add {"addition"} else {"subtraction"}, wlen, wlen - r_triv],
             [
-                let mut w = x.clone();
-                // let length of w be the same of the longer ciphertext + 1 for "carry"
-                for _ in 0..((y.len() as i64) - (x.len() as i64) + 1) {
+                let mut w = ParmCiphertext::empty();
+                // fill w with x up to wlen (x might be shorter!)
+                for (i, xi) in x.iter().enumerate() {
+                    if i == wlen {break;}
+                    w.push(xi.clone());
+                }
+                // if x is shorter than wlen, fill the rest with zeros
+                for _ in 0..((wlen as i64) - (x.len() as i64)) {
                     w.push(LWE::zero(0)?);
                 }
+                // now w has the correct length!
 
                 // w = x + y
                 // -----------------------------------------------------------------
@@ -96,16 +119,20 @@ pub fn add_sub_impl(
                 //~ ]);
                 // -----------------------------------------------------------------
 
-                let mut q = ParmCiphertext::triv(x.len())?;
+                let mut q = ParmCiphertext::triv(w.len())?;
                 z = w.clone();
+                // one more word for "carry"
+                z.push(LWE::zero(0)?);
 
-                q[triv..].par_iter_mut().zip(w[triv..].par_iter().enumerate()).for_each(| (qi, (i0, wi)) | {
-                    let i = i0 + triv;
+                q[r_triv..].par_iter_mut().zip(w[r_triv..].par_iter().enumerate()).for_each(| (qi, (i0, wi)) | {
+                    let i = i0 + r_triv;
                     // calc   3 w_i + w_i-1
                     let mut wi_3 = wi.mul_uint_constant(3).expect("mul_uint_constant failed.");
                     if i0 > 0 { wi_3.add_uint_inplace(&w[i-1]).expect("add_uint_inplace failed."); }
                     *qi = pbs::f_4__pi_5(pub_keys, &wi_3).expect("f_4__pi_5 failed.");
                 });
+                // q must have the same length as z
+                q.push(LWE::zero(0)?);
 
                 z.par_iter_mut().zip(q.par_iter().enumerate()).for_each(| (zi, (i, qi)) | {
                     // calc   2 q_i
@@ -132,7 +159,7 @@ pub fn add_sub_impl(
                 let mut qi_1:   LWE = LWE::zero(0)?;
                 z = ParmCiphertext::empty();
 
-                //TODO apply triv
+                //TODO apply r_triv
                 for (xi, yi) in x.iter().zip(y.iter()) {
                     let mut wi_0    = xi.clone();
                     if is_add {
