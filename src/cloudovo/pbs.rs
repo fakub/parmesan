@@ -191,7 +191,7 @@ pub fn relu_plus__pi_5(
 //~ };
 //~ pub const F_1: Lut = Lut {
     //~ title:  "X ⋛ ±1",
-    //~ lut:    |x| x * x,   //TODO
+    //~ lut:    |x| x * x,
 //~ };
 //~ pub const MY_LUT: Lut = Lut {
     //~ title:  "My LUT",

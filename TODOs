@@ -2,7 +2,13 @@
     TODO
 ================================================================================
 
+* FIXME in Concrete LWE
 * add Makefile
+
 * make *everything* parallel (e.g., there are many pairs of operations)
-* one more bit in multiplication (needed?)
-* speedup compared to standard 32-bit addition
+* scalar mult .. block of ones ~ 1 zeros -1
+
+* cfg for max{} behavior
+* resolve bootstraps after / before operations
+
+* replace sequential with standard base algorithms

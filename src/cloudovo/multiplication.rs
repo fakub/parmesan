@@ -273,7 +273,7 @@ fn mul_lwe(
     //~ measure_duration!(
         //~ "Multiplication LWE × LWE",
         //~ [
-            //TODO these can be done in parallel
+            //TODO FIXME these can be done in parallel
             // tmp = x + y
             let mut tmp: LWE = x.clone();
             tmp.add_uint_inplace(y)?;

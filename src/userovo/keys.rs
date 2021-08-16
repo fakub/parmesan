@@ -80,10 +80,10 @@ impl PrivKeySet {
     fn generate(params: &params::Params) -> Result<PrivKeySet, Box<dyn Error>> {
         // generate LWE & RLWE secret keys
         measure_duration!(
-            ["Generating  LWE secret key"],   //TODO add formatting for: "{}-bit", params.lwe_params.dimension
+            ["Generating  LWE secret key ({}-bit)", params.lwe_params.dimension],
             [let      sk:  LWESecretKey =  LWESecretKey::new(&params.lwe_params );]);
         measure_duration!(
-            ["Generating RLWE secret key"],
+            ["Generating RLWE secret key (deg = {})", params.rlwe_params.polynomial_size],
             [let rlwe_sk: RLWESecretKey = RLWESecretKey::new(&params.rlwe_params);]);
 
         // calculate bootstrapping & key-switching keys

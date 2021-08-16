@@ -2,7 +2,7 @@ use std::error::Error;
 
 use concrete::LWE;
 
-//TODO  ciphertext should be more standalone type: it should hold a reference to its public keys & params so that operations can be done with only this type parameter
+//WISH  ciphertext should be more standalone type: it should hold a reference to its public keys & params so that operations can be done with only this type parameter
 //      ale je to: zasrane, zamrdane
 pub type ParmCiphertext = Vec<LWE>;
 
