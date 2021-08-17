@@ -429,31 +429,8 @@ pub fn nn_demo() -> Result<(), Box<dyn Error>> {
     // =================================
     //  C: Evaluation
 
-    let nn = NeuralNetwork {
-        layers: vec![
-            vec![
-                Perceptron {
-                    t: PercType::MAX,
-                    w: vec![1,-2,-2,],
-                    b: 2,
-                },
-                Perceptron {
-                    t: PercType::LIN,
-                    w: vec![1,3,-1,],
-                    b: -5,
-                },
-                Perceptron {
-                    t: PercType::ACT,
-                    w: vec![1,3,-1,],
-                    b: 3,
-                },
-            ],
-        ],
-        pc: &pc,
-    };
-
-    let c_out = nn.eval(&c_in);
-    let m_out_plain = nn.eval(&m_in);
+    let c_out       = demo_nn().eval(&pc, &c_in);
+    let m_out_plain = demo_nn().eval(&pc, &m_in);
 
 
     // =================================
@@ -482,4 +459,31 @@ pub fn nn_demo() -> Result<(), Box<dyn Error>> {
     // =================================
 
     Ok(())
+}
+
+/// Get a demo neural network
+///
+/// * n.b., since Vec is an allocated structure, it cannot be in const/static.
+pub fn demo_nn() -> NeuralNetwork {
+    NeuralNetwork {
+        layers: vec![
+            vec![
+                Perceptron {
+                    t: PercType::MAX,
+                    w: vec![1,-2,-2,],
+                    b: 2,
+                },
+                Perceptron {
+                    t: PercType::LIN,
+                    w: vec![1,3,-1,],
+                    b: -5,
+                },
+                Perceptron {
+                    t: PercType::ACT,
+                    w: vec![1,3,-1,],
+                    b: 3,
+                },
+            ],
+        ],
+    }
 }

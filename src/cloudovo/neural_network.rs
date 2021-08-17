@@ -71,17 +71,17 @@ pub struct Perceptron {
 pub type Layer = Vec<Perceptron>;
 
 /// Neural Network
-pub struct NeuralNetwork<'a> {
+pub struct NeuralNetwork {
     //  NN consists of layers, evaluated one after each other
     pub layers: Vec<Layer>,
-    pub pc: &'a ParmesanCloudovo<'a>,
 }
 
-impl NeuralNetwork<'_> {
+impl NeuralNetwork {
 
     /// Evaluate Neural Network
     pub fn eval<T: Clone + ParmArithmetics>( // T is either i32, or ParmCiphertext
         &self,
+        pc: &ParmesanCloudovo,
         inputs: &Vec<T>,
     ) -> Vec<T> {
 
@@ -95,7 +95,7 @@ impl NeuralNetwork<'_> {
                     measure_duration!(
                         ["{}. layer evaluation", _li],
                         [
-                            self.eval_layer::<T>(layer, &il, &mut ol);
+                            self.eval_layer::<T>(pc, layer, &il, &mut ol);
                             // last output is next input
                             il = ol.clone();
                         ]
@@ -110,6 +110,7 @@ impl NeuralNetwork<'_> {
     /// Evaluate a layer of NN
     pub fn eval_layer<T: Clone + ParmArithmetics>(
         &self,
+        pc: &ParmesanCloudovo,
         layer: &Layer,
         input: &Vec<T>,
         output: &mut Vec<T>,
@@ -123,16 +124,16 @@ impl NeuralNetwork<'_> {
                 [
                     match &perc.t {
                         PercType::MAX => {
-                            let max = self.max_pool::<T>(&perc.w, input, perc.b);
+                            let max = self.max_pool::<T>(pc, &perc.w, input, perc.b);
                             output.push(max);
                         },
                         PercType::LIN => {
-                            let aff = self.affine_pool::<T>(&perc.w, input, perc.b);
+                            let aff = self.affine_pool::<T>(pc, &perc.w, input, perc.b);
                             output.push(aff);
                         },
                         PercType::ACT => {
-                            let aff = self.affine_pool::<T>(&perc.w, input, perc.b);
-                            output.push(self.act_fn::<T>(&aff));
+                            let aff = self.affine_pool::<T>(pc, &perc.w, input, perc.b);
+                            output.push(self.act_fn::<T>(pc, &aff));
                         },
                     }
                 ]
@@ -142,6 +143,7 @@ impl NeuralNetwork<'_> {
 
     pub fn affine_pool<T: Clone + ParmArithmetics>(
         &self,
+        pc: &ParmesanCloudovo,
         w: &Vec<i32>,
         a: &Vec<T>,
         b: i32,
@@ -153,18 +155,19 @@ impl NeuralNetwork<'_> {
 
         // dot product
         for (wi, ai) in w.iter().zip(a.iter()) {
-            scm = ParmArithmetics::scalar_mul(self.pc, *wi, ai);
-            agg = ParmArithmetics::add(self.pc, &res, &scm);
+            scm = ParmArithmetics::scalar_mul(pc, *wi, ai);
+            agg = ParmArithmetics::add(pc, &res, &scm);
             //TODO try directly to res, or implement add_inplace? (rather not..)
             res = agg.clone();
         }
 
         // + bias
-        ParmArithmetics::add_const(self.pc, &res, b)
+        ParmArithmetics::add_const(pc, &res, b)
     }
 
     pub fn max_pool<T: Clone + ParmArithmetics>(
         &self,
+        pc: &ParmesanCloudovo,
         w: &Vec<i32>,
         a: &Vec<T>,
         b: i32,
@@ -174,18 +177,19 @@ impl NeuralNetwork<'_> {
 
         // apply weights
         for (wi, ai) in w.iter().zip(a.iter()) {
-            wa.push(ParmArithmetics::scalar_mul(self.pc, *wi, ai));
+            wa.push(ParmArithmetics::scalar_mul(pc, *wi, ai));
         }
 
         // locate maximum
-        let res = self.max_pool_recursion::<T>(&wa);
+        let res = self.max_pool_recursion::<T>(pc, &wa);
 
         // + bias
-        ParmArithmetics::add_const(self.pc, &res, b)
+        ParmArithmetics::add_const(pc, &res, b)
     }
 
     fn max_pool_recursion<T: Clone + ParmArithmetics>(
         &self,
+        pc: &ParmesanCloudovo,
         a: &Vec<T>,
     ) -> T {
         if a.len() == 0 {
@@ -198,19 +202,20 @@ impl NeuralNetwork<'_> {
         let mut a_half: Vec<T> = Vec::new();
         for aic in a.chunks(2) {
             if aic.len() == 2 {
-                a_half.push(ParmArithmetics::max(self.pc, &aic[0], &aic[1]));
+                a_half.push(ParmArithmetics::max(pc, &aic[0], &aic[1]));
             } else {
                 a_half.push(aic[0].clone())
             }
         }
 
-        return self.max_pool_recursion::<T>(&a_half);
+        return self.max_pool_recursion::<T>(pc, &a_half);
     }
 
     pub fn act_fn<T: ParmArithmetics>(
         &self,
+        pc: &ParmesanCloudovo,
         lc: &T,   // lc .. for linear combination
     ) -> T {
-        ParmArithmetics::sgn(self.pc, lc)
+        ParmArithmetics::sgn(pc, lc)
     }
 }
