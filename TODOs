@@ -2,9 +2,6 @@
     TODO
 ================================================================================
 
-* FIXME in Concrete LWE
-* add Makefile
-
 * make *everything* parallel (e.g., there are many pairs of operations)
 * scalar mult .. block of ones ~ 1 zeros -1
 
@@ -12,3 +9,4 @@
 * resolve bootstraps after / before operations
 
 * replace sequential with standard base algorithms
+* wish: add tree-based method for arbitrary function evaluation

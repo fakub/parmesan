@@ -15,6 +15,9 @@ use std::error::Error;
 use colored::Colorize;
 //~ use concrete::LWE;
 
+#[cfg(test)]
+mod tests;
+
 /// Keeps log level for nested time measurements
 static mut LOG_LVL: u8 = 0;
 
