@@ -58,6 +58,9 @@ pub fn mul_impl(
     Ok(p)
 }
 
+//TODO
+// pub fn squ_impl
+
 /// Karatsuba multiplication
 fn mul_karatsuba(
     pub_keys: &PubKeySet,
