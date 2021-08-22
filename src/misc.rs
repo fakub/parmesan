@@ -4,7 +4,7 @@
 #[macro_export]
 macro_rules! measure_duration {
     ([$($arg:tt)*], [$($block:tt)+]) => {
-        let __now: std::time::SystemTime;
+        let __now: std::time::Instant;
         let __msg: String;
         //  Measurement ON
         #[cfg(feature = "measure")]
@@ -17,7 +17,7 @@ macro_rules! measure_duration {
                 if crate::LOG_LVL < u8::MAX {crate::LOG_LVL += 1;}
             }
             // start timer
-            __now = std::time::SystemTime::now();
+            __now = std::time::Instant::now();
         }
 
         // run block
@@ -26,7 +26,7 @@ macro_rules! measure_duration {
         #[cfg(feature = "measure")]
         {
             // get elapsed time
-            let __time = __now.elapsed().unwrap().as_micros() as f64;
+            let __time = __now.elapsed().as_micros() as f64;
             let __s_time = if __time < 1_000. {
                 String::from(format!("{} μs", __time             )).purple()
             } else if __time < 1_000_000. {
@@ -50,13 +50,15 @@ macro_rules! simple_duration {
     ([$($arg:tt)*], [$($block:tt)+]) => {
         // print msg
         let __msg = format!($($arg)*);
-        println!(" {}  {} ... ", String::from("+").green().bold(), __msg);
+
+        let mut __utc_now = Utc::now();
+        println!(" {}  [{}.{}] {} ... ", String::from("+").green().bold(), __utc_now.format("%M:%S"), __utc_now.timestamp_subsec_millis(), __msg);
         // start timer
-        let __now = std::time::SystemTime::now();
+        let __now = std::time::Instant::now();
         // run block
         $($block)+
         // get elapsed time
-        let __time = __now.elapsed().unwrap().as_micros() as f64;
+        let __time = __now.elapsed().as_micros() as f64;
         let __s_time = if __time < 1_000. {
             String::from(format!("{} μs", __time             )).purple()
         } else if __time < 1_000_000. {
@@ -65,7 +67,8 @@ macro_rules! simple_duration {
             String::from(format!("{:.3} s",  __time / 1_000_000.)).cyan().bold()
         };
         // print result
-        println!(" {}  {} (in {})\n", String::from("—").red().bold(), __msg, __s_time);
+        __utc_now = Utc::now();
+        println!(" {}  [{}.{}] {} (in {})\n", String::from("—").red().bold(), __utc_now.format("%M:%S"), __utc_now.timestamp_subsec_millis(), __msg, __s_time);
     }
 }
 
