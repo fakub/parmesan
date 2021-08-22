@@ -113,7 +113,7 @@ impl ParmesanUserovo<'_> {
 /// # Cloud-side Parmesan
 pub struct ParmesanCloudovo<'a> {
     pub params: &'a Params,
-    pub_keys: &'a PubKeySet<'a>,
+    pub pub_keys: &'a PubKeySet<'a>,
 }
 
 impl ParmesanCloudovo<'_> {
