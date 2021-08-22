@@ -36,7 +36,7 @@ pub fn sgn_impl(
         ]
     );
 
-    Ok(ParmCiphertext::single(s_lwe)?)
+    Ok(ParmCiphertext::single(s_lwe))
 }
 
 pub fn sgn_recursion_raw(

@@ -11,7 +11,7 @@ pub trait ParmCiphertextExt {
 
     fn empty() -> ParmCiphertext;
 
-    fn single(c: LWE) -> Result<ParmCiphertext, Box<dyn Error>>;
+    fn single(c: LWE) -> ParmCiphertext;
 }
 
 impl ParmCiphertextExt for ParmCiphertext {
@@ -23,7 +23,7 @@ impl ParmCiphertextExt for ParmCiphertext {
         Vec::new()
     }
 
-    fn single(c: LWE) -> Result<ParmCiphertext, Box<dyn Error>> {
-        Ok(vec![c])
+    fn single(c: LWE) -> ParmCiphertext {
+        vec![c]
     }
 }
