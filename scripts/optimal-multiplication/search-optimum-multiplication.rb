@@ -15,8 +15,9 @@ end
 #   BS complexity of single addition
 A = 2                                       # 1 + 1, but needed
 
-#   BS complexity of single multiplication
+#   BS complexity of single-bit multiplication & single-bit square
 M = 2                                       # 2 (+ 1), possibly not needed
+S = 1
 
 # ------------------------------------------------------------------------------
 
@@ -36,30 +37,59 @@ MP[8] = 8**2 * MP[1] + 4 * (8 * A) + 2 * (10 * A) + 13 * A                      
 
 # ------------------------------------------------------------------------------
 
-#   BS complexity of schoolbook multiplication
+#   BS complexity of schoolbook multiplication  (~4n^2)
 def m(n)
-    2*n * (2*n - 1)
+    M*n**2 + A*n*(n-1)                          # 2n(2n-1)
+end
+#   BS complexity of schoolbook squaring        (~3n^2)
+def s(n)
+    M*n*(n-1)/2 + S*n + A*n*(n-1)               # n(3n-2)
 end
 
 #   hash table for optimal BS complexity of multiplication
-j = {}
-j[0] = Float::NAN
-j[1] = M
-j[2] = 12
-j[3] = 30
-j[4] = 56
+jm = {}
+jm[0] = Float::NAN
+jm[1] =  M
+jm[2] = 12
+jm[3] = 30
+jm[4] = 56
+#   hash table for optimal BS complexity of squaring
+js = {}
+js[0] = Float::NAN
+js[1] =  S
+js[2] =  8
+js[3] = 21
 
 #   calc the optimal BS complexity of multiplication
 (2..16).each do |n|
     # Karatsuba
-    k0 = 2*j[n] + j[n+1] +          20*n +  2               # K_2n
-    k1 =   j[n] + j[n+1] + j[n+2] + 20*n + 14               # K_2n+1
-    # schoolbook
+    k0 = 2*jm[n] + jm[n+1] +          20*n +  2                 # K_2n
+    k1 =   jm[n] + jm[n+1] + jm[n+2] + 20*n + 14                # K_2n+1
+    # schoolbook mult
     m0 = m(2*n)
     m1 = m(2*n + 1)
-    # optimal
-    j[2*n] = [k0, m0].min
-    j[2*n+1] = [k1, m1].min
-    puts "J[#{2*n}] = #{j[2*n]} #{k0 < m0 ? "by " + "Karatsuba".bold + ": [#{n} | #{n} ; #{n+1}] (scb =" : "by schoolbook#{n <= 4 ? " /#{MP[2*n]} prl/" : ""} (Kar ="} #{[k0, m0].max})"
-    puts "J[#{2*n+1}] = #{j[2*n+1]} #{k1 < m1 ? "by " + "Karatsuba".bold + ": [#{n} | #{n+1} ; #{n+2}] (scb =" : "by schoolbook#{n <= 3 ? " /#{MP[2*n+1]} prl/" : ""} (Kar ="} #{[k1, m1].max})"
+    # optimal mult
+    jm[2*n] = [k0, m0].min
+    jm[2*n+1] = [k1, m1].min
+    # print out
+    puts "Jm[#{2*n}] = #{jm[2*n]} #{k0 < m0 ? "by " + "Karatsuba".bold + ": [#{n} | #{n} ; #{n+1}] (scb =" : "by schoolbook#{n <= 4 ? " /#{MP[2*n]} prl/" : ""} (Kar ="} #{[k0, m0].max})"
+    puts "Jm[#{2*n+1}] = #{jm[2*n+1]} #{k1 < m1 ? "by " + "Karatsuba".bold + ": [#{n} | #{n+1} ; #{n+2}] (scb =" : "by schoolbook#{n <= 3 ? " /#{MP[2*n+1]} prl/" : ""} (Kar ="} #{[k1, m1].max})"
+end
+
+puts "-" * 80
+
+#   calc the optimal BS complexity of squaring
+(2..16).each do |n|
+    # divide-and-conquer
+    d0 = 2*js[n] + jm[n] + A*(3*n-1)
+    d1 =   js[n] + js[n+1] + jm[n+1] + A*(3*n)
+    # schoolbook square
+    s0 = s(2*n)
+    s1 = s(2*n + 1)
+    # optimal square
+    js[2*n] = [d0, s0].min
+    js[2*n+1] = [d1, s1].min
+    # print out
+    puts "Js[#{2*n}] = #{js[2*n]} #{d0 < s0 ? "by " + "Div & Conq".bold + ": [sq-#{n} | sq-#{n} ; mul-#{n}] (scb =" : "by schoolbook (D&Q ="} #{[d0, s0].max})"
+    puts "Js[#{2*n+1}] = #{js[2*n+1]} #{d1 < s1 ? "by " + "Div & Conq".bold + ": [sq-#{n} | sq-#{n+1} ; mul-#{n+1}] (scb =" : "by schoolbook (D&Q ="} #{[d1, s1].max})"
 end

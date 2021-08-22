@@ -68,6 +68,7 @@ fn mul_karatsuba(
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
+    //WISH be able to calculate n and n-1 bit numbers (useful for squaring of non-power of two lengths)
     assert_eq!(x.len(), y.len());
 
     // not needed: let len1 = x.len() / 2;
