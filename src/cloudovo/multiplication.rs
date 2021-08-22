@@ -10,6 +10,12 @@ use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use crate::userovo::keys::PubKeySet;
 use super::pbs;
 
+
+// =============================================================================
+//
+//  Multiplication
+//
+
 /// Implementation of product of two ciphertexts using Karatsuba algorithm
 pub fn mul_impl(
     pub_keys: &PubKeySet,
@@ -58,9 +64,6 @@ pub fn mul_impl(
     Ok(p)
 }
 
-//TODO
-// pub fn squ_impl
-
 /// Karatsuba multiplication
 fn mul_karatsuba(
     pub_keys: &PubKeySet,
@@ -68,7 +71,8 @@ fn mul_karatsuba(
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
-    //WISH be able to calculate n and n-1 bit numbers (useful for squaring of non-power of two lengths)
+    //WISH  be able to calculate n and n-1 bit numbers (useful for squaring of non-power of two lengths)
+    //      in the end, it will be needed in schoolbook, too
     assert_eq!(x.len(), y.len());
 
     // not needed: let len1 = x.len() / 2;
@@ -307,4 +311,65 @@ fn mul_lwe(
     //~ );
 
     Ok(z)
+}
+
+
+// =============================================================================
+//
+//  Squaring
+//
+
+pub fn squ_impl(
+    pub_keys: &PubKeySet,
+    x: &ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
+
+    let s = match x.len() {
+        l if l == 1 => squ_1word(
+            pub_keys,
+            x,
+        )?,
+        l if l < 4 => squ_schoolbook(
+            pub_keys,
+            x,
+        )?,
+        l if l <= 32 => squ_dnq(
+            pub_keys,
+            x,
+        )?,
+        _ => return Err(format!("Squaring for {}-word integer not implemented.", x.len()).into()),
+    };
+
+    Ok(s)
+}
+
+//TODO
+fn squ_dnq(
+    pub_keys: &PubKeySet,
+    x: &ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
+}
+
+fn squ_schoolbook(
+    pub_keys: &PubKeySet,
+    x: &ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
+}
+
+fn squ_1word(
+    pub_keys: &PubKeySet,
+    x: &ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
+}
+
+fn fill_squary(
+    pub_keys: &PubKeySet,
+    x: &ParmCiphertext,
+) -> Result<Vec<ParmCiphertext>, Box<dyn Error>> {
+}
+
+fn squ_lwe(
+    pub_keys: &PubKeySet,
+    x: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
 }

@@ -3,13 +3,8 @@
 ================================================================================
 
 * make *everything* parallel (e.g., there are many pairs of operations)
-* squaring:
-    * for Karatsuba: (A^2 << 2n) + (A*B << n+1) + (B^2)
-    * n.b., thresholds for Karatsuba may change
-    * for schoolbook:
-        * 1-word square .. 1BS
-        * other mult's are 2x repeated, only (4 over 2) = 6 actual multiplications needed
-        * e.g., for 4-word square, 4 * 1BS + (4 over 2) * 2BS = 16BS instead of 32BS for multiplication
+* squaring: divide & conquer: (A^2 << 2n) + (A*B << n+1) + (B^2)
+    * multiply |n|n+1|-bit numbers
 
 * cfg for max{} behavior
 * resolve bootstraps after / before operations
