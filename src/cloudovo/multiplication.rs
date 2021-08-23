@@ -99,21 +99,21 @@ fn mul_karatsuba(
     measure_duration!(
         ["Multiplication Karatsuba ({}-bit)", x.len()],
         [
-            //  A = x_1 * y_1                   .. len1-bit
+            //  A = x_1 * y_1                   .. len1-bit multiplication
             let mut a = mul_impl(
                 pub_keys,
                 &x1,
                 &y1,
             )?;
 
-            //  B = x_0 * y_0                   .. len0-bit
+            //  B = x_0 * y_0                   .. len0-bit multiplication
             let mut b = mul_impl(
                 pub_keys,
                 &x0,
                 &y0,
             )?;
 
-            //  C = (x_0 + x_1) * (y_0 + y_1)   .. (len0 + 1)-bit
+            //  C = (x_0 + x_1) * (y_0 + y_1)   .. (len0 + 1)-bit multiplication
             let x01 = super::addition::add_sub_noise_refresh(
                 true,
                 pub_keys,
@@ -161,6 +161,16 @@ fn mul_karatsuba(
                 &b,
                 &c,
             )?;
+            //FIXME analyze this in closer detail:
+            //      e.g., for squaring of 4-bit numbers by D&Q, there may emerge 1
+            //      does it holds for longer splits?
+            //      I guess there can emerge a problem, hence suggestion:
+            //          * first, add -a-b to c (no problem with ciphertext growth)
+            //          * then add c-a-b to a|b
+            //          * output one bit longer ciphertext
+            //          * in a higher level of recursin, do not concat A|B, but add them:
+            //              * last thing to be added is A, then it should not grow more than 1 bit
+            //              * short cases must be considered
             // remove last element (guaranteed to be zero)
             abc.pop();
 
@@ -259,6 +269,7 @@ fn fill_mulary(
     //TODO try different approaches and compare
     let mut mulary = vec![ParmCiphertext::triv(2*len)?; len];
 
+    //FIXME check whether nested parallel iterators work as expected
     mulary.par_iter_mut().zip(y.par_iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
         &x_yj[j..j+len].par_iter_mut().zip(x.par_iter()).for_each(| (xi_yj, xi) | {
             *xi_yj = mul_lwe(pub_keys, &xi, &yj).expect("mul_lwe failed.");
@@ -329,6 +340,7 @@ pub fn squ_impl(
             pub_keys,
             x,
         )?,
+        //TODO check for l = 3, fix odd lengths (now they do not work, even in recursion!)
         l if l < 4 => squ_schoolbook(
             pub_keys,
             x,
@@ -343,33 +355,169 @@ pub fn squ_impl(
     Ok(s)
 }
 
-//TODO
 fn squ_dnq(
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
+
+    let len0 = (x.len() + 1) / 2;
+
+    //       len1  len0
+    //  x = | x_1 | x_0 |
+    let mut x0 = ParmCiphertext::empty();
+    let mut x1 = ParmCiphertext::empty();
+
+    // divide
+    for (i, xi) in x.iter().enumerate() {
+        if i < len0 {
+            x0.push(xi.clone());
+        } else {
+            x1.push(xi.clone());
+        }
+    }
+
+    measure_duration!(
+        ["Squaring Divide & Conquer ({}-bit)", x.len()],
+        [
+            //  A = x_1 ^ 2                     .. len1-bit squaring
+            let mut a = squ_impl(
+                pub_keys,
+                &x1,
+            )?;
+
+            //  B = x_0 ^2                      .. len0-bit squaring
+            let mut b = squ_impl(
+                pub_keys,
+                &x0,
+            )?;
+
+            //  B <- | A | B |
+            b.append(&mut a);
+
+            //  C = x_0 * x_1                   .. len0- x len1-bit multiplication (to be shited len0 + 1 bits where 1 bit is for 2x AB)
+            let mut c = ParmCiphertext::triv(len0 + 1)?;
+            let mut c_plain = mul_impl(
+                pub_keys,
+                &x0,
+                &x1,
+            )?;
+            c.append(&mut c_plain);
+
+            //  |   A   |   B   |   in b
+            //     |   C   |        in c
+            let mut res = super::addition::add_sub_noise_refresh(
+                true,
+                pub_keys,
+                &b,
+                &c,
+            )?;
+            //FIXME same as for multiplication
+            // remove last element (guaranteed to be zero)
+            //~ res.pop();
+        ]
+    );
+
+    Ok(res)
 }
 
 fn squ_schoolbook(
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
+
+    measure_duration!(
+        ["Squaring schoolbook ({}-bit)", x.len()],
+        [
+            // calc multiplication array
+            let squary = fill_squary(
+                pub_keys,
+                x,
+            )?;
+
+            // reduce squaring array
+            //TODO write a function that will be common with scalar_multiplication (if this is possible with strategies 2+)
+            let mut intmd = vec![ParmCiphertext::empty(); 2];
+            let mut idx = 0usize;
+            intmd[idx] = super::addition::add_sub_noise_refresh(
+                true,
+                pub_keys,
+                &squary[0],
+                &squary[1],
+            )?;
+
+            for i in 2..x.len() {
+                idx ^= 1;
+                intmd[idx] = super::addition::add_sub_noise_refresh(
+                    true,
+                    pub_keys,
+                    &intmd[idx ^ 1],
+                    &squary[i],
+                )?;
+            }
+        ]
+    );
+
+    Ok(intmd[idx].clone())
 }
 
 fn squ_1word(
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
+
+    measure_duration!(
+        ["Squaring 1-word"],
+        [
+            // calc squaring array
+            let squary = fill_squary(
+                pub_keys,
+                x,
+            )?;
+        ]
+    );
+
+    Ok(squary[0].clone())
 }
 
 fn fill_squary(
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
 ) -> Result<Vec<ParmCiphertext>, Box<dyn Error>> {
+
+    let len = x.len();
+    let x2 = x.clone();   //TODO needed? intended for parallel addition to avoid concurrent memory access
+
+    // fill temp squaring array
+    let mut squary_tmp  = vec![ParmCiphertext::triv(2*len)?; len];
+    let mut squary      = vec![ParmCiphertext::triv(2*len)?; len];
+
+    squary_tmp.par_iter_mut().zip(x.par_iter().enumerate()).for_each(| (sqi, (i, xi)) | {
+        &sqi[i..].par_iter_mut().zip(x2.par_iter().enumerate()).for_each(| (sqij, (j, x2j)) | {
+            if j < i {
+                *sqij = mul_lwe(pub_keys, &xi, &x2j).expect("mul_lwe failed.");
+            } else if j == i {
+                *sqij = squ_lwe(pub_keys, &xi).expect("squ_lwe failed.");
+            }
+        });
+    });
+
+    // copy values & identities
+    for (i, sqi) in squary.iter_mut().enumerate() {
+        for (j, sqij) in sqi[i..].iter_mut().enumerate() {
+            if j <= i {
+                *sqij = squary_tmp[i][i+j].clone();
+            } else if j > i && j < len {
+                *sqij = squary_tmp[j][i+j].clone();
+            }
+        }
+    }
+
+    Ok(squary)
 }
 
 fn squ_lwe(
     pub_keys: &PubKeySet,
     x: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
+    Ok(pbs::a_1__pi_5(pub_keys, x)?)
 }

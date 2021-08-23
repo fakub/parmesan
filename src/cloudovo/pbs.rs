@@ -78,30 +78,6 @@ pub fn f_4__pi_5(
 }
 
 //
-//  |X| ≥ 2
-//
-#[allow(non_snake_case)]
-pub fn a_2__pi_5(
-    pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
-    if c.dimension == 0 {
-        return Ok(c.clone());
-    }
-
-    //~ measure_duration!(
-        //~ ["PBS: |X| ≥ 2 (for π = 5)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,1.,1.,1.,1.,1.,1.,31.,31.,31.,31.,31.,31.,31.,0.][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
-
-    Ok(res)
-}
-
-//
 //  X ⋛ ±1 (× val)
 //
 #[allow(non_snake_case)]
@@ -146,6 +122,54 @@ pub fn f_0__pi_5__with_val(
         //~ ["PBS: X ≥ 0 /sgn+/ (× val, for π = 5)"],
         //~ [
             let res = c.bootstrap_with_function(pub_keys.bsk, |x| [val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
+
+//
+//  |X| ≥ 2
+//
+#[allow(non_snake_case)]
+pub fn a_2__pi_5(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
+    //~ measure_duration!(
+        //~ ["PBS: |X| ≥ 2 (for π = 5)"],
+        //~ [
+            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,1.,1.,1.,1.,1.,1.,31.,31.,31.,31.,31.,31.,31.,0.][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
+
+//
+//  |X| ≥ 1   (i.e., squaring)
+//
+#[allow(non_snake_case)]
+pub fn a_1__pi_5(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
+    //~ measure_duration!(
+        //~ ["PBS: |X| ≥ 1 (for π = 5)"],
+        //~ [
+            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,1.,1.,1.,1.,1.,1.,31.,31.,31.,31.,31.,31.,31.,31.][x as usize], pub_keys.encoder)?
                        .keyswitch(pub_keys.ksk)?;
         //~ ]
     //~ );

@@ -70,6 +70,12 @@ pub trait ParmArithmetics {
         x: &Self,
         y: &Self,
     ) -> Self;
+
+    /// Squaring: `X²`
+    fn squ(
+        pc: &ParmesanCloudovo,
+        x: &Self,
+    ) -> Self;
 }
 
 impl ParmArithmetics for i64 {
@@ -117,6 +123,11 @@ impl ParmArithmetics for i64 {
         x: &i64,
         y: &i64,
     ) -> i64 {x * y}
+
+    fn squ(
+        _pc: &ParmesanCloudovo,
+        x: &i64,
+    ) -> i64 {x * x}
 }
 
 impl ParmArithmetics for ParmCiphertext {
@@ -213,5 +224,15 @@ impl ParmArithmetics for ParmCiphertext {
             x,
             y,
         ).expect("ParmArithmetics::mul failed.")
+    }
+
+    fn squ(
+        pc: &ParmesanCloudovo,
+        x: &ParmCiphertext,
+    ) -> ParmCiphertext {
+        multiplication::squ_impl(
+            pc.pub_keys,
+            x,
+        ).expect("ParmArithmetics::squ failed.")
     }
 }
