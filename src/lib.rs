@@ -189,8 +189,10 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let m_y4 : i64 =  0b1001;                   //     9    ->         126
     let m_x8 : i64 =  0b10010111;               //   151
     let m_y8 : i64 =  0b10111010;               //   186    ->       28086
-    let m_x16: i64 =  0b110000101101011;        // 24939
-    let m_y16: i64 =  0b100011010100001;        // 18081    ->   450922059
+    //~ let m_x16: i64 =  0b110000101101011;        // 24939
+    //~ let m_y16: i64 =  0b100011010100001;        // 18081    ->   450922059
+    let m_x16: i64 =  0b1111111111111111;        // 24939
+    let m_y16: i64 =  0b1111111111111111;        // 18081    ->   450922059
     let m_x17: i64 =  0b1111011001001001;       // 63049
     let m_y17: i64 =  0b1001000111110011;       // 37363    ->  2355699787 which is more than 2^31 - 1
     let m_x32: i64 =  0b01100110010010111011011001100110;   // 1716237926
@@ -249,13 +251,15 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     //~ let c_max  = ParmArithmetics::max(&pc, &c[1], &c[0]);
 
     //~ let c_xy1  = ParmArithmetics::mul(&pc, &cx1,  &cy1 );
-    //~ let c_xy4  = ParmArithmetics::mul(&pc, &cx4,  &cy4 );
-    //~ let c_xy8  = ParmArithmetics::mul(&pc, &cx8,  &cy8 );
-    //~ let c_xy16 = ParmArithmetics::mul(&pc, &cx16, &cy16);
+    let c_xy4  = ParmArithmetics::mul(&pc, &cx4,  &cy4 );
+    let c_xy8  = ParmArithmetics::mul(&pc, &cx8,  &cy8 );
+    let c_xy16 = ParmArithmetics::mul(&pc, &cx16, &cy16);
     //~ let c_xy17 = ParmArithmetics::mul(&pc, &cx17, &cy17);
     //~ let c_xy32 = ParmArithmetics::mul(&pc, &cx32, &cy32);
 
     let c_xx4  = ParmArithmetics::squ(&pc, &cx4 );
+    let c_xx8  = ParmArithmetics::squ(&pc, &cx8 );
+    let c_xx16 = ParmArithmetics::squ(&pc, &cx16);
 
     //~ let c_n161x16 = ParmArithmetics::scalar_mul(&pc, -161, &cx16);
     //~ let c_n128x16 = ParmArithmetics::scalar_mul(&pc, -128, &cx16);
@@ -271,13 +275,15 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     //~ let m_sgn  = pu.decrypt(&c_sgn )?;
     //~ let m_max  = pu.decrypt(&c_max )?;
     //~ let m_xy1  = pu.decrypt(&c_xy1 )?;
-    //~ let m_xy4  = pu.decrypt(&c_xy4 )?;
-    //~ let m_xy8  = pu.decrypt(&c_xy8 )?;
-    //~ let m_xy16 = pu.decrypt(&c_xy16)?;
+    let m_xy4  = pu.decrypt(&c_xy4 )?;
+    let m_xy8  = pu.decrypt(&c_xy8 )?;
+    let m_xy16 = pu.decrypt(&c_xy16)?;
     //~ let m_xy17 = pu.decrypt(&c_xy17)?;
     //~ let m_xy32 = pu.decrypt(&c_xy32)?;
 
     let m_xx4  = pu.decrypt(&c_xx4 )?;
+    let m_xx8  = pu.decrypt(&c_xx8 )?;
+    let m_xx16 = pu.decrypt(&c_xx16)?;
 
     //~ let m_n161x16 = pu.decrypt(&c_n161x16)?;
     //~ let m_n128x16 = pu.decrypt(&c_n128x16)?;
@@ -315,21 +321,21 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
                             //~ if m_x1 * m_y1 == m_xy1 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             //~ m_x1 * m_y1
     //~ );
-    //~ summary_text = format!("{}\nx_4 × y_4     = {:12} :: {} (exp. {})", summary_text,
-                            //~ m_xy4,
-                            //~ if m_x4 * m_y4 == m_xy4 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ m_x4 * m_y4
-    //~ );
-    //~ summary_text = format!("{}\nx_8 × y_8     = {:12} :: {} (exp. {})", summary_text,
-                            //~ m_xy8,
-                            //~ if m_x8 * m_y8 == m_xy8 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ m_x8 * m_y8
-    //~ );
-    //~ summary_text = format!("{}\nx_16 × y_16   = {:12} :: {} (exp. {})", summary_text,
-                            //~ m_xy16,
-                            //~ if m_x16 * m_y16 == m_xy16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ m_x16 * m_y16
-    //~ );
+    summary_text = format!("{}\nx_4 × y_4     = {:12} :: {} (exp. {})", summary_text,
+                            m_xy4,
+                            if m_x4 * m_y4 == m_xy4 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x4 * m_y4
+    );
+    summary_text = format!("{}\nx_8 × y_8     = {:12} :: {} (exp. {})", summary_text,
+                            m_xy8,
+                            if m_x8 * m_y8 == m_xy8 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x8 * m_y8
+    );
+    summary_text = format!("{}\nx_16 × y_16   = {:12} :: {} (exp. {})", summary_text,
+                            m_xy16,
+                            if m_x16 * m_y16 == m_xy16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x16 * m_y16
+    );
     //~ summary_text = format!("{}\nx_17 × y_17   = {:12} :: {} (exp. {})", summary_text,
                             //~ m_xy17,
                             //~ if m_x17 * m_y17 == m_xy17 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
@@ -341,10 +347,20 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
                             //~ m_x32 * m_y32
     //~ );
 
-    summary_text = format!("{}\nx_4 ^ 2       = {:12} :: {} (exp. {})", summary_text,
+    summary_text = format!("{}\nx_4  ^ 2      = {:12} :: {} (exp. {})", summary_text,
                             m_xx4,
                             if m_xx4 == m_x4 * m_x4 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             m_x4 * m_x4
+    );
+    summary_text = format!("{}\nx_8  ^ 2      = {:12} :: {} (exp. {})", summary_text,
+                            m_xx8,
+                            if m_xx8 == m_x8 * m_x8 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x8 * m_x8
+    );
+    summary_text = format!("{}\nx_16 ^ 2      = {:12} :: {} (exp. {})", summary_text,
+                            m_xx16,
+                            if m_xx16 == m_x16 * m_x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x16 * m_x16
     );
 
     //~ summary_text = format!("{}\n-161 × x_16   = {:12} :: {} (exp. {})", summary_text,

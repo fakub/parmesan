@@ -63,6 +63,7 @@ js[3] = 21
 #   calc the optimal BS complexity of multiplication
 (2..16).each do |n|
     # Karatsuba
+    #FIXME the values will be different after keeping the extra bit that comes from recursion
     k0 = 2*jm[n] + jm[n+1] +          20*n +  2                 # K_2n
     k1 =   jm[n] + jm[n+1] + jm[n+2] + 20*n + 14                # K_2n+1
     # schoolbook mult

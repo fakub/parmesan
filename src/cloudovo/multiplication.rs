@@ -161,16 +161,15 @@ fn mul_karatsuba(
                 &b,
                 &c,
             )?;
-            //FIXME analyze this in closer detail:
-            //      e.g., for squaring of 4-bit numbers by D&Q, there may emerge 1
-            //      does it holds for longer splits?
-            //      I guess there can emerge a problem, hence suggestion:
-            //          * first, add -a-b to c (no problem with ciphertext growth)
-            //          * then add c-a-b to a|b
-            //          * output one bit longer ciphertext
-            //          * in a higher level of recursin, do not concat A|B, but add them:
-            //              * last thing to be added is A, then it should not grow more than 1 bit
-            //              * short cases must be considered
+            //FIXME last element is NOT guaranteed to be zero (in redundant representation)
+            //      * first, add -a-b to c (no problem with ciphertext growth)
+            //      * then add c-a-b to
+            //          * a|b if lengths are appropriate
+            //          * a << len0 + b if they overlap
+            //      * -> outputs one bit longer ciphertext
+            //      * in case A and B need to be added:
+            //          * last thing to be added is A, then it should not grow more than 1 bit
+            //          * short cases must be considered
             // remove last element (guaranteed to be zero)
             abc.pop();
 
