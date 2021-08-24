@@ -147,10 +147,10 @@ fn mul_karatsuba(
             }
 
             //  |   A   |   B   |   TBD based on overlap
-            //     |    C   |       in c
-            //      | -A-B  |       in na_nb
+            //     |    C   | 0 |   in c
+            //      | -A-B  | 0 |   in na_nb
 
-            //  |  C | + | -A - B |..
+            //  |  C | 0 | + | -A-B | 0 |
             let c_nanb = super::addition::add_sub_noise_refresh(
                 true,
                 pub_keys,
@@ -158,30 +158,29 @@ fn mul_karatsuba(
                 &na_nb,
             )?;
 
-            //FIXME in case A and B need to be added:
-            //  * last thing to be added is A, then it should not grow more than 1 bit
-            //  * short cases must be considered
-
             //  add everything together
             let res = if b.len() == 2*len0 {
                 //  | A | B |   simply concat
                 b.append(&mut a);
-                super::addition::add_sub_impl(
+                super::addition::add_sub_noise_refresh(
                     true,
                     pub_keys,
                     &b,
                     &c_nanb,
                 )?
             } else {
+                //  first, add |c-a-b|0| to |b|
                 let b_cnanb = super::addition::add_sub_noise_refresh(
                     true,
                     pub_keys,
                     &b,
                     &c_nanb,
                 )?;
-                let mut a_sh  = ParmCiphertext::triv(len0)?;
+                //  second, add |c-a-b|0|+|b| to a|0|0|
+                //  n.b., this way, the resulting ciphertext grows the least (1 bit only) and it also uses least BS inside additions
+                let mut a_sh  = ParmCiphertext::triv(2*len0)?;
                 a_sh.append(&mut a);
-                super::addition::add_sub_impl(
+                super::addition::add_sub_noise_refresh(
                     true,
                     pub_keys,
                     &a_sh,
@@ -397,9 +396,6 @@ fn squ_dnq(
                 &x0,
             )?;
 
-            //  B <- | A | B |
-            b.append(&mut a);
-
             //  C = x_0 * x_1                   .. len0- x len1-bit multiplication (to be shited len0 + 1 bits where 1 bit is for 2x AB)
             let mut c = ParmCiphertext::triv(len0 + 1)?;
             let mut c_plain = mul_impl(
@@ -409,17 +405,36 @@ fn squ_dnq(
             )?;
             c.append(&mut c_plain);
 
-            //  |   A   |   B   |   in b
-            //     |   C   |        in c
-            let mut res = super::addition::add_sub_noise_refresh(
-                true,
-                pub_keys,
-                &b,
-                &c,
-            )?;
-            //FIXME same as for multiplication
-            // remove last element (guaranteed to be zero)
-            //~ res.pop();
+            //  |   A   |   B   |   TBD based on overlap
+            //     |   C   |  0 |   in c
+            //  add everything together
+            let res = if b.len() == 2*len0 {
+                //  | A | B |   simply concat
+                b.append(&mut a);
+                super::addition::add_sub_noise_refresh(
+                    true,
+                    pub_keys,
+                    &b,
+                    &c,
+                )?
+            } else {
+                //  first, add | C |0| to | B |
+                let b_c = super::addition::add_sub_noise_refresh(
+                    true,
+                    pub_keys,
+                    &b,
+                    &c,
+                )?;
+                //  second, add | C |0|+| B | to | A |0|0|
+                let mut a_sh  = ParmCiphertext::triv(2*len0)?;
+                a_sh.append(&mut a);
+                super::addition::add_sub_impl(
+                    true,
+                    pub_keys,
+                    &a_sh,
+                    &b_c,
+                )?
+            };
         ]
     );
 

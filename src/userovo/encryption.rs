@@ -100,7 +100,8 @@ pub fn parm_decrypt(
         //~ [
             for (i, ct) in pc.iter().enumerate() {
                 let mi = parm_decr_word(params, priv_keys, ct)?;
-                //~ infoln!("m[{}] = {} (pi = {})", i, mi, ct.encoder.nb_bit_precision);
+                // infoln!("m[{}] = {} (pi = {})", i, mi, ct.encoder.nb_bit_precision);
+                // if i >= 63 {dbgln!("i >= 63 !! namely {}", i);}
                 m += match mi {
                      1 => {  1i64 << i},
                      0 => {  0i64},

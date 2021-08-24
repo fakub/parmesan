@@ -2,9 +2,10 @@
     TODO
 ================================================================================
 
+* !! make new estimates on Karatsuba and D&C squaring BS complexity !!
+* for squaring of non-power-of-2: multiply |n|n+1|-bit numbers
 * make *everything* parallel (e.g., there are many pairs of operations)
-* squaring: divide & conquer: (A^2 << 2n) + (A*B << n+1) + (B^2)
-    * multiply |n|n+1|-bit numbers
+    * check whether nested parallel iterators work as expected, i.e., whether they put everything into one pool
 
 * cfg for max{} behavior
 * resolve bootstraps after / before operations

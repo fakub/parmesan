@@ -186,17 +186,16 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let m_x1 : i64 =  0b1;
     let m_y1 : i64 = -0b1;
     let m_x4 : i64 =  0b1110;                   //    14
-    let m_y4 : i64 =  0b1001;                   //     9    ->         126
+    let m_y4 : i64 =  0b1001;                   //     9    ->               126
     let m_x8 : i64 =  0b10010111;               //   151
-    let m_y8 : i64 =  0b10111010;               //   186    ->       28086
-    //~ let m_x16: i64 =  0b110000101101011;        // 24939
-    //~ let m_y16: i64 =  0b100011010100001;        // 18081    ->   450922059
-    let m_x16: i64 =  0b1111111111111111;        // 24939
-    let m_y16: i64 =  0b1111111111111111;        // 18081    ->   450922059
-    let m_x17: i64 =  0b1111011001001001;       // 63049
-    let m_y17: i64 =  0b1001000111110011;       // 37363    ->  2355699787 which is more than 2^31 - 1
+    let m_y8 : i64 =  0b10111010;               //   186    ->             28086
+    let m_x16: i64 =  0b1110000101101011;        // 57707
+    let m_y16: i64 =  0b1100011010100001;        // 50849    ->       2934343243
+    let m_x17: i64 =  0b11111011001001001;       // 128585
+    let m_y17: i64 =  0b11001000111110011;       // 102899    ->     13231267915
     let m_x32: i64 =  0b01100110010010111011011001100110;   // 1716237926
     let m_y32: i64 =  0b01001011100111010100110001010100;   // 1268599892   ->  2177219247569903992 which fits 63 bits (i64)
+                                                            //                  AND it does not happen that some 1 would be at such a position due to redundant repre
 
     // encrypt all values
     let mut c: [ParmCiphertext; DEMO_N_MSGS] = [
@@ -244,83 +243,86 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     // =================================
     //  C: Evaluation
 
-    //~ let c_add  = ParmArithmetics::add(&pc, &c[0], &c[1]);
-    //~ let c_sub  = ParmArithmetics::sub(&pc, &c[1], &c[0]);
-    //~ let c_adc  = ParmArithmetics::add_const(&pc,  &c[0], DEMO_ADC);
-    //~ let c_sgn  = ParmArithmetics::sgn(&pc, &c[2]       );
-    //~ let c_max  = ParmArithmetics::max(&pc, &c[1], &c[0]);
+    let c_add  = ParmArithmetics::add(&pc, &c[0], &c[1]);
+    let c_sub  = ParmArithmetics::sub(&pc, &c[1], &c[0]);
+    let c_adc  = ParmArithmetics::add_const(&pc,  &c[0], DEMO_ADC);
+    let c_sgn  = ParmArithmetics::sgn(&pc, &c[2]       );
+    let c_max  = ParmArithmetics::max(&pc, &c[1], &c[0]);
 
-    //~ let c_xy1  = ParmArithmetics::mul(&pc, &cx1,  &cy1 );
+    let c_xy1  = ParmArithmetics::mul(&pc, &cx1,  &cy1 );
     let c_xy4  = ParmArithmetics::mul(&pc, &cx4,  &cy4 );
     let c_xy8  = ParmArithmetics::mul(&pc, &cx8,  &cy8 );
     let c_xy16 = ParmArithmetics::mul(&pc, &cx16, &cy16);
-    //~ let c_xy17 = ParmArithmetics::mul(&pc, &cx17, &cy17);
-    //~ let c_xy32 = ParmArithmetics::mul(&pc, &cx32, &cy32);
+    let c_xy17 = ParmArithmetics::mul(&pc, &cx17, &cy17);
+    let c_xy32 = ParmArithmetics::mul(&pc, &cx32, &cy32);
 
     let c_xx4  = ParmArithmetics::squ(&pc, &cx4 );
     let c_xx8  = ParmArithmetics::squ(&pc, &cx8 );
     let c_xx16 = ParmArithmetics::squ(&pc, &cx16);
+    let c_xx32 = ParmArithmetics::squ(&pc, &cx32);
 
-    //~ let c_n161x16 = ParmArithmetics::scalar_mul(&pc, -161, &cx16);
-    //~ let c_n128x16 = ParmArithmetics::scalar_mul(&pc, -128, &cx16);
-    //~ let c_p3x16   = ParmArithmetics::scalar_mul(&pc,    3, &cx16);
+    let c_n161x16 = ParmArithmetics::scalar_mul(&pc, -161, &cx16);
+    let c_n128x16 = ParmArithmetics::scalar_mul(&pc, -128, &cx16);
+    let c_p3x16   = ParmArithmetics::scalar_mul(&pc,    3, &cx16);
 
 
     // =================================
     //  U: Decryption
 
-    //~ let m_add  = pu.decrypt(&c_add )?;
-    //~ let m_sub  = pu.decrypt(&c_sub )?;
-    //~ let m_adc  = pu.decrypt(&c_adc )?;
-    //~ let m_sgn  = pu.decrypt(&c_sgn )?;
-    //~ let m_max  = pu.decrypt(&c_max )?;
-    //~ let m_xy1  = pu.decrypt(&c_xy1 )?;
+    let m_add  = pu.decrypt(&c_add )?;
+    let m_sub  = pu.decrypt(&c_sub )?;
+    let m_adc  = pu.decrypt(&c_adc )?;
+    let m_sgn  = pu.decrypt(&c_sgn )?;
+    let m_max  = pu.decrypt(&c_max )?;
+
+    let m_xy1  = pu.decrypt(&c_xy1 )?;
     let m_xy4  = pu.decrypt(&c_xy4 )?;
     let m_xy8  = pu.decrypt(&c_xy8 )?;
     let m_xy16 = pu.decrypt(&c_xy16)?;
-    //~ let m_xy17 = pu.decrypt(&c_xy17)?;
-    //~ let m_xy32 = pu.decrypt(&c_xy32)?;
+    let m_xy17 = pu.decrypt(&c_xy17)?;
+    let m_xy32 = pu.decrypt(&c_xy32)?;
 
     let m_xx4  = pu.decrypt(&c_xx4 )?;
     let m_xx8  = pu.decrypt(&c_xx8 )?;
     let m_xx16 = pu.decrypt(&c_xx16)?;
+    let m_xx32 = pu.decrypt(&c_xx32)?;
 
-    //~ let m_n161x16 = pu.decrypt(&c_n161x16)?;
-    //~ let m_n128x16 = pu.decrypt(&c_n128x16)?;
-    //~ let m_p3x16   = pu.decrypt(&c_p3x16  )?;
+    let m_n161x16 = pu.decrypt(&c_n161x16)?;
+    let m_n128x16 = pu.decrypt(&c_n128x16)?;
+    let m_p3x16   = pu.decrypt(&c_p3x16  )?;
 
     let mut summary_text = format!("{} results", String::from("User:").bold().yellow());
 
-    //~ summary_text = format!("{}\nm_0 + m_1     = {:12} :: {} (exp. {})", summary_text,
-                            //~ m_add,
-                            //~ if m_as[0] + m_as[1] == m_add {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ m_as[0] + m_as[1]
-    //~ );
-    //~ summary_text = format!("{}\nm_1 - m_0     = {:12} :: {} (exp. {})", summary_text,
-                            //~ m_sub,
-                            //~ if m_as[1] - m_as[0] == m_sub {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ m_as[1] - m_as[0]
-    //~ );
-    //~ summary_text = format!("{}\nm_0 + {:3}     = {:12} :: {} (exp. {})", summary_text,
-                            //~ DEMO_ADC, m_adc,
-                            //~ if m_as[0] + (DEMO_ADC as i64) == m_adc {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ m_as[0] + (DEMO_ADC as i64)
-    //~ );
-    //~ summary_text = format!("{}\nsgn(m_2)      = {:12} :: {}", summary_text,
-                            //~ m_sgn,
-                            //~ if m_as[2].signum() == m_sgn {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-    //~ );
-    //~ summary_text = format!("{}\nmax{{m_1, m_0}} = {:12} :: {} (exp. {})", summary_text,
-                            //~ m_max,
-                            //~ if std::cmp::max(m_as[1], m_as[0]) == m_max {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ std::cmp::max(m_as[1], m_as[0])
-    //~ );
+    summary_text = format!("{}\nm_0 + m_1     = {:12} :: {} (exp. {})", summary_text,
+                            m_add,
+                            if m_as[0] + m_as[1] == m_add {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_as[0] + m_as[1]
+    );
+    summary_text = format!("{}\nm_1 - m_0     = {:12} :: {} (exp. {})", summary_text,
+                            m_sub,
+                            if m_as[1] - m_as[0] == m_sub {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_as[1] - m_as[0]
+    );
+    summary_text = format!("{}\nm_0 + {:3}     = {:12} :: {} (exp. {})", summary_text,
+                            DEMO_ADC, m_adc,
+                            if m_as[0] + (DEMO_ADC as i64) == m_adc {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_as[0] + (DEMO_ADC as i64)
+    );
+    summary_text = format!("{}\nsgn(m_2)      = {:12} :: {}", summary_text,
+                            m_sgn,
+                            if m_as[2].signum() == m_sgn {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+    );
+    summary_text = format!("{}\nmax{{m_1, m_0}} = {:12} :: {} (exp. {})", summary_text,
+                            m_max,
+                            if std::cmp::max(m_as[1], m_as[0]) == m_max {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            std::cmp::max(m_as[1], m_as[0])
+    );
 
-    //~ summary_text = format!("{}\nx_1 × y_1     = {:12} :: {} (exp. {})", summary_text,
-                            //~ m_xy1,
-                            //~ if m_x1 * m_y1 == m_xy1 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ m_x1 * m_y1
-    //~ );
+    summary_text = format!("{}\nx_1 × y_1     = {:12} :: {} (exp. {})", summary_text,
+                            m_xy1,
+                            if m_x1 * m_y1 == m_xy1 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x1 * m_y1
+    );
     summary_text = format!("{}\nx_4 × y_4     = {:12} :: {} (exp. {})", summary_text,
                             m_xy4,
                             if m_x4 * m_y4 == m_xy4 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
@@ -336,16 +338,16 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
                             if m_x16 * m_y16 == m_xy16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             m_x16 * m_y16
     );
-    //~ summary_text = format!("{}\nx_17 × y_17   = {:12} :: {} (exp. {})", summary_text,
-                            //~ m_xy17,
-                            //~ if m_x17 * m_y17 == m_xy17 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ m_x17 * m_y17
-    //~ );
-    //~ summary_text = format!("{}\nx_32 × y_32   = {:24} :: {} (exp. {})", summary_text,
-                            //~ m_xy32,
-                            //~ if m_x32 * m_y32 == m_xy32 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ m_x32 * m_y32
-    //~ );
+    summary_text = format!("{}\nx_17 × y_17   = {:12} :: {} (exp. {})", summary_text,
+                            m_xy17,
+                            if m_x17 * m_y17 == m_xy17 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x17 * m_y17
+    );
+    summary_text = format!("{}\nx_32 × y_32   = {:24} :: {} (exp. {})", summary_text,
+                            m_xy32,
+                            if m_x32 * m_y32 == m_xy32 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x32 * m_y32
+    );
 
     summary_text = format!("{}\nx_4  ^ 2      = {:12} :: {} (exp. {})", summary_text,
                             m_xx4,
@@ -362,22 +364,27 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
                             if m_xx16 == m_x16 * m_x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             m_x16 * m_x16
     );
+    summary_text = format!("{}\nx_32 ^ 2      = {:24} :: {} (exp. {})", summary_text,
+                            m_xx32,
+                            if m_xx32 == m_x32 * m_x32 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x32 * m_x32
+    );
 
-    //~ summary_text = format!("{}\n-161 × x_16   = {:12} :: {} (exp. {})", summary_text,
-                            //~ m_n161x16,
-                            //~ if -161 * m_x16 == m_n161x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ -161 * m_x16
-    //~ );
-    //~ summary_text = format!("{}\n-128 × x_16   = {:12} :: {} (exp. {})", summary_text,
-                            //~ m_n128x16,
-                            //~ if -128 * m_x16 == m_n128x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ -128 * m_x16
-    //~ );
-    //~ summary_text = format!("{}\n 3 × x_16     = {:12} :: {} (exp. {})", summary_text,
-                            //~ m_p3x16,
-                            //~ if 3 * m_x16 == m_p3x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            //~ 3 * m_x16
-    //~ );
+    summary_text = format!("{}\n-161 × x_16   = {:12} :: {} (exp. {})", summary_text,
+                            m_n161x16,
+                            if -161 * m_x16 == m_n161x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            -161 * m_x16
+    );
+    summary_text = format!("{}\n-128 × x_16   = {:12} :: {} (exp. {})", summary_text,
+                            m_n128x16,
+                            if -128 * m_x16 == m_n128x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            -128 * m_x16
+    );
+    summary_text = format!("{}\n 3 × x_16     = {:12} :: {} (exp. {})", summary_text,
+                            m_p3x16,
+                            if 3 * m_x16 == m_p3x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            3 * m_x16
+    );
 
     infoln!("{}", summary_text);
 
