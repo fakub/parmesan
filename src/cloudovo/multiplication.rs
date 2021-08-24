@@ -135,59 +135,59 @@ fn mul_karatsuba(
             c.append(&mut c_plain);
 
             //  A + B .. -A - B
-            let papb = super::addition::add_sub_noise_refresh(
+            let pa_pb = super::addition::add_sub_noise_refresh(
                 true,
                 pub_keys,
                 &a,
                 &b,
             )?;
-            let mut nanb = ParmCiphertext::triv(len0)?;
-            for abi in papb {
-                nanb.push(abi.opposite_uint()?);
+            let mut na_nb = ParmCiphertext::triv(len0)?;
+            for abi in pa_pb {
+                na_nb.push(abi.opposite_uint()?);
             }
 
-            let mut ab_sh = ParmCiphertext::empty();
-            //  AB <- | A | B |
-            let ab = if b.len() == 2*len0 {
-                //  | A | B |
-                b.append(&mut a);
-                &b
-            } else {
-                //  | A | 0 | + | B |   because of overlap
-                let mut a_sh  = ParmCiphertext::triv(len0)?;
-                a_sh.append(&mut a);
-                ab_sh = super::addition::add_sub_noise_refresh(
-                    true,
-                    pub_keys,
-                    &a_sh,
-                    &b,
-                )?;
-                &ab_sh
-            };
-
-            //  |   A   |   B   |   in ab
+            //  |   A   |   B   |   TBD based on overlap
             //     |    C   |       in c
-            //      |  -A   |       in nanb
-            //      |  -B   |       -- " --
+            //      | -A-B  |       in na_nb
 
             //  |  C | + | -A - B |..
-            let cnanb = super::addition::add_sub_noise_refresh(
+            let c_nanb = super::addition::add_sub_noise_refresh(
                 true,
                 pub_keys,
                 &c,
-                &nanb,
+                &na_nb,
             )?;
-            //FIXME last element is NOT guaranteed to be zero (in redundant representation)
-            //      * in case A and B need to be added:
-            //          * last thing to be added is A, then it should not grow more than 1 bit
-            //          * short cases must be considered
 
-            let res = super::addition::add_sub_impl(
-                true,
-                pub_keys,
-                ab,
-                &cnanb,
-            )?;
+            //FIXME in case A and B need to be added:
+            //  * last thing to be added is A, then it should not grow more than 1 bit
+            //  * short cases must be considered
+
+            //  add everything together
+            let res = if b.len() == 2*len0 {
+                //  | A | B |   simply concat
+                b.append(&mut a);
+                super::addition::add_sub_impl(
+                    true,
+                    pub_keys,
+                    &b,
+                    &c_nanb,
+                )?
+            } else {
+                let b_cnanb = super::addition::add_sub_noise_refresh(
+                    true,
+                    pub_keys,
+                    &b,
+                    &c_nanb,
+                )?;
+                let mut a_sh  = ParmCiphertext::triv(len0)?;
+                a_sh.append(&mut a);
+                super::addition::add_sub_impl(
+                    true,
+                    pub_keys,
+                    &a_sh,
+                    &b_cnanb,
+                )?
+            };
         ]
     );
 
