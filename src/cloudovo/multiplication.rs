@@ -146,41 +146,48 @@ fn mul_karatsuba(
                 nanb.push(abi.opposite_uint()?);
             }
 
-            //  B <- | A | B |
-            b.append(&mut a);
+            let mut ab_sh = ParmCiphertext::empty();
+            //  AB <- | A | B |
+            let ab = if b.len() == 2*len0 {
+                //  | A | B |
+                b.append(&mut a);
+                &b
+            } else {
+                //  | A | 0 | + | B |   because of overlap
+                let mut a_sh  = ParmCiphertext::triv(len0)?;
+                a_sh.append(&mut a);
+                ab_sh = super::addition::add_sub_noise_refresh(
+                    true,
+                    pub_keys,
+                    &a_sh,
+                    &b,
+                )?;
+                &ab_sh
+            };
 
-            //  |   A   |   B   |   in b
+            //  |   A   |   B   |   in ab
             //     |    C   |       in c
             //      |  -A   |       in nanb
             //      |  -B   |       -- " --
 
-            //  | A | B |   +   |  C |..
-            let mut abc = super::addition::add_sub_noise_refresh(
+            //  |  C | + | -A - B |..
+            let cnanb = super::addition::add_sub_noise_refresh(
                 true,
                 pub_keys,
-                &b,
                 &c,
+                &nanb,
             )?;
             //FIXME last element is NOT guaranteed to be zero (in redundant representation)
-            //      * first, add -a-b to c (no problem with ciphertext growth)
-            //      * then add c-a-b to
-            //          * a|b if lengths are appropriate
-            //          * a << len0 + b if they overlap
-            //      * -> outputs one bit longer ciphertext
             //      * in case A and B need to be added:
             //          * last thing to be added is A, then it should not grow more than 1 bit
             //          * short cases must be considered
-            // remove last element (guaranteed to be zero)
-            abc.pop();
 
-            let mut res = super::addition::add_sub_impl(
+            let res = super::addition::add_sub_impl(
                 true,
                 pub_keys,
-                &abc,
-                &nanb,
+                ab,
+                &cnanb,
             )?;
-            // remove last element (guaranteed to be zero)
-            res.pop();
         ]
     );
 
