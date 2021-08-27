@@ -64,8 +64,8 @@ js[3] = 21
 (2..16).each do |n|
     # Karatsuba
     #FIXME the values will be different after keeping the extra bit that comes from recursion
-    k0 = 2*jm[n] + jm[n+1] +          20*n +  2                 # K_2n
-    k1 =   jm[n] + jm[n+1] + jm[n+2] + 20*n + 14                # K_2n+1
+    k0 = 2*jm[n] + jm[n+1] +           A*(2*n     + 2*(n+1) + 3*n  )            # K_2n:     3 mul's, 3 add's
+    k1 =   jm[n] + jm[n+1] + jm[n+2] + A*(2*(n+1) + 2*(n+2) + 3*n+1)            # K_2n+1:   3 mul's, 3 add's
     # schoolbook mult
     m0 = m(2*n)
     m1 = m(2*n + 1)
@@ -82,7 +82,7 @@ puts "-" * 80
 #   calc the optimal BS complexity of squaring
 (2..16).each do |n|
     # divide-and-conquer
-    d0 = 2*js[n] + jm[n] + A*(3*n-1)
+    d0 = 2*js[n] + jm[n] + A*(3*n-1)                # 3n-1 .. 2AB is shifted one bit (hence there occurs triv zero)
     d1 =   js[n] + js[n+1] + jm[n+1] + A*(3*n)
     # schoolbook square
     s0 = s(2*n)

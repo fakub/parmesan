@@ -99,6 +99,7 @@ fn mul_karatsuba(
     measure_duration!(
         ["Multiplication Karatsuba ({}-bit)", x.len()],
         [
+            //TODO these can be calculated in parallel
             //  A = x_1 * y_1                   .. len1-bit multiplication
             let mut a = mul_impl(
                 pub_keys,
@@ -274,7 +275,7 @@ fn fill_mulary(
     //TODO try different approaches and compare
     let mut mulary = vec![ParmCiphertext::triv(2*len)?; len];
 
-    //FIXME check whether nested parallel iterators work as expected
+    // nested parallel iterators work as expected: they indeed create nested pools
     mulary.par_iter_mut().zip(y.par_iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
         &x_yj[j..j+len].par_iter_mut().zip(x.par_iter()).for_each(| (xi_yj, xi) | {
             *xi_yj = mul_lwe(pub_keys, &xi, &yj).expect("mul_lwe failed.");

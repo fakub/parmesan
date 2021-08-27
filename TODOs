@@ -2,10 +2,16 @@
     TODO
 ================================================================================
 
-* !! make new estimates on Karatsuba and D&C squaring BS complexity !!
-* for squaring of non-power-of-2: multiply |n|n+1|-bit numbers
-* make *everything* parallel (e.g., there are many pairs of operations)
-    * check whether nested parallel iterators work as expected, i.e., whether they put everything into one pool
+* make *everything* parallel (e.g., there are many pairs of operations, nested parallel iterators work as expected, i.e., they put everything into one pool)
+* for squaring of non-power-of-2: multiply |n|n+1|-bit numbers (isn't this too technical? it can be bypassed by adding a triv zero)
+* make new estimates on Karatsuba and D&C squaring BS complexity (actually only for 2 and more nested recursion levels, schoolbook does not add extra bits)
+
+* just comment on "floating-point-like" feature:
+    * in standard binary repre, rounding is just adding the next word
+    * in redundant binary, more complicated:
+        * 0 is fine
+        * 1 and -1 must search for the closest next non-zero .. that's PROBLEM!
+        * btw the problem stems from the fact that rounding is not possible in parallel
 
 * cfg for max{} behavior
 * resolve bootstraps after / before operations
