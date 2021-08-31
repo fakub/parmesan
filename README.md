@@ -4,9 +4,13 @@
 
 Parmesan implements selected parallel algorithms for multi-digit arithmetics over TFHE ciphertexts. Namely:
 
-- addition,
-- signum, and
-- maximum of two numbers.
+- addition/subtraction,
+- scalar multiplication (i.e., multiplication by a known integer),
+- multiplication,
+- squaring,
+- signum,
+- maximum of two numbers, and
+- evaluation of a simple neural network.
 
 ## The Short Story
 
@@ -18,11 +22,13 @@ See our [full paper](https://eprint.iacr.org/2021/TODO).
 
 ## Use `parmesan`
 
-Add a dependency to your `Cargo.toml` file in your Rust project.
+Add a dependency to your `Cargo.toml` file in your Rust project. (Currently only from git or locally.)
 
 ```toml
 [dependencies]
-parmesan = "^0.1"
+parmesan = { git = "https://gitlab.fit.cvut.cz/klemsjak/parmesan" }
+# or:
+parmesan = { path = "../parmesan" }
 ```
 
 For the best performance, we recommend to compile & run with the `RUSTFLAGS="-C target-cpu=native" cargo run --release` command.
@@ -32,15 +38,19 @@ For the best performance, we recommend to compile & run with the `RUSTFLAGS="-C 
 ```rust
 use std::error::Error;
 
-// add use to what is missing
+use parmesan::params;
+use parmesan::userovo::*;
+use parmesan::ParmesanUserovo;
+use parmesan::ParmesanCloudovo;
+use parmesan::arithmetics::ParmArithmetics;
 
 pub fn main() -> Result<(), Box<dyn Error>> {
-    
+
     // =================================
     //  Initialization
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARMXX__TRIVIAL;
+    let par = &params::PARM90__PI_5__D_20__LEN_32;
     // ---------------------------------
     //  Userovo Scope
     let pu = ParmesanUserovo::new(par)?;
@@ -51,46 +61,37 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 
     // =================================
     //  U: Encryption
-    let m1 =  0b00100111i32;
-    let m2 =  0b00101110i32;
-    let m3 = -0b00011001i32;
-    let c1 = pu.encrypt(m1, 6)?;
-    let c2 = pu.encrypt(m2, 6)?;
-    let c3 = pu.encrypt(m3, 6)?;
-    infoln!("{} messages\nm1 = {}{:b} ({})\nm2 = {}{:b} ({})m3 = {}{:b} ({})", 
-            String::from("User:").bold().yellow(),
-                                if m1 >= 0 {""} else {"-"}, m1.abs(), m1,
-                                                  if m2 >= 0 {""} else {"-"}, m2.abs(), m2,
-                                                                  if m3 >= 0 {""} else {"-"}, m3.abs(), m3);
+    let a: Vec<i32> = vec![1,0,1,-1,-1,0,-1,1,1,-1,1,1,1,-1,-1,0,0,1,1,0,0,0,0,-1,0,0,0,0,0,-1,0,0,];
+    let b: Vec<i32> = vec![-1,0,0,-1,1,1,-1,1,-1,0,0,1,0,1,1,0,0,0,-1,0,0,1,0,0,-1,0,-1,-1,-1,1,1,0,];
+    let ca = pu.encrypt_vec(&a)?;
+    let cb = pu.encrypt_vec(&b)?;
+    // convert to actual numbers
+    let a_val = encryption::convert(&a)?;
+    let b_val = encryption::convert(&b)?;
+    // print plain inputs
+    println!("\nInputs:\n");
+    println!("a   = {:12}", a_val);
+    println!("b   = {:12}", b_val);
 
     // =================================
     //  C: Evaluation
-    let c_add = pc.add(&c1, &c2)?;
-    let c_sub = pc.sub(&c1, &c2)?;
-    let c_sgn = pc.sgn(&c3)?;
-    let c_max = pc.max(&c1, &c2)?;
+    let c_add_a_b = ParmArithmetics::add(&pc, &ca, &cb);
 
     // =================================
     //  U: Decryption
-    let m_add  = pu.decrypt(&c_add)?;
-    let m_sub  = pu.decrypt(&c_sub)?;
-    let m_sgn  = pu.decrypt(&c_sgn)?;
-    let m_max  = pu.decrypt(&c_max)?;
+    let add_a_b = pu.decrypt(&c_add_a_b)?;
 
-    infoln!("{} result\nm1 + m2 = {} :: {} (exp. {})\nm1 - m2 = {} :: {} (exp. {})\nsgn(m3) = {} :: {}\nmax{{m1, m2}} = {} :: {}",
-              String::from("User:").bold().yellow(),
-                    m_add,
-                    if m_add - (m1+m2) % (1<<6) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                    (m1+m2) % (1<<6),
-                            m_sub,
-                            if m_sub - (m1-m2) % (1<<6) == 0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            (m1-m2) % (1<<6),
-                                    m_sgn,
-                                    if m_sgn == m3.signum() {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                                            m_max,
-                                            if m_max == std::cmp::max(m1, m2) {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()});
+    let mut summary_text = format!("\nResults:\n");
+    summary_text = format!("{}\nAddition:", summary_text);
+    summary_text = format!("{}\na + b         = {:12} :: {} (exp. {})", summary_text,
+                            add_a_b,
+                            if add_a_b == a_val + b_val {"PASS"} else {"FAIL"},
+                            a_val + b_val
+    );
 
-    infobox!("Demo END");
+    println!("{}", summary_text);
+
+    println!("\nDemo END\n");
 
     Ok(())
 }
