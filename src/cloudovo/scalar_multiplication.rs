@@ -31,7 +31,7 @@ pub fn scalar_mul_impl(
     let k_abs = k.abs() as u32;
 
     // resolve |k| < 2
-    if k_abs == 0 {return Ok(ParmCiphertext::triv(1)?);}   //TODO check whether a valid ParmCiphertext can have length = 0
+    if k_abs == 0 {return Ok(ParmCiphertext::empty());}
     if k_abs == 1 {return Ok(x_pos);}
 
     // |k| < 2 already resolved, set to len = 2 and start from length 3: take 1 << 2 (which is 0b100 = 4)
