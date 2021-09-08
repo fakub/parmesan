@@ -59,6 +59,7 @@ pub const PARMXX__TRIVIAL: Params = Params {
     ks_base_log: 1,
        ks_level: 3,
 };
+
 #[allow(dead_code)]
 pub const PARM90__PI_5__D_20__LEN_32: Params = Params {
            maxlen: 32,
@@ -78,6 +79,7 @@ pub const PARM90__PI_5__D_20__LEN_32: Params = Params {
     ks_base_log: 1,
        ks_level: 16,
 };
+
 #[allow(dead_code)]
 pub const PARM90__PI_5__D_36__LEN_32: Params = Params {
            maxlen: 32,
@@ -97,3 +99,5 @@ pub const PARM90__PI_5__D_36__LEN_32: Params = Params {
     ks_base_log: 1,
        ks_level: 16,
 };
+
+//TODO add params for all scenarios

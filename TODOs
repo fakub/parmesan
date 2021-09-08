@@ -8,13 +8,21 @@
 
 * just comment on "floating-point-like" feature:
     * in standard binary repre, rounding is just adding the next word
-    * in redundant binary, more complicated:
-        * 0 is fine
-        * 1 and -1 must search for the closest next non-zero .. that's PROBLEM!
-        * btw the problem stems from the fact that rounding is not possible in parallel
+    * in redundant binary, a bit more complicated:
+        * for 1 and -1, one must search for the next non-zero ~ calc its sign
+        * SOLUTION:
+            let A = X ∥ y | Z .. s := sgn(Z)
+
+            y \ s   |-1 | 0 | 1 |
+            ---------------------
+                1   | 0 | 1 | 1 |
+                0   | 0 | 0 | 0 |
+               -1   |-1 | 0 | 0 |
+
+            add: 2y + s == 2, 3 .. +1 or 2y + s == -3 .. -1 otherwise 0
 
 * cfg for max{} behavior
-* resolve bootstraps after / before operations
+* resolve bootstraps before / after / in between operations
 
 * replace sequential with standard base algorithms
 * wish: add tree-based method for arbitrary function evaluation
