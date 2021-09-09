@@ -9,7 +9,7 @@ use concrete::*;
 /// * THFE parameters
 #[derive(Clone, Debug)]   //WISH Serialize, Deserialize (also elsewhere)
 pub struct Params {
-    pub        maxlen:  usize,
+    pub        maxlen:  usize,          // not used (btw, what was the intended purpose??)
     pub bit_precision:  usize,          // aka. pi
     pub   quad_weight:  usize,          // aka. 2^2Δ
     pub    lwe_params:  LWEParams,
@@ -60,19 +60,127 @@ pub const PARMXX__TRIVIAL: Params = Params {
        ks_level: 3,
 };
 
+/// TFHE Parameter Set A
 #[allow(dead_code)]
-pub const PARM90__PI_5__D_20__LEN_32: Params = Params {
+pub const PARM90__PI_2__D_02__A: Params = Params {
            maxlen: 32,
-    bit_precision: 5,
-      quad_weight: 20,
-    lwe_params: LWEParams {
-        dimension: 560,
-        log2_std_dev: -18,
+    bit_precision: 2,
+      quad_weight: 2,
+       lwe_params: LWEParams {
+        dimension: 400,
+     log2_std_dev: -13, // -13.31,
     },
     rlwe_params: RLWEParams {
         polynomial_size: 1024,
-        dimension: 1,
-        log2_std_dev: -31,
+              dimension: 1,
+           log2_std_dev: -31, // -31.20,
+    },
+    bs_base_log: 15,
+       bs_level: 1,
+    ks_base_log: 1,
+       ks_level: 11,
+};
+
+/// TFHE Parameter Set B
+#[allow(dead_code)]
+pub const PARM90__PI_2__D_03__B: Params = Params {
+           maxlen: 32,
+    bit_precision: 2,
+      quad_weight: 3,
+       lwe_params: LWEParams {
+        dimension: 420,
+     log2_std_dev: -13, // -13.61,
+    },
+    rlwe_params: RLWEParams {
+        polynomial_size: 1024,
+              dimension: 1,
+           log2_std_dev: -32, // -32.53,
+    },
+    bs_base_log: 16,
+       bs_level: 1,
+    ks_base_log: 1,
+       ks_level: 11,
+};
+
+/// TFHE Parameter Set C
+#[allow(dead_code)]
+pub const PARM90__PI_3__D_19__C: Params = Params {
+           maxlen: 32,
+    bit_precision: 3,
+      quad_weight: 19,
+       lwe_params: LWEParams {
+        dimension: 490,
+     log2_std_dev: -16, // -16.11,
+    },
+    rlwe_params: RLWEParams {
+        polynomial_size: 1024,
+              dimension: 1,
+           log2_std_dev: -28, // -28.47,
+    },
+    bs_base_log: 9,
+       bs_level: 2,
+    ks_base_log: 1,
+       ks_level: 14,
+};
+
+// -----------------------------------------------------------------------------
+
+/// TFHE Parameter Set D
+#[allow(dead_code)]
+pub const PARM90__PI_3__D_12__D: Params = Params {
+           maxlen: 32,
+    bit_precision: 3,
+      quad_weight: 12,
+       lwe_params: LWEParams {
+        dimension: 480,
+     log2_std_dev: -15, // -15.73,
+    },
+    rlwe_params: RLWEParams {
+        polynomial_size: 1024,
+              dimension: 1,
+           log2_std_dev: -28, // -28.12,
+    },
+    bs_base_log: 9,
+       bs_level: 2,
+    ks_base_log: 1,
+       ks_level: 13,
+};
+
+/// TFHE Parameter Set E
+#[allow(dead_code)]
+pub const PARM90__PI_4__D_12__E: Params = Params {
+           maxlen: 32,
+    bit_precision: 4,
+      quad_weight: 12,
+       lwe_params: LWEParams {
+        dimension: 510,
+     log2_std_dev: -16, // -16.78,
+    },
+    rlwe_params: RLWEParams {
+        polynomial_size: 1024,
+              dimension: 1,
+           log2_std_dev: -30, // -30.17,
+    },
+    bs_base_log: 10,
+       bs_level: 2,
+    ks_base_log: 1,
+       ks_level: 14,
+};
+
+/// TFHE Parameter Set F
+#[allow(dead_code)]
+pub const PARM90__PI_5__D_20__F: Params = Params {
+           maxlen: 32,
+    bit_precision: 5,
+      quad_weight: 20,
+       lwe_params: LWEParams {
+        dimension: 560,
+     log2_std_dev: -18, // -18.25,
+    },
+    rlwe_params: RLWEParams {
+        polynomial_size: 1024,
+              dimension: 1,
+           log2_std_dev: -31, // -31.60,
     },
     bs_base_log: 10,
        bs_level: 2,
@@ -80,19 +188,43 @@ pub const PARM90__PI_5__D_20__LEN_32: Params = Params {
        ks_level: 16,
 };
 
+// -----------------------------------------------------------------------------
+
+/// TFHE Parameter Set G
 #[allow(dead_code)]
-pub const PARM90__PI_5__D_36__LEN_32: Params = Params {
+pub const PARM90__PI_4__D_36__G: Params = Params {
            maxlen: 32,
-    bit_precision: 5,
+    bit_precision: 4,
       quad_weight: 36,
-    lwe_params: LWEParams {
-        dimension: 570,
-        log2_std_dev: -18,
+       lwe_params: LWEParams {
+        dimension: 540,
+     log2_std_dev: -17, // -17.62,
     },
     rlwe_params: RLWEParams {
         polynomial_size: 1024,
-        dimension: 1,
-        log2_std_dev: -33,
+              dimension: 1,
+           log2_std_dev: -31, // -31.00,
+    },
+    bs_base_log: 10,
+       bs_level: 2,
+    ks_base_log: 1,
+       ks_level: 15,
+};
+
+/// TFHE Parameter Set H
+#[allow(dead_code)]
+pub const PARM90__PI_5__D_36__H: Params = Params {
+           maxlen: 32,
+    bit_precision: 5,
+      quad_weight: 36,
+       lwe_params: LWEParams {
+        dimension: 570,
+     log2_std_dev: -18, // -18.67,
+    },
+    rlwe_params: RLWEParams {
+        polynomial_size: 1024,
+              dimension: 1,
+           log2_std_dev: -33, // -33.04,
     },
     bs_base_log: 11,
        bs_level: 2,
@@ -100,4 +232,23 @@ pub const PARM90__PI_5__D_36__LEN_32: Params = Params {
        ks_level: 16,
 };
 
-//TODO add params for all scenarios
+/// TFHE Parameter Set I
+#[allow(dead_code)]
+pub const PARM90__PI_7__D_74__I: Params = Params {
+           maxlen: 32,
+    bit_precision: 7,
+      quad_weight: 74,
+       lwe_params: LWEParams {
+        dimension: 680,
+     log2_std_dev: -22, // -22.35,
+    },
+    rlwe_params: RLWEParams {
+        polynomial_size: 4096,
+              dimension: 1,
+           log2_std_dev: -49, // -49.19,
+    },
+    bs_base_log: 24,
+       bs_level: 1,
+    ks_base_log: 1,
+       ks_level: 20,
+};

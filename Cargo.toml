@@ -20,5 +20,14 @@ concrete = { path = "../concrete-lib/concrete", features = ["unsafe"] }
 
 [features]
 default = []        # no feature selected by default
+sc_A = []
+sc_B = []
+sc_C = []
+sc_D = []
+sc_E = []
+sc_F = []
+sc_G = []
+sc_H = []
+sc_I = []
 sequential = []     # run (selected) algorithms sequentially
 measure = []        # measure duration of selected operations
