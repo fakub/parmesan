@@ -84,6 +84,7 @@ pub fn add_sub_impl(
             let mut c: LWE = LWE::encrypt_uint_triv(7, pub_keys.encoder)?;   // logical 0 encrypts -1
 
             for (xi, yi) in x.iter().zip(y.iter()) {
+                //TODO rearrange & run in parallel
                 // z_i = x_i XOR y_i XOR c
                 let wi = pbs::XOR(pub_keys, xi, yi)?;
                 z.push(pbs::XOR(pub_keys, &wi, &c)?);
@@ -110,6 +111,7 @@ pub fn add_sub_impl(
             let mut c: LWE = LWE::encrypt_uint_triv(7, pub_keys.encoder)?;   // logical 0 encrypts -1
 
             for (xi, yi) in x.iter().zip(y.iter()) {
+                //TODO in parallel
                 // z_i = x_i XOR y_i XOR c
                 z.push(pbs::XOR_THREE(pub_keys, xi, yi, &c)?);
 
