@@ -343,10 +343,10 @@ pub fn add_sub_impl(
 
             q.par_iter_mut().zip(w.par_iter().enumerate()).for_each(| (qi, (i, wi)) | {
                 //TODO in parallel
-                let mut r1 = pbs::f_3__pi_4(pub_keys, wi).expect("f_2__pi_4 failed.");
-                let mut r2 = pbs::g_2__pi_4(pub_keys, wi).expect("g_1__pi_4 failed.");
+                let mut r1 = pbs::f_3__pi_4(pub_keys, wi).expect("f_3__pi_4 failed.");
+                let mut r2 = pbs::g_2__pi_4(pub_keys, wi).expect("g_2__pi_4 failed.");
                 let     r3 = if i > 0 {
-                    pbs::f_2__pi_4(pub_keys, &w[i-1]).expect("f_1__pi_4 failed.")
+                    pbs::f_2__pi_4(pub_keys, &w[i-1]).expect("f_2__pi_4 failed.")
                 } else {
                     LWE::zero(0).expect("LWE::zero failed.")
                 };
@@ -376,7 +376,40 @@ pub fn add_sub_impl(
     measure_duration!(
         ["Sequential {}, sc. H ({}-bit, {} active)", if is_add {"addition"} else {"subtraction"}, wlen, wlen - r_triv],
         [
-            z = x.clone(); //TODO
+            // w = x + y
+            let mut w = x.clone();
+            for (wi, yi) in w.iter_mut().zip(y.iter()) {
+                wi.add_uint_inplace(&yi)?;
+            }
+
+            // init q with zeros and z with w
+            let mut q = ParmCiphertext::triv(w.len())?;
+            z = w.clone();
+            // one more word for "carry"
+            z.push(LWE::zero(0)?);
+
+            q.par_iter_mut().zip(w.par_iter().enumerate()).for_each(| (qi, (i, wi)) | {
+                //TODO in parallel
+                let     r1 = pbs::f_3__pi_5(pub_keys, wi).expect("f_3__pi_5 failed.");
+                let mut r2 = pbs::g_2__pi_5__with_val(pub_keys, wi, 3).expect("g_2__pi_5__with_val failed.");
+
+                if i > 0 {
+                    r2.add_uint_inplace(&w[i-1]).expect("add_uint_inplace failed.");   // w_i-1 + r2
+                }
+                let r23 = pbs::f_5__pi_5(pub_keys, &r2).expect("f_5__pi_5 failed.");
+
+                // qi = r1 + r23
+                *qi = r1.add_uint(&r23).expect("add_uint failed.");
+            });
+            // q must have the same length as z
+            q.push(LWE::zero(0)?);
+
+            z.par_iter_mut().zip(q.par_iter().enumerate()).for_each(| (zi, (i, qi)) | {
+                // calc   4 q_i
+                let qi_4 = qi.mul_uint_constant(4).expect("mul_uint_constant failed.");
+                zi.sub_uint_inplace(&qi_4).expect("sub_uint_inplace failed.");
+                if i > 0 { zi.add_uint_inplace(&q[i-1]).expect("add_uint_inplace failed."); }
+            });
         ]
     );
     }

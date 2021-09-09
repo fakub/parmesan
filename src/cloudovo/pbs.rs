@@ -60,6 +60,30 @@ pub fn pos_id(
 //
 
 //
+//  X ⋛ ±3
+//
+#[allow(non_snake_case)]
+pub fn f_3__pi_5(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
+    //~ measure_duration!(
+        //~ ["PBS: X ⋛ ±3 (for π = 5)"],
+        //~ [
+            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
+
+//
 //  X ⋛ ±4
 //
 #[allow(non_snake_case)]
@@ -76,6 +100,56 @@ pub fn f_4__pi_5(
         //~ ["PBS: X ⋛ ±4 (for π = 5)"],
         //~ [
             let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.,0.][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
+
+//
+//  X ⋛ ±5
+//
+#[allow(non_snake_case)]
+pub fn f_5__pi_5(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
+    //~ measure_duration!(
+        //~ ["PBS: X ⋛ ±5 (for π = 5)"],
+        //~ [
+            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,0.,0.,0.,0.][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
+
+//
+//  X ≡ ±2 (× val)
+//
+#[allow(non_snake_case)]
+pub fn g_2__pi_5__with_val(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+    val: u32,
+) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
+    let val_f = val as f64;
+    //~ measure_duration!(
+        //~ ["PBS: X ≡ ±2 (× val, for π = 5)"],
+        //~ [
+            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,val_f,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,val_f,0.,][x as usize], pub_keys.encoder)?
                        .keyswitch(pub_keys.ksk)?;
         //~ ]
     //~ );
