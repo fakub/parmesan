@@ -261,7 +261,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     //  C: Evaluation
 
     let c_add  = ParmArithmetics::add(&pc, &c[0], &c[1]);
-    let c_sub  = ParmArithmetics::sub(&pc, &c[1], &c[0]);
+    //~ let c_sub  = ParmArithmetics::sub(&pc, &c[1], &c[0]);
     //~ let c_adc  = ParmArithmetics::add_const(&pc,  &c[0], DEMO_ADC);
     //~ let c_sgn  = ParmArithmetics::sgn(&pc, &c[2]       );
     //~ let c_max  = ParmArithmetics::max(&pc, &c[1], &c[0]);
@@ -287,7 +287,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     //  U: Decryption
 
     let m_add  = pu.decrypt(&c_add )?;
-    let m_sub  = pu.decrypt(&c_sub )?;
+    //~ let m_sub  = pu.decrypt(&c_sub )?;
     //~ let m_adc  = pu.decrypt(&c_adc )?;
     //~ let m_sgn  = pu.decrypt(&c_sgn )?;
     //~ let m_max  = pu.decrypt(&c_max )?;
@@ -315,11 +315,11 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
                             if m_as[0] + m_as[1] == m_add {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             m_as[0] + m_as[1]
     );
-    summary_text = format!("{}\nm_1 - m_0     = {:12} :: {} (exp. {})", summary_text,
-                            m_sub,
-                            if m_as[1] - m_as[0] == m_sub {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            m_as[1] - m_as[0]
-    );
+    //~ summary_text = format!("{}\nm_1 - m_0     = {:12} :: {} (exp. {})", summary_text,
+                            //~ m_sub,
+                            //~ if m_as[1] - m_as[0] == m_sub {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            //~ m_as[1] - m_as[0]
+    //~ );
     //~ summary_text = format!("{}\nm_0 + {:3}     = {:12} :: {} (exp. {})", summary_text,
                             //~ DEMO_ADC, m_adc,
                             //~ if m_as[0] + (DEMO_ADC as i64) == m_adc {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
