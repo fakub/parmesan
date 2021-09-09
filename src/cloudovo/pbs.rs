@@ -488,6 +488,30 @@ pub fn f_3__pi_4(
 }
 
 //
+//  X ≡ ±2
+//
+#[allow(non_snake_case)]
+pub fn g_2__pi_4(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
+    //~ measure_duration!(
+        //~ ["PBS: X ≡ ±2 (for π = 4)"],
+        //~ [
+            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,1.,0.,0.,0.,1.,0.,][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
+
+//
 //  X ≡ ±1 (× val)
 //
 #[allow(non_snake_case)]
