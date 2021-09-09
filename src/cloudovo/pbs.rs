@@ -199,6 +199,57 @@ pub fn relu_plus__pi_5(
     Ok(res)
 }
 
+//
+//  XOR
+//
+#[allow(non_snake_case)]
+pub fn XOR(
+    pub_keys: &PubKeySet,
+    x: &LWE,
+    y: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    //~ measure_duration!(
+        //~ ["PBS: XOR"],
+        //~ [
+            // t = 2x + 2y
+            let mut t = x.mul_uint_constant(2)?;
+            t.add_uint_inplace(y)?; t.add_uint_inplace(y)?;
+            // bootstrap
+            //FIXME resolve corner values: 1 1 1/-1 -1 .. shift by 1/16 .. pi = 4, change encoding
+            let res = t.bootstrap_with_function(pub_keys.bsk, |x| [1.,1.,1.,7.,][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
+
+//
+//  AND
+//
+#[allow(non_snake_case)]
+pub fn AND(
+    pub_keys: &PubKeySet,
+    x: &LWE,
+    y: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    //~ measure_duration!(
+        //~ ["PBS: AND"],
+        //~ [
+            // t = x + y
+            let mut t = x.clone();
+            t.add_uint_inplace(y)?;
+            // bootstrap
+            //FIXME resolve corner values: -1 -1/1 1 1 .. shift by 1/16 .. pi = 4, change encoding
+            let res = t.bootstrap_with_function(pub_keys.bsk, |x| [7.,7.,1.,1.,][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
+
+
 
 // zasrane, zamrdane ... http://milujupraci.cz/#29
 

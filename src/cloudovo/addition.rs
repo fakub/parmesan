@@ -79,9 +79,22 @@ pub fn add_sub_impl(
     measure_duration!(
         ["Sequential {}, sc. A ({}-bit, {} active)", if is_add {"addition"} else {"subtraction"}, wlen, wlen - r_triv],
         [
-            // init carry
+            // init result & carry
+            z = ParmCiphertext::empty();
             let mut c: LWE = LWE::zero(0)?;
-            z = x.clone(); //TODO
+
+            for (xi, yi) in x.iter().zip(y.iter()) {
+                // z_i = x_i XOR y_i XOR c
+                let wi = pbs::XOR(pub_keys, xi, yi)?;
+                z.push(pbs::XOR(pub_keys, &wi, &c)?);
+
+                // c = (x_i AND y_i) XOR (c AND (x_i XOR y_i))
+                let t1 = pbs::AND(pub_keys, xi, yi)?; // temp_1 = x_i AND y_i
+                let t2 = pbs::AND(pub_keys, &c,&wi)?; // temp_2 = c AND w_i
+                c = pbs::XOR(pub_keys, &t1, &t2)?;
+            }
+
+            z.push(c);
         ]
     );
     }

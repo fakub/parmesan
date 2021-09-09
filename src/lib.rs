@@ -177,7 +177,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let pu = ParmesanUserovo::new(par)?;
     let pub_k = pu.export_pub_keys();
 
-    const DEMO_BITLEN: usize =  28;
+    const DEMO_BITLEN: usize =  16;
     const DEMO_N_MSGS: usize =   3;
     const DEMO_ADC:    i32   = -20;
 
@@ -194,10 +194,12 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
     // for most operations
     let m: [i64; DEMO_N_MSGS] = [
-         0b01111110110010010011100110111011,
-         0b00110010001111100110111100100000,
-         0b01000100001010010111100000010101,
-        //~ -0b01000100001010010111100000010101,   //DBG
+         //~ 0b01111110110010010011100110111011,
+         //~ 0b00110010001111100110111100100000,
+        //~ -0b01000100001010010111100000010101,
+         0b01010110100010010010100110011010,
+         0b00100010001001100110011000100000,
+         0b01000100001010010101100000010101,
     ];
     let mut m_as: [i64; DEMO_N_MSGS] = [0,0,0];
     // for multiplication
