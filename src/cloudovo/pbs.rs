@@ -53,6 +53,12 @@ pub fn pos_id(
     Ok(res)
 }
 
+
+// -----------------------------------------------------------------------------
+//
+//  PI = 5
+//
+
 //
 //  X ⋛ ±4
 //
@@ -199,6 +205,12 @@ pub fn relu_plus__pi_5(
     Ok(res)
 }
 
+
+// -----------------------------------------------------------------------------
+//
+//  Logical (represented with pi = 3)
+//
+
 //
 //  XOR
 //
@@ -301,6 +313,12 @@ pub fn TWO_OF_THREE(
     Ok(res)
 }
 
+
+// -----------------------------------------------------------------------------
+//
+//  Special function for Scenario C
+//
+
 //
 //  X ≥ 2*4
 //
@@ -323,6 +341,96 @@ pub fn c_4__pi_2x4(
     //~ );
 
     Ok(res)
+}
+
+
+// -----------------------------------------------------------------------------
+//
+//  PI = 3
+//
+
+//
+//  X ⋛ ±1
+//
+#[allow(non_snake_case)]
+pub fn f_1__pi_3(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
+    //~ measure_duration!(
+        //~ ["PBS: X ⋛ ±1 (for π = 3)"],
+        //~ [
+            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,1.,1.,][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
+
+//
+//  X ⋛ ±2
+//
+#[allow(non_snake_case)]
+pub fn f_2__pi_3(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
+    //~ measure_duration!(
+        //~ ["PBS: X ⋛ ±2 (for π = 3)"],
+        //~ [
+            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,1.,0.,][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
+
+//
+//  X ≡ ±1
+//
+#[allow(non_snake_case)]
+pub fn g_1__pi_3(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
+    //~ measure_duration!(
+        //~ ["PBS: X ≡ ±1 (for π = 3)"],
+        //~ [
+            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,0.,1.,][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
+
+//
+//  X ≡ ±2
+//
+#[allow(non_snake_case)]
+pub fn g_2__pi_3(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    // for π = 3 .. equivalent to X ⋛ ±2
+    f_2__pi_3(pub_keys, c)
 }
 
 

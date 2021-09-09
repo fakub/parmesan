@@ -165,7 +165,43 @@ pub fn add_sub_impl(
     measure_duration!(
         ["Sequential {}, sc. D ({}-bit, {} active)", if is_add {"addition"} else {"subtraction"}, wlen, wlen - r_triv],
         [
-            z = x.clone(); //TODO
+            // w = x + y
+            let mut w = x.clone();
+            for (wi, yi) in w.iter_mut().zip(y.iter()) {
+                wi.add_uint_inplace(&yi)?;
+            }
+
+            // init q with zeros and z with w
+            let mut q = ParmCiphertext::triv(w.len())?;
+            z = w.clone();
+            // one more word for "carry"
+            z.push(LWE::zero(0)?);
+
+            q.par_iter_mut().zip(w.par_iter().enumerate()).for_each(| (qi, (i, wi)) | {
+                //TODO in parallel
+                let mut r1 = pbs::f_2__pi_3(pub_keys, wi).expect("f_2__pi_3 failed.");
+                let mut r2 = pbs::g_1__pi_3(pub_keys, wi).expect("g_1__pi_3 failed.");
+                let     r3 = if i > 0 {
+                    pbs::f_1__pi_3(pub_keys, &w[i-1]).expect("f_1__pi_3 failed.")
+                } else {
+                    LWE::zero(0).expect("LWE::zero failed.")
+                };
+
+                r2.add_uint_inplace(&r3).expect("add_uint_inplace failed.");   // r2 + r3
+                let r23 = pbs::g_2__pi_3(pub_keys, &r2).expect("g_2__pi_3 failed.");
+
+                // qi = r1 + r23
+                *qi = r1.add_uint(&r23).expect("add_uint failed.");
+            });
+            // q must have the same length as z
+            q.push(LWE::zero(0)?);
+
+            z.par_iter_mut().zip(q.par_iter().enumerate()).for_each(| (zi, (i, qi)) | {
+                // calc   2 q_i
+                let qi_2 = qi.mul_uint_constant(2).expect("mul_uint_constant failed.");
+                zi.sub_uint_inplace(&qi_2).expect("sub_uint_inplace failed.");
+                if i > 0 { zi.add_uint_inplace(&q[i-1]).expect("add_uint_inplace failed."); }
+            });
         ]
     );
     }
