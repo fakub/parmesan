@@ -29,12 +29,37 @@ pub fn parm_encrypt(
     let m_abs = m.abs();
     let m_pos = m >= 0;
 
+    #[cfg(any(feature = "sc_A", feature = "sc_B"))]
+    for i in 0..bits {
+        if !m_pos {panic!("Negative numbers not supported in scenarios A, B.")}
+        // calculate logical representation of i-th bit
+        let mi = if ((m_abs >> i) & 1) == 0 {-1i32} else {1i32};
+        res.push(parm_encr_word(params, priv_keys, mi)?);
+    }
+    #[cfg(any(feature = "sc_C"))]
+    for i in 0..bits {
+        if !m_pos {panic!("Negative numbers not supported in scenario C.")}
+        // calculate i-th word (2 bits)
+        let mi = ((m_abs >> (2*i)) & 0b11) as i32;
+        res.push(parm_encr_word(params, priv_keys, mi)?);
+    }
+    #[cfg(any(feature = "sc_D", feature = "sc_E", feature = "sc_F"))]
     for i in 0..bits {
         // calculate i-th bit with sign
         let mi = if ((m_abs >> i) & 1) == 0 {
             0i32
         } else {
             if m_pos {1i32} else {-1i32}
+        };
+        res.push(parm_encr_word(params, priv_keys, mi)?);
+    }
+    #[cfg(any(feature = "sc_G", feature = "sc_H", feature = "sc_I"))]
+    for i in 0..bits {
+        // calculate i-th word with sign (n.b., this fails to parm_encr_word if there is a digit 3 .. out of alphabet)
+        let mi = if m_pos {
+            ((m_abs >> (2*i)) & 0b11) as i32
+        } else {
+            -((m_abs >> (2*i)) & 0b11) as i32
         };
         res.push(parm_encr_word(params, priv_keys, mi)?);
     }
@@ -64,8 +89,21 @@ fn parm_encr_word(
 ) -> Result<LWE, Box<dyn Error>> {
 
     // check that mi is in alphabet
+    #[cfg(any(feature = "sc_A", feature = "sc_B"))]
+    if mi != -1 && mi != 1 {
+        panic!("Word to be encrypted outside logical representation {{-1,1}}.");
+    }
+    #[cfg(feature = "sc_C")]
+    if mi < 0 || mi > 3 {
+        panic!("Word to be encrypted outside alphabet {{0,1,2,3}}.");
+    }
+    #[cfg(any(feature = "sc_D", feature = "sc_E", feature = "sc_F"))]
     if mi < -1 || mi > 1 {
-        return Err("Word to be encrypted outside alphabet {-1,0,1}.".into());
+        panic!("Word to be encrypted outside alphabet {{-1,0,1}}.");
+    }
+    #[cfg(any(feature = "sc_G", feature = "sc_H", feature = "sc_I"))]
+    if mi < -2 || mi > 2 {
+        panic!("Word to be encrypted outside alphabet {{-2,-1,0,1,2}}.");
     }
 
     // little hack, how to bring mi into positive interval [0, 2^pi)
@@ -95,22 +133,54 @@ pub fn parm_decrypt(
 ) -> Result<i64, Box<dyn Error>> {
     let mut m = 0i64;
 
-    //~ measure_duration!(
-        //~ ["Decrypt"],
-        //~ [
-            for (i, ct) in pc.iter().enumerate() {
-                let mi = parm_decr_word(params, priv_keys, ct)?;
-                // infoln!("m[{}] = {} (pi = {})", i, mi, ct.encoder.nb_bit_precision);
-                // if i >= 63 {dbgln!("i >= 63 !! namely {}", i);}
-                m += match mi {
-                     1 => {  1i64 << i},
-                     0 => {  0i64},
-                    -1 => {-(1i64 << i)},
-                     _ => {return Err(format!("Word m_[{}] out of alphabet: {}.", i, mi).into())},
-                };
-            }
-        //~ ]
-    //~ );
+    for (i, ct) in pc.iter().enumerate() {
+        let mi = parm_decr_word(params, priv_keys, ct)?;
+        // infoln!("m[{}] = {} (pi = {})", i, mi, ct.encoder.nb_bit_precision);
+        // if i >= 63 {dbgln!("i >= 63 !! namely {}", i);}
+
+        //  logical
+        #[cfg(any(feature = "sc_A", feature = "sc_B"))]
+        {
+        m += match mi {
+             1 => {  1i64 << i},
+            -1 => {  0i64},
+             _ => {panic!("Word m_[{}] out of logical representation: {}.", i, mi)},
+        };
+        }
+        //  bin redundant
+        #[cfg(any(feature = "sc_D", feature = "sc_E", feature = "sc_F"))]
+        {
+        m += match mi {
+             1 => {  1i64 << i},
+             0 => {  0i64},
+            -1 => {-(1i64 << i)},
+             _ => {panic!("Word m_[{}] out of redundant bin alphabet: {}.", i, mi)},
+        };
+        }
+        //  quad standard
+        #[cfg(feature = "sc_C")]
+        {
+        m += match mi {
+             3 => {  3i64 << (2*i)},
+             2 => {  2i64 << (2*i)},
+             1 => {  1i64 << (2*i)},
+             0 => {  0i64},
+             _ => {panic!("Word m_[{}] out of standard quad alphabet: {}.", i, mi)},
+        };
+        }
+        //  quad redundant
+        #[cfg(any(feature = "sc_G", feature = "sc_H", feature = "sc_I"))]
+        {
+        m += match mi {
+             2 => {  2i64 << (2*i)},
+             1 => {  1i64 << (2*i)},
+             0 => {  0i64},
+            -1 => {-(1i64 << (2*i))},
+            -2 => {-(2i64 << (2*i))},
+             _ => {panic!("Word m_[{}] out of redundant quad alphabet: {}.", i, mi)},
+        };
+        }
+    }
 
     Ok(m)
 }
@@ -134,13 +204,51 @@ fn parm_decr_word(
 /// Conversion from redundant
 pub fn convert(mv: &Vec<i32>) -> Result<i64, Box<dyn Error>> {
     let mut m = 0i64;
+
     for (i, mi) in mv.iter().enumerate() {
+        //  logical
+        #[cfg(any(feature = "sc_A", feature = "sc_B"))]
+        {
+        m += match mi {
+             1 => {  1i64 << i},
+            -1 => {  0i64},
+             _ => {panic!("Word m_[{}] out of logical representation: {}.", i, mi)},
+        };
+        }
+        //  bin redundant
+        #[cfg(any(feature = "sc_D", feature = "sc_E", feature = "sc_F"))]
+        {
         m += match mi {
              1 => {  1i64 << i},
              0 => {  0i64},
             -1 => {-(1i64 << i)},
-             _ => {return Err(format!("Word out of alphabet: {}.", mi).into())},
+             _ => {panic!("Word m_[{}] out of redundant bin alphabet: {}.", i, mi)},
         };
+        }
+        //  quad standard
+        #[cfg(feature = "sc_C")]
+        {
+        m += match mi {
+             3 => {  3i64 << (2*i)},
+             2 => {  2i64 << (2*i)},
+             1 => {  1i64 << (2*i)},
+             0 => {  0i64},
+             _ => {panic!("Word m_[{}] out of standard quad alphabet: {}.", i, mi)},
+        };
+        }
+        //  quad redundant
+        #[cfg(any(feature = "sc_G", feature = "sc_H", feature = "sc_I"))]
+        {
+        m += match mi {
+             2 => {  2i64 << (2*i)},
+             1 => {  1i64 << (2*i)},
+             0 => {  0i64},
+            -1 => {-(1i64 << (2*i))},
+            -2 => {-(2i64 << (2*i))},
+             _ => {panic!("Word m_[{}] out of redundant quad alphabet: {}.", i, mi)},
+        };
+        }
     }
+
     Ok(m)
 }

@@ -64,7 +64,7 @@ pub const PARMXX__TRIVIAL: Params = Params {
 #[allow(dead_code)]
 pub const PARM90__PI_2__D_02__A: Params = Params {
            maxlen: 32,
-    bit_precision: 2,
+    bit_precision: 3,   // other params correspond with pi = 2, one more bit is needed to simulate logic operations, which work with halves
       quad_weight: 2,
        lwe_params: LWEParams {
         dimension: 400,
@@ -85,7 +85,7 @@ pub const PARM90__PI_2__D_02__A: Params = Params {
 #[allow(dead_code)]
 pub const PARM90__PI_2__D_03__B: Params = Params {
            maxlen: 32,
-    bit_precision: 2,
+    bit_precision: 3,   // other params correspond with pi = 2, one more bit is needed to simulate logic operations, which work with halves
       quad_weight: 3,
        lwe_params: LWEParams {
         dimension: 420,
@@ -106,7 +106,7 @@ pub const PARM90__PI_2__D_03__B: Params = Params {
 #[allow(dead_code)]
 pub const PARM90__PI_3__D_19__C: Params = Params {
            maxlen: 32,
-    bit_precision: 3,
+    bit_precision: 4,   // other params correspond with pi = 3, one more bit is needed to simulate halves that are used in scenario C
       quad_weight: 19,
        lwe_params: LWEParams {
         dimension: 490,

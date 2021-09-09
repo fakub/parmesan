@@ -196,7 +196,8 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let m: [i64; DEMO_N_MSGS] = [
          0b01111110110010010011100110111011,
          0b00110010001111100110111100100000,
-        -0b01000100001010010111100000010101,
+         0b01000100001010010111100000010101,
+        //~ -0b01000100001010010111100000010101,   //DBG
     ];
     let mut m_as: [i64; DEMO_N_MSGS] = [0,0,0];
     // for multiplication
@@ -224,18 +225,18 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
         *ci = pu.encrypt(*mi, DEMO_BITLEN)?;
         *mi_as = (*mi).signum() * ((*mi).abs() % (1 << DEMO_BITLEN));
     }
-    let cx1 = pu.encrypt(m_x1,   1)?;
-    let cy1 = pu.encrypt(m_y1,   1)?;
-    let cx4 = pu.encrypt(m_x4,   4)?;
-    let cy4 = pu.encrypt(m_y4,   4)?;
-    let cx8 = pu.encrypt(m_x8,   8)?;
-    let cy8 = pu.encrypt(m_y8,   8)?;
-    let cx16= pu.encrypt(m_x16, 16)?;
-    let cy16= pu.encrypt(m_y16, 16)?;
-    let cx17= pu.encrypt(m_x17, 17)?;
-    let cy17= pu.encrypt(m_y17, 17)?;
-    let cx32= pu.encrypt(m_x32, 32)?;
-    let cy32= pu.encrypt(m_y32, 32)?;
+    //~ let cx1 = pu.encrypt(m_x1,   1)?;
+    //~ let cy1 = pu.encrypt(m_y1,   1)?;
+    //~ let cx4 = pu.encrypt(m_x4,   4)?;
+    //~ let cy4 = pu.encrypt(m_y4,   4)?;
+    //~ let cx8 = pu.encrypt(m_x8,   8)?;
+    //~ let cy8 = pu.encrypt(m_y8,   8)?;
+    //~ let cx16= pu.encrypt(m_x16, 16)?;
+    //~ let cy16= pu.encrypt(m_y16, 16)?;
+    //~ let cx17= pu.encrypt(m_x17, 17)?;
+    //~ let cy17= pu.encrypt(m_y17, 17)?;
+    //~ let cx32= pu.encrypt(m_x32, 32)?;
+    //~ let cy32= pu.encrypt(m_y32, 32)?;
 
     // print message
     let mut intro_text = format!("{} messages ({} bits taken)", String::from("User:").bold().yellow(), DEMO_BITLEN);
@@ -286,6 +287,10 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     // =================================
     //  U: Decryption
 
+    //DBG
+    let m0 = pu.decrypt(&c[0])?;
+    let m1 = pu.decrypt(&c[1])?;
+
     let m_add  = pu.decrypt(&c_add )?;
     //~ let m_sub  = pu.decrypt(&c_sub )?;
     //~ let m_adc  = pu.decrypt(&c_adc )?;
@@ -309,6 +314,18 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     //~ let m_p3x16   = pu.decrypt(&c_p3x16  )?;
 
     let mut summary_text = format!("{} results", String::from("User:").bold().yellow());
+
+    //DBG
+    summary_text = format!("{}\nm_0           = {:12} :: {} (exp. {})", summary_text,
+                            m0,
+                            if m_as[0] == m0 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_as[0]
+    );
+    summary_text = format!("{}\nm_1           = {:12} :: {} (exp. {})", summary_text,
+                            m1,
+                            if m_as[1] == m1 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_as[1]
+    );
 
     summary_text = format!("{}\nm_0 + m_1     = {:12} :: {} (exp. {})", summary_text,
                             m_add,

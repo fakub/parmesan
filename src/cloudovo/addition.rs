@@ -79,6 +79,8 @@ pub fn add_sub_impl(
     measure_duration!(
         ["Sequential {}, sc. A ({}-bit, {} active)", if is_add {"addition"} else {"subtraction"}, wlen, wlen - r_triv],
         [
+            // init carry
+            let mut c: LWE = LWE::zero(0)?;
             z = x.clone(); //TODO
         ]
     );
