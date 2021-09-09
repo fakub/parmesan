@@ -237,8 +237,7 @@ pub fn AND(
         //~ ["PBS: AND"],
         //~ [
             // t = x + y
-            let mut t = x.clone();
-            t.add_uint_inplace(y)?;
+            let t = x.add_uint(y)?;
             // bootstrap
             //FIXME resolve corner values: -1 -1/1 1 1 .. shift by 1/16 .. pi = 4, change encoding
             let res = t.bootstrap_with_function(pub_keys.bsk, |x| [7.,7.,1.,1.,][x as usize], pub_keys.encoder)?
@@ -290,13 +289,36 @@ pub fn TWO_OF_THREE(
         //~ ["PBS: 2OF3"],
         //~ [
             // t = x + y + z
-            let mut t = x.clone();
-            t.add_uint_inplace(y)?;
+            let mut t = x.add_uint(y)?;
             t.add_uint_inplace(z)?;
             // bootstrap
             //FIXME resolve corner values: 1/-1 -1 -1 -1 .. shift by 1/16 .. pi = 4, change encoding
             let res = t.bootstrap_with_function(pub_keys.bsk, |x| [1.,1.,1.,1.,][x as usize], pub_keys.encoder)?
                        .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
+
+//
+//  X ≥ 2*4
+//
+#[allow(non_snake_case)]
+pub fn c_4__pi_2x4(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
+    //~ measure_duration!(
+        //~ ["PBS: X ≥ 2*4 (for π = 4)"],
+        //~ [
+            let mut res = c.bootstrap_with_function(pub_keys.bsk, |x| [15.,15.,15.,15.,15.,15.,15.,15.,][x as usize], pub_keys.encoder)?
+                           .keyswitch(pub_keys.ksk)?;
         //~ ]
     //~ );
 

@@ -132,7 +132,29 @@ pub fn add_sub_impl(
     measure_duration!(
         ["Sequential {}, sc. C ({}-bit, {} active)", if is_add {"addition"} else {"subtraction"}, wlen, wlen - r_triv],
         [
-            z = x.clone(); //TODO
+            // init result & carry
+            z = ParmCiphertext::empty();
+            let mut c: LWE = LWE::zero(0)?;
+
+            for (xi, yi) in x.iter().zip(y.iter()) {
+                // w_i = x_i + y_i + c
+                let mut wi = xi.add_uint(yi)?;
+                wi.add_uint_inplace(&c)?;
+
+                //TODO in parallel: bootstrap z_i-1 with identity
+
+                // c = w_i >= 4 (0, -, 0, -, 0, -, 0, -, 2, -, 2, -, 2, -, 2, - .. in pi = 4 repre .. everything x2)
+                c = pbs::c_4__pi_2x4(pub_keys, &wi)?;
+                let one = LWE::encrypt_uint_triv(1, &pub_keys.encoder)?;
+                c.add_uint_inplace(&one);
+
+                // zi = wi - 4*c
+                let fc = c.mul_uint_constant(4)?;   // 4*c
+                wi.sub_uint_inplace(&fc)?;          // wi - 4*c
+                z.push(wi);
+            }
+
+            z.push(c);
         ]
     );
     }

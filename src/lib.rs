@@ -177,7 +177,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let pu = ParmesanUserovo::new(par)?;
     let pub_k = pu.export_pub_keys();
 
-    const DEMO_BITLEN: usize =  28;
+    const DEMO_BITLEN: usize =  16;
     const DEMO_N_MSGS: usize =   3;
     const DEMO_ADC:    i32   = -20;
 

@@ -40,7 +40,7 @@ pub fn parm_encrypt(
     for i in 0..bits {
         if !m_pos {panic!("Negative numbers not supported in scenario C.")}
         // calculate i-th word (2 bits)
-        let mi = ((m_abs >> (2*i)) & 0b11) as i32;
+        let mi = (((m_abs >> (2*i)) & 0b11) * 2) as i32;
         res.push(parm_encr_word(params, priv_keys, mi)?);
     }
     #[cfg(any(feature = "sc_D", feature = "sc_E", feature = "sc_F"))]
@@ -94,8 +94,8 @@ fn parm_encr_word(
         panic!("Word to be encrypted outside logical representation {{-1,1}}.");
     }
     #[cfg(feature = "sc_C")]
-    if mi < 0 || mi > 3 {
-        panic!("Word to be encrypted outside alphabet {{0,1,2,3}}.");
+    if mi < 0 || mi > 6 || (mi & 1) != 0 {
+        panic!("Word to be encrypted outside alphabet (2x) {{0,1,2,3}}.");
     }
     #[cfg(any(feature = "sc_D", feature = "sc_E", feature = "sc_F"))]
     if mi < -1 || mi > 1 {
@@ -161,9 +161,9 @@ pub fn parm_decrypt(
         #[cfg(feature = "sc_C")]
         {
         m += match mi {
-             3 => {  3i64 << (2*i)},
-             2 => {  2i64 << (2*i)},
-             1 => {  1i64 << (2*i)},
+             6 => {  3i64 << (2*i)},
+             4 => {  2i64 << (2*i)},
+             2 => {  1i64 << (2*i)},
              0 => {  0i64},
              _ => {panic!("Word m_[{}] out of standard quad alphabet: {}.", i, mi)},
         };
