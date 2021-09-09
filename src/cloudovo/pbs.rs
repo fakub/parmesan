@@ -249,6 +249,60 @@ pub fn AND(
     Ok(res)
 }
 
+//
+//  XOR3
+//
+#[allow(non_snake_case)]
+pub fn XOR_THREE(
+    pub_keys: &PubKeySet,
+    x: &LWE,
+    y: &LWE,
+    z: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    //~ measure_duration!(
+        //~ ["PBS: XOR3"],
+        //~ [
+            // t = 2(x + y + z)
+            let mut t = x.mul_uint_constant(2)?;
+            t.add_uint_inplace(y)?; t.add_uint_inplace(y)?;
+            t.add_uint_inplace(z)?; t.add_uint_inplace(z)?;
+            // bootstrap
+            //FIXME resolve corner values: 1/-1 -1 -1 -1 .. shift by 1/16 .. pi = 4, change encoding
+            let res = t.bootstrap_with_function(pub_keys.bsk, |x| [7.,7.,7.,7.,][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
+
+//
+//  2OF3
+//
+#[allow(non_snake_case)]
+pub fn TWO_OF_THREE(
+    pub_keys: &PubKeySet,
+    x: &LWE,
+    y: &LWE,
+    z: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    //~ measure_duration!(
+        //~ ["PBS: 2OF3"],
+        //~ [
+            // t = x + y + z
+            let mut t = x.clone();
+            t.add_uint_inplace(y)?;
+            t.add_uint_inplace(z)?;
+            // bootstrap
+            //FIXME resolve corner values: 1/-1 -1 -1 -1 .. shift by 1/16 .. pi = 4, change encoding
+            let res = t.bootstrap_with_function(pub_keys.bsk, |x| [1.,1.,1.,1.,][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
+
 
 
 // zasrane, zamrdane ... http://milujupraci.cz/#29

@@ -81,7 +81,7 @@ pub fn add_sub_impl(
         [
             // init result & carry
             z = ParmCiphertext::empty();
-            let mut c: LWE = LWE::zero(0)?;
+            let mut c: LWE = LWE::encrypt_uint_triv(7, pub_keys.encoder)?;   // logical 0 encrypts -1
 
             for (xi, yi) in x.iter().zip(y.iter()) {
                 // z_i = x_i XOR y_i XOR c
@@ -105,7 +105,21 @@ pub fn add_sub_impl(
     measure_duration!(
         ["Sequential {}, sc. B ({}-bit, {} active)", if is_add {"addition"} else {"subtraction"}, wlen, wlen - r_triv],
         [
-            z = x.clone(); //TODO
+            // init result & carry
+            z = ParmCiphertext::empty();
+            let mut c: LWE = LWE::encrypt_uint_triv(7, pub_keys.encoder)?;   // logical 0 encrypts -1
+
+            for (xi, yi) in x.iter().zip(y.iter()) {
+                // z_i = x_i XOR y_i XOR c
+                z.push(pbs::XOR_THREE(pub_keys, xi, yi, &c)?);
+
+                // c = 2OF3(x_i, y_i, c)
+                // cf. https://www.wolframalpha.com/input/?i=%28x+AND+y%29+XOR+%28z+AND+%28x+XOR+y%29%29
+                let cn = pbs::TWO_OF_THREE(pub_keys, xi, yi, &c)?;
+                c = cn.clone();
+            }
+
+            z.push(c);
         ]
     );
     }
