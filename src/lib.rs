@@ -190,7 +190,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let pu = ParmesanUserovo::new(par)?;
     let pub_k = pu.export_pub_keys();
 
-    const DEMO_BITLEN:  usize =  23;
+    const DEMO_BITLEN:  usize =  31;
     #[cfg(any(feature = "sc_A", feature = "sc_B", feature = "sc_D", feature = "sc_E", feature = "sc_F"))]
     const DEMO_WORDLEN: usize =  DEMO_BITLEN;
     #[cfg(any(feature = "sc_C", feature = "sc_G", feature = "sc_H", feature = "sc_I"))]
