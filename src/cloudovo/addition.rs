@@ -163,7 +163,7 @@ pub fn add_sub_impl(
     #[cfg(feature = "sc_D")]
     {
     measure_duration!(
-        ["Sequential {}, sc. D ({}-bit, {} active)", if is_add {"addition"} else {"subtraction"}, wlen, wlen - r_triv],
+        ["Parallel {}, sc. D ({}-bit, {} active)", if is_add {"addition"} else {"subtraction"}, wlen, wlen - r_triv],
         [
             // w = x + y
             let mut w = x.clone();
@@ -210,7 +210,7 @@ pub fn add_sub_impl(
     #[cfg(feature = "sc_E")]
     {
     measure_duration!(
-        ["Sequential {}, sc. E ({}-bit, {} active)", if is_add {"addition"} else {"subtraction"}, wlen, wlen - r_triv],
+        ["Parallel {}, sc. E ({}-bit, {} active)", if is_add {"addition"} else {"subtraction"}, wlen, wlen - r_triv],
         [
             // w = x + y
             let mut w = x.clone();
@@ -327,7 +327,7 @@ pub fn add_sub_impl(
     #[cfg(feature = "sc_G")]
     {
     measure_duration!(
-        ["Sequential {}, sc. G ({}-bit, {} active)", if is_add {"addition"} else {"subtraction"}, wlen, wlen - r_triv],
+        ["Parallel {}, sc. G ({}-bit, {} active)", if is_add {"addition"} else {"subtraction"}, wlen, wlen - r_triv],
         [
             // w = x + y
             let mut w = x.clone();
@@ -374,7 +374,7 @@ pub fn add_sub_impl(
     #[cfg(feature = "sc_H")]
     {
     measure_duration!(
-        ["Sequential {}, sc. H ({}-bit, {} active)", if is_add {"addition"} else {"subtraction"}, wlen, wlen - r_triv],
+        ["Parallel {}, sc. H ({}-bit, {} active)", if is_add {"addition"} else {"subtraction"}, wlen, wlen - r_triv],
         [
             // w = x + y
             let mut w = x.clone();
@@ -418,7 +418,7 @@ pub fn add_sub_impl(
     #[cfg(feature = "sc_I")]
     {
     measure_duration!(
-        ["Sequential {}, sc. I ({}-bit, {} active)", if is_add {"addition"} else {"subtraction"}, wlen, wlen - r_triv],
+        ["Parallel {}, sc. I ({}-bit, {} active)", if is_add {"addition"} else {"subtraction"}, wlen, wlen - r_triv],
         [
             // w = x + y
             let mut w = x.clone();

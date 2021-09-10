@@ -15,6 +15,9 @@ use std::error::Error;
 use colored::Colorize;
 //~ use concrete::LWE;
 
+extern crate chrono;
+use chrono::Utc;
+
 #[cfg(test)]
 mod tests;
 
@@ -88,9 +91,9 @@ impl ParmesanUserovo<'_> {
     pub fn encrypt(
         &self,
         m: i64,
-        bits: usize,
+        words: usize,
     ) -> Result<ParmCiphertext, Box<dyn Error>> {   //WISH change to a template for other integer types/lengths, too
-        Ok(encryption::parm_encrypt(self.params, &self.priv_keys, m, bits)?)
+        Ok(encryption::parm_encrypt(self.params, &self.priv_keys, m, words)?)
     }
 
     /// Encrypt a vector of words from alphabet `{-1,0,1}`
@@ -177,9 +180,13 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let pu = ParmesanUserovo::new(par)?;
     let pub_k = pu.export_pub_keys();
 
-    const DEMO_BITLEN: usize =  16;
-    const DEMO_N_MSGS: usize =   3;
-    const DEMO_ADC:    i32   = -20;
+    const DEMO_BITLEN:  usize =  23;
+    #[cfg(any(feature = "sc_A", feature = "sc_B", feature = "sc_D", feature = "sc_E", feature = "sc_F"))]
+    const DEMO_WORDLEN: usize =  DEMO_BITLEN;
+    #[cfg(any(feature = "sc_C", feature = "sc_G", feature = "sc_H", feature = "sc_I"))]
+    const DEMO_WORDLEN: usize = (DEMO_BITLEN + 1) / 2;
+    const DEMO_N_MSGS:  usize =   3;
+    const DEMO_ADC:     i32   = -20;
 
     // ---------------------------------
     //  Cloudovo Scope
@@ -224,8 +231,8 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
         ParmCiphertext::empty(),
     ];
     for (ci, (mi, mi_as)) in c.iter_mut().zip(m.iter().zip(m_as.iter_mut())) {
-        *ci = pu.encrypt(*mi, DEMO_BITLEN)?;
         *mi_as = (*mi).signum() * ((*mi).abs() % (1 << DEMO_BITLEN));
+        *ci = pu.encrypt(*mi_as, DEMO_WORDLEN)?;
     }
     //~ let cx1 = pu.encrypt(m_x1,   1)?;
     //~ let cy1 = pu.encrypt(m_y1,   1)?;
@@ -262,6 +269,17 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
     // =================================
     //  C: Evaluation
+
+    // BS only
+    for _ in 0..10 {
+        simple_duration!(
+            ["Programmable bootstrapping"],
+            [
+                // positive identity is defined for any pi
+                let _c = pbs::pos_id(&pc.pub_keys, &c[0][0])?;
+            ]
+        );
+    }
 
     let c_add  = ParmArithmetics::add(&pc, &c[0], &c[1]);
     //~ let c_sub  = ParmArithmetics::sub(&pc, &c[1], &c[0]);

@@ -17,34 +17,34 @@ use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 //
 
 /// Parmesan encryption of a 64-bit signed integer
-/// * splits signed integer into bits
+/// * splits signed integer into words
 /// * encrypt one-by-one
 pub fn parm_encrypt(
     params: &Params,
     priv_keys: &PrivKeySet,
     m: i64,
-    bits: usize,
+    words: usize,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
     let mut res = ParmCiphertext::empty();
     let m_abs = m.abs();
     let m_pos = m >= 0;
 
     #[cfg(any(feature = "sc_A", feature = "sc_B"))]
-    for i in 0..bits {
+    for i in 0..words {
         if !m_pos {panic!("Negative numbers not supported in scenarios A, B.")}
         // calculate logical representation of i-th bit
         let mi = if ((m_abs >> i) & 1) == 0 {-1i32} else {1i32};
         res.push(parm_encr_word(params, priv_keys, mi)?);
     }
-    #[cfg(any(feature = "sc_C"))]
-    for i in 0..bits {
+    #[cfg(feature = "sc_C")]
+    for i in 0..words {
         if !m_pos {panic!("Negative numbers not supported in scenario C.")}
-        // calculate i-th word (2 bits)
+        // calculate i-th word (2 words)
         let mi = (((m_abs >> (2*i)) & 0b11) * 2) as i32;
         res.push(parm_encr_word(params, priv_keys, mi)?);
     }
     #[cfg(any(feature = "sc_D", feature = "sc_E", feature = "sc_F"))]
-    for i in 0..bits {
+    for i in 0..words {
         // calculate i-th bit with sign
         let mi = if ((m_abs >> i) & 1) == 0 {
             0i32
@@ -54,7 +54,7 @@ pub fn parm_encrypt(
         res.push(parm_encr_word(params, priv_keys, mi)?);
     }
     #[cfg(any(feature = "sc_G", feature = "sc_H", feature = "sc_I"))]
-    for i in 0..bits {
+    for i in 0..words {
         // calculate i-th word with sign (n.b., this fails to parm_encr_word if there is a digit 3 .. out of alphabet)
         let mi = if m_pos {
             ((m_abs >> (2*i)) & 0b11) as i32
