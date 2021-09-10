@@ -439,14 +439,46 @@ pub fn add_sub_impl(
             z.push(LWE::zero(0)?);
 
             q.par_iter_mut().zip(w.par_iter().enumerate()).for_each(| (qi, (i, wi)) | {
-                //TODO in parallel
-                let mut r1 = pbs::f_3__pi_4(pub_keys, wi).expect("f_3__pi_4 failed.");
-                let mut r2 = pbs::g_2__pi_4(pub_keys, wi).expect("g_2__pi_4 failed.");
-                let     r3 = if i > 0 {
-                    pbs::f_2__pi_4(pub_keys, &w[i-1]).expect("f_2__pi_4 failed.")
-                } else {
-                    LWE::zero(0).expect("LWE::zero failed.")
-                };
+                //~ // ---   SEQUENTIAL BEGIN   ------------------------------------
+                //~ let mut r1 = pbs::f_3__pi_4(pub_keys, wi).expect("f_3__pi_4 failed.");
+                //~ let mut r2 = pbs::g_2__pi_4(pub_keys, wi).expect("g_2__pi_4 failed.");
+                //~ let     r3 = if i > 0 {
+                    //~ pbs::f_2__pi_4(pub_keys, &w[i-1]).expect("f_2__pi_4 failed.")
+                //~ } else {
+                    //~ LWE::zero(0).expect("LWE::zero failed.")
+                //~ };
+                //~ // ---   SEQUENTIAL END   --------------------------------------
+
+                // ---   PARALLEL BEGIN   --------------------------------------
+                // init tmp variables
+                let mut r1 = LWE::zero(0).expect("LWE::zero failed.");
+                let mut r2 = LWE::zero(0).expect("LWE::zero failed.");
+                let mut r3 = LWE::zero(0).expect("LWE::zero failed.");
+                // only references can be passed to threads
+                let r1r = &mut r1;
+                let r2r = &mut r2;
+                let r3r = &mut r3;
+
+                // parallel pool: r1-3
+                thread::scope(|ri_scope| {
+                    ri_scope.spawn(|_| {
+                        // r1 = wi ⋛ ±3
+                        *r1r = pbs::f_3__pi_4(pub_keys, wi).expect("f_3__pi_4 failed.");
+                    });
+                    ri_scope.spawn(|_| {
+                        // r2 = wi ≡ ±2
+                        *r2r = pbs::g_2__pi_4(pub_keys, wi).expect("g_2__pi_4 failed.");
+                    });
+                    ri_scope.spawn(|_| {
+                        // r3 = w_i-1 ⋛ ±2
+                        *r3r = if i > 0 {
+                            pbs::f_2__pi_4(pub_keys, &w[i-1]).expect("f_2__pi_4 failed.")
+                        } else {
+                            LWE::zero(0).expect("LWE::zero failed.")
+                        };
+                    });
+                }).expect("thread::scope ri_scope failed.");
+                // ---   PARALLEL END   ----------------------------------------
 
                 r2.add_uint_inplace(&r3).expect("add_uint_inplace failed.");   // r2 + r3
                 let r23 = pbs::g_2__pi_4(pub_keys, &r2).expect("g_2__pi_4 failed.");
@@ -486,9 +518,31 @@ pub fn add_sub_impl(
             z.push(LWE::zero(0)?);
 
             q.par_iter_mut().zip(w.par_iter().enumerate()).for_each(| (qi, (i, wi)) | {
-                //TODO in parallel
-                let     r1 = pbs::f_3__pi_5(pub_keys, wi).expect("f_3__pi_5 failed.");
-                let mut r2 = pbs::g_2__pi_5__with_val(pub_keys, wi, 3).expect("g_2__pi_5__with_val failed.");
+                //~ // ---   SEQUENTIAL BEGIN   ------------------------------------
+                //~ let     r1 = pbs::f_3__pi_5(pub_keys, wi).expect("f_3__pi_5 failed.");
+                //~ let mut r2 = pbs::g_2__pi_5__with_val(pub_keys, wi, 3).expect("g_2__pi_5__with_val failed.");
+                //~ // ---   SEQUENTIAL END   --------------------------------------
+
+                // ---   PARALLEL BEGIN   --------------------------------------
+                // init tmp variables
+                let mut r1 = LWE::zero(0).expect("LWE::zero failed.");
+                let mut r2 = LWE::zero(0).expect("LWE::zero failed.");
+                // only references can be passed to threads
+                let r1r = &mut r1;
+                let r2r = &mut r2;
+
+                // parallel pool: r1, r2
+                thread::scope(|r12_scope| {
+                    r12_scope.spawn(|_| {
+                        // r1 = wi ⋛ ±3
+                        *r1r = pbs::f_3__pi_5(pub_keys, wi).expect("f_3__pi_5 failed.");
+                    });
+                    r12_scope.spawn(|_| {
+                        // r2 = 3·(wi ≡ ±2)
+                        *r2r = pbs::g_2__pi_5__with_val(pub_keys, wi, 3).expect("g_2__pi_5__with_val failed.");
+                    });
+                }).expect("thread::scope r12_scope failed.");
+                // ---   PARALLEL END   ----------------------------------------
 
                 if i > 0 {
                     r2.add_uint_inplace(&w[i-1]).expect("add_uint_inplace failed.");   // w_i-1 + r2
