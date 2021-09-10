@@ -10,6 +10,7 @@ license = "AGPL-3.0"
 [dependencies]
 colored = "^2.0.0"
 rayon = "^1.5.1"
+crossbeam-utils = "^0.8.0"
 rand = "^0.8.0"
 chrono = "^0.4.0"
 # this will be needed for publishing (dependency must be an actual crate at crates.io):

@@ -409,8 +409,8 @@ pub fn c_4__pi_2x4(
     //~ measure_duration!(
         //~ ["PBS: X ≥ 2*4 (for π = 4)"],
         //~ [
-            let mut res = c.bootstrap_with_function(pub_keys.bsk, |x| [15.,15.,15.,15.,15.,15.,15.,15.,][x as usize], pub_keys.encoder)?
-                           .keyswitch(pub_keys.ksk)?;
+            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [15.,15.,15.,15.,15.,15.,15.,15.,][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
         //~ ]
     //~ );
 

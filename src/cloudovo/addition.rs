@@ -1,10 +1,14 @@
 use std::error::Error;
 
-#[cfg(not(feature = "sequential"))]
+// parallelization tools
 use rayon::prelude::*;
-use concrete::LWE;
+use crossbeam_utils::thread;
+
 #[allow(unused_imports)]
 use colored::Colorize;
+
+use concrete::LWE;
+
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use crate::userovo::keys::PubKeySet;
 use crate::params::Params;
@@ -84,15 +88,43 @@ pub fn add_sub_impl(
             let mut c: LWE = LWE::encrypt_uint_triv(7, pub_keys.encoder)?;   // logical 0 encrypts -1
 
             for (xi, yi) in x.iter().zip(y.iter()) {
-                //TODO rearrange & run in parallel
-                // z_i = x_i XOR y_i XOR c
-                let wi = pbs::XOR(pub_keys, xi, yi)?;
-                z.push(pbs::XOR(pub_keys, &wi, &c)?);
+                // init tmp variables
+                let mut t = LWE::zero(0)?;
+                let mut u = LWE::zero(0)?;
+                let mut v = LWE::zero(0)?;
 
-                // c = (x_i AND y_i) XOR (c AND (x_i XOR y_i))
-                let t1 = pbs::AND(pub_keys, xi, yi)?; // temp_1 = x_i AND y_i
-                let t2 = pbs::AND(pub_keys, &c,&wi)?; // temp_2 = c AND w_i
-                c = pbs::XOR(pub_keys, &t1, &t2)?;
+                // only references can be passed to threads, otherwise they "consume" the values (t, u, v)
+                // (quite a weird workaround)
+                let tr = &mut t;
+                let ur = &mut u;
+                let vr = &mut v;
+
+                // first parallel pool: t, u
+                thread::scope(|tu_scope| {
+                    tu_scope.spawn(|_| {
+                        // t = x_i XOR y_i
+                        *tr = pbs::XOR(pub_keys, xi, yi).expect("pbs::XOR failed.");
+                    });
+                    tu_scope.spawn(|_| {
+                        // u = x_i AND y_i
+                        *ur = pbs::AND(pub_keys, xi, yi).expect("pbs::XOR failed.");
+                    });
+                }).expect("thread::scope tu_scope failed.");
+
+                // second parallel pool: zi, v
+                thread::scope(|zv_scope| {
+                    zv_scope.spawn(|_| {
+                        // z_i = t XOR c
+                        z.push(pbs::XOR(pub_keys, tr, &c).expect("pbs::XOR failed."));
+                    });
+                    zv_scope.spawn(|_| {
+                        // v   = t AND c
+                        *vr = pbs::AND(pub_keys, tr, &c).expect("pbs::XOR failed.");
+                    });
+                }).expect("thread::scope zv_scope failed.");
+
+                // calc new carry
+                c = pbs::XOR(pub_keys, &u, &v)?;
             }
 
             z.push(c);
@@ -111,13 +143,23 @@ pub fn add_sub_impl(
             let mut c: LWE = LWE::encrypt_uint_triv(7, pub_keys.encoder)?;   // logical 0 encrypts -1
 
             for (xi, yi) in x.iter().zip(y.iter()) {
-                //TODO in parallel
-                // z_i = x_i XOR y_i XOR c
-                z.push(pbs::XOR_THREE(pub_keys, xi, yi, &c)?);
+                // init new carry & reference (only references can be passed to threads)
+                let mut cn = LWE::zero(0)?;
+                let cnr = &mut cn;
 
-                // c = 2OF3(x_i, y_i, c)
-                // cf. https://www.wolframalpha.com/input/?i=%28x+AND+y%29+XOR+%28z+AND+%28x+XOR+y%29%29
-                let cn = pbs::TWO_OF_THREE(pub_keys, xi, yi, &c)?;
+                // parallel pool: zi, c
+                thread::scope(|zc_scope| {
+                    zc_scope.spawn(|_| {
+                        // z_i = x_i XOR y_i XOR c
+                        z.push(pbs::XOR_THREE(pub_keys, xi, yi, &c).expect("pbs::XOR_THREE failed."));
+                    });
+                    zc_scope.spawn(|_| {
+                        // c = 2OF3(x_i, y_i, c)
+                        *cnr = pbs::TWO_OF_THREE(pub_keys, xi, yi, &c).expect("pbs::TWO_OF_THREE failed.");
+                        // cf. https://www.wolframalpha.com/input/?i=%28x+AND+y%29+XOR+%28z+AND+%28x+XOR+y%29%29
+                    });
+                }).expect("thread::scope zc_scope failed.");
+
                 c = cn.clone();
             }
 

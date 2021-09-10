@@ -144,6 +144,16 @@ impl ParmesanCloudovo<'_> {
 
 pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
+
+    //~ // xxx   Playground BEGIN   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+    //~ println!(">>> Playground BEGIN");
+
+    //~ println!(">>> Playground END");
+
+    //~ // xxx   Playground END   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
     // move to Cloudovo initialization (makes no sense at user, but now I want to have it on the top)
     #[cfg(not(feature = "sequential"))]
     infobox!("Parallel Arithmetics DEMO ({} threads)", rayon::current_num_threads());
