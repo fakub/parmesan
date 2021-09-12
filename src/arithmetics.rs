@@ -64,6 +64,12 @@ pub trait ParmArithmetics {
         y: &Self,
     ) -> Self;
 
+    /// ReLU: `max{0, X}`
+    fn relu(
+        pc: &ParmesanCloudovo,
+        x: &Self,
+    ) -> Self;
+
     /// Multiplication: `X × Y`
     fn mul(
         pc: &ParmesanCloudovo,
@@ -117,6 +123,11 @@ impl ParmArithmetics for i64 {
         x: &i64,
         y: &i64,
     ) -> i64 {std::cmp::max(*x, *y)}
+
+    fn relu(
+        _pc: &ParmesanCloudovo,
+        x: &i64,
+    ) -> i64 {std::cmp::max(0, *x)}
 
     fn mul(
         _pc: &ParmesanCloudovo,
@@ -212,6 +223,18 @@ impl ParmArithmetics for ParmCiphertext {
             x,
             y,
         ).expect("ParmArithmetics::max failed.")
+    }
+
+    fn relu(
+        pc: &ParmesanCloudovo,
+        x: &ParmCiphertext,
+    ) -> ParmCiphertext {
+        maximum::max_impl(
+            pc.params,
+            pc.pub_keys,
+            &ParmArithmetics::zero(),
+            x,
+        ).expect("ParmArithmetics::relu failed.")
     }
 
     fn mul(

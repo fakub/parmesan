@@ -216,6 +216,6 @@ impl NeuralNetwork {
         pc: &ParmesanCloudovo,
         lc: &T,   // lc .. for linear combination
     ) -> T {
-        ParmArithmetics::sgn(pc, lc)
+        ParmArithmetics::sgn(pc, lc)    // sgn   relu
     }
 }
