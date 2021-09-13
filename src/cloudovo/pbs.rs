@@ -8,29 +8,6 @@ use crate::userovo::keys::PubKeySet;
 //TODO implement evaluation for dimension == 0 (should not be needed at the moment)
 
 //
-//  X (around zero)
-//
-pub fn id(
-    pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
-    if c.dimension == 0 {
-        return Ok(c.clone());
-    }
-
-    //~ measure_duration!(
-        //~ ["PBS: Identity (around zero)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,2.,3.,4.,5.,6.,7.,8.,7.,6.,5.,4.,3.,2.,1.][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
-
-    Ok(res)
-}
-
-//
 //  X (positive half)
 //
 pub fn pos_id(
@@ -58,6 +35,30 @@ pub fn pos_id(
 //
 //  PI = 5
 //
+
+//
+//  X (around zero)
+//
+#[allow(non_snake_case)]
+pub fn id__pi_5(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
+    //~ measure_duration!(
+        //~ ["PBS: Identity (around zero, for π = 5)"],
+        //~ [
+            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,2.,3.,4.,5.,6.,7.,8.,7.,6.,5.,4.,3.,2.,1.][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
 
 //
 //  X ⋛ ±3
@@ -424,6 +425,30 @@ pub fn c_4__pi_2x4(
 //
 
 //
+//  X (around zero)
+//
+#[allow(non_snake_case)]
+pub fn id__pi_3(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
+    //~ measure_duration!(
+        //~ ["PBS: Identity (around zero, for π = 3)"],
+        //~ [
+            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,2.,1.][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
+
+//
 //  X ⋛ ±1
 //
 #[allow(non_snake_case)]
@@ -512,6 +537,30 @@ pub fn g_2__pi_3(
 //
 //  PI = 4
 //
+
+//
+//  X (around zero)
+//
+#[allow(non_snake_case)]
+pub fn id__pi_4(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
+    //~ measure_duration!(
+        //~ ["PBS: Identity (around zero, for π = 4)"],
+        //~ [
+            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,2.,3.,4.,3.,2.,1.][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
 
 //
 //  X ⋛ ±2
@@ -614,8 +663,32 @@ pub fn g_1__pi_4__with_val(
 
 // -----------------------------------------------------------------------------
 //
-//  PI = 4
+//  PI = 7
 //
+
+//
+//  X (around zero)
+//
+#[allow(non_snake_case)]
+pub fn id__pi_7(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        return Ok(c.clone());
+    }
+
+    //~ measure_duration!(
+        //~ ["PBS: Identity (around zero, for π = 7)"],
+        //~ [
+            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15.,16.,17.,18.,19.,20.,21.,22.,23.,24.,25.,26.,27.,28.,29.,30.,31.,32.,31.,30.,29.,28.,27.,26.,25.,24.,23.,22.,21.,20.,19.,18.,17.,16.,15.,14.,13.,12.,11.,10.,9.,8.,7.,6.,5.,4.,3.,2.,1.][x as usize], pub_keys.encoder)?
+                       .keyswitch(pub_keys.ksk)?;
+        //~ ]
+    //~ );
+
+    Ok(res)
+}
 
 //
 //  X ⋛ ±14

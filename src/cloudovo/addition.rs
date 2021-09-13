@@ -31,7 +31,7 @@ pub fn add_sub_noise_refresh(
     let mut z = ParmCiphertext::triv(z_noisy.len())?;
 
     z_noisy.par_iter().zip(z.par_iter_mut()).for_each(| (zni, zi) | {
-        *zi = pbs::id(pub_keys, zni).expect("pbs::id failed.");
+        *zi = pbs::id__pi_5(pub_keys, zni).expect("pbs::id__pi_5 failed.");
     });
 
     Ok(z)
@@ -193,7 +193,10 @@ pub fn add_sub_impl(
                 // zi = wi - 4*c
                 let fc = c.mul_uint_constant(4)?;   // 4*c
                 wi.sub_uint_inplace(&fc)?;          // wi - 4*c
-                z.push(wi);
+
+                // refresh
+                z.push(pbs::pos_id(pub_keys, &wi)?);
+                //~ z.push(wi);
             }
 
             z.push(c);
@@ -276,6 +279,10 @@ pub fn add_sub_impl(
                 let qi_2 = qi.mul_uint_constant(2).expect("mul_uint_constant failed.");
                 zi.sub_uint_inplace(&qi_2).expect("sub_uint_inplace failed.");
                 if i > 0 { zi.add_uint_inplace(&q[i-1]).expect("add_uint_inplace failed."); }
+
+                // refresh
+                let zi_fresh = pbs::id__pi_3(pub_keys, zi).expect("pbs::id__pi_3 failed.");
+                *zi = zi_fresh.clone();
             });
         ]
     );
@@ -342,6 +349,10 @@ pub fn add_sub_impl(
                 let qi_2 = qi.mul_uint_constant(2).expect("mul_uint_constant failed.");
                 zi.sub_uint_inplace(&qi_2).expect("sub_uint_inplace failed.");
                 if i > 0 { zi.add_uint_inplace(&q[i-1]).expect("add_uint_inplace failed."); }
+
+                // refresh
+                let zi_fresh = pbs::id__pi_4(pub_keys, zi).expect("pbs::id__pi_4 failed.");
+                *zi = zi_fresh.clone();
             });
         ]
     );
@@ -413,6 +424,11 @@ pub fn add_sub_impl(
                 let qi_2 = qi.mul_uint_constant(2).expect("mul_uint_constant failed.");
                 zi.sub_uint_inplace(&qi_2).expect("sub_uint_inplace failed.");
                 if i > 0 { zi.add_uint_inplace(&q[i-1]).expect("add_uint_inplace failed."); }
+
+                //DBG !!!
+                // refresh
+                let zi_fresh = pbs::id__pi_5(pub_keys, zi).expect("pbs::id__pi_5 failed.");
+                *zi = zi_fresh.clone();
             });
             //TODO add one more bootstrap with identity (or leave it for user? in some cases BS could be saved)
             //TODO add one more thread if < maxlen
@@ -494,6 +510,10 @@ pub fn add_sub_impl(
                 let qi_4 = qi.mul_uint_constant(4).expect("mul_uint_constant failed.");
                 zi.sub_uint_inplace(&qi_4).expect("sub_uint_inplace failed.");
                 if i > 0 { zi.add_uint_inplace(&q[i-1]).expect("add_uint_inplace failed."); }
+
+                // refresh
+                let zi_fresh = pbs::id__pi_4(pub_keys, zi).expect("pbs::id__pi_4 failed.");
+                *zi = zi_fresh.clone();
             });
         ]
     );
@@ -560,6 +580,10 @@ pub fn add_sub_impl(
                 let qi_4 = qi.mul_uint_constant(4).expect("mul_uint_constant failed.");
                 zi.sub_uint_inplace(&qi_4).expect("sub_uint_inplace failed.");
                 if i > 0 { zi.add_uint_inplace(&q[i-1]).expect("add_uint_inplace failed."); }
+
+                // refresh
+                let zi_fresh = pbs::id__pi_5(pub_keys, zi).expect("pbs::id__pi_5 failed.");
+                *zi = zi_fresh.clone();
             });
         ]
     );
@@ -597,6 +621,10 @@ pub fn add_sub_impl(
                 let qi_4 = qi.mul_uint_constant(4).expect("mul_uint_constant failed.");
                 zi.sub_uint_inplace(&qi_4).expect("sub_uint_inplace failed.");
                 if i > 0 { zi.add_uint_inplace(&q[i-1]).expect("add_uint_inplace failed."); }
+
+                // refresh
+                let zi_fresh = pbs::id__pi_7(pub_keys, zi).expect("pbs::id__pi_7 failed.");
+                *zi = zi_fresh.clone();
             });
         ]
     );
