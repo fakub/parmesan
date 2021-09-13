@@ -196,6 +196,7 @@ pub fn add_sub_impl(
 
                 // refresh
                 z.push(pbs::pos_id(pub_keys, &wi)?);
+                //TODO this can run in parallel: with the previous round
                 //~ z.push(wi);
             }
 
