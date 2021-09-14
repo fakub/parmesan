@@ -41,7 +41,7 @@ pub trait ParmArithmetics {
     fn add_const(
         pc: &ParmesanCloudovo,
         x: &Self,
-        k: i32,
+        k: i64,
     ) -> Self;
 
     /// Scalar multiplication (by an integer): `k·X`
@@ -104,8 +104,8 @@ impl ParmArithmetics for i64 {
     fn add_const(
         _pc: &ParmesanCloudovo,
         x: &i64,
-        k: i32,
-    ) -> i64 {x + (k as i64)}
+        k: i64,
+    ) -> i64 {x + k}
 
     fn scalar_mul(
         _pc: &ParmesanCloudovo,
@@ -179,7 +179,7 @@ impl ParmArithmetics for ParmCiphertext {
     fn add_const(
         pc: &ParmesanCloudovo,
         x: &ParmCiphertext,
-        k: i32,
+        k: i64,
     ) -> ParmCiphertext {
         addition::add_const_impl(
             pc.params,

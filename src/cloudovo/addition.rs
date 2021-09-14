@@ -650,18 +650,18 @@ pub fn add_const_impl(
     params: &Params,
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
-    k: i32,
+    k: i64,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
     // resolve k == 0
     if k == 0 {
         return Ok(x.clone());
     }
 
-    let k_abs = (k as i64).abs() as u32;   // deal with -2^31, for which abs() panics, because it does not fit i32
+    let k_abs = k.abs();   // deal with -2^63, for which abs() panics, because it does not fit i64
     let k_pos = k >= 0;
 
     let mut k_len = 0usize;
-    for i in 0..31 {if k_abs & (1 << i) != 0 {k_len = i + 1;}}
+    for i in 0..63 {if k_abs & (1 << i) != 0 {k_len = i + 1;}}
 
     let mut ck = ParmCiphertext::empty();
 
