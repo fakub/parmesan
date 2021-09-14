@@ -64,7 +64,7 @@ pub struct Perceptron {
     // weights to perceptrons in the preceeding layer
     pub w: Vec<i32>,
     // bias
-    pub b: i32,
+    pub b: i64,
 }
 
 /// Layer
@@ -116,6 +116,8 @@ impl NeuralNetwork {
         output: &mut Vec<T>,
     ) {
         output.clear();
+        //DBG
+        println!("\n>   LAYER   ====================================================================");
 
         // evaluate perceptron by type
         for (_ip, perc) in layer.iter().enumerate() {
@@ -133,6 +135,8 @@ impl NeuralNetwork {
                         },
                         PercType::ACT => {
                             let aff = self.affine_pool::<T>(pc, &perc.w, input, perc.b);
+                            //DBG
+                            println!("\n>   ReLU   ---------------------------------------------------------------------");
                             output.push(self.act_fn::<T>(pc, &aff));
                         },
                     }
@@ -146,21 +150,27 @@ impl NeuralNetwork {
         pc: &ParmesanCloudovo,
         w: &Vec<i32>,
         a: &Vec<T>,
-        b: i32,
+        b: i64,
     ) -> T {
 
         let mut res: T = ParmArithmetics::zero();
         let mut agg: T;
         let mut scm: T;
+        //DBG
+        println!("\n>   AFFINE POOL   --------------------------------------------------------------");
 
         // dot product
         for (wi, ai) in w.iter().zip(a.iter()) {
+            //DBG
+            println!(">>> scalar mul: {} ...", *wi);
             scm = ParmArithmetics::scalar_mul(pc, *wi, ai);
+            println!(">>> addition ...");
             agg = ParmArithmetics::add(pc, &res, &scm);
             //TODO try directly to res, or implement add_inplace? (rather not..)
             res = agg.clone();
         }
 
+        println!(">>> add bias ...");
         // + bias
         ParmArithmetics::add_const(pc, &res, b)
     }
@@ -170,7 +180,7 @@ impl NeuralNetwork {
         pc: &ParmesanCloudovo,
         w: &Vec<i32>,
         a: &Vec<T>,
-        b: i32,
+        b: i64,
     ) -> T {
 
         let mut wa: Vec<T> = Vec::new();
@@ -216,6 +226,6 @@ impl NeuralNetwork {
         pc: &ParmesanCloudovo,
         lc: &T,   // lc .. for linear combination
     ) -> T {
-        ParmArithmetics::sgn(pc, lc)    // sgn   relu
+        ParmArithmetics::relu(pc, lc)    // sgn   relu
     }
 }
