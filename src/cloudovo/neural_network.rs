@@ -170,7 +170,7 @@ impl NeuralNetwork {
             res = agg.clone();
         }
 
-        println!(">>> add bias ...");
+        println!(">>> add bias {} ...", b);
         // + bias
         ParmArithmetics::add_const(pc, &res, b)
     }
