@@ -3,6 +3,7 @@
 ================================================================================
 
 * make *everything* parallel (e.g., there are many pairs of operations, nested parallel iterators work as expected, i.e., they put everything into one pool)
+* investigate why BS runs 50% longer in scenario F when applied to addition compared to standalone
 * for squaring of non-power-of-2: multiply |n|n+1|-bit numbers (isn't this too technical? it can be bypassed by adding a triv zero)
 * make new estimates on Karatsuba and D&C squaring BS complexity (actually only for 2 and more nested recursion levels, schoolbook does not add extra bits)
 
