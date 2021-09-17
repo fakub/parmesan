@@ -1,0 +1,30 @@
+test: encryption, status : valid, sample : -8896755255106949230, decrypted result : -8896755255106949230, number of encrypted bits(input size) : 64, length of decrypted result : 64
+test: encryption, status : valid, sample : 4818718772866050587, decrypted result : 4818718772866050587, number of encrypted bits(input size) : 63, length of decrypted result : 63
+test: encryption, status : valid, sample : -7954847618339581105, decrypted result : -7954847618339581105, number of encrypted bits(input size) : 64, length of decrypted result : 64
+test: encryption, status : valid, sample : 7419553706757520178, decrypted result : 7419553706757520178, number of encrypted bits(input size) : 63, length of decrypted result : 63
+test: encryption, status : valid, sample : -7497879557027068385, decrypted result : -7497879557027068385, number of encrypted bits(input size) : 64, length of decrypted result : 64
+test: encryption, status : valid, sample : 4572350867593900980, decrypted result : 4572350867593900980, number of encrypted bits(input size) : 62, length of decrypted result : 62
+test: encryption, status : valid, sample : 6001138019704426485, decrypted result : 6001138019704426485, number of encrypted bits(input size) : 63, length of decrypted result : 63
+test: encryption, status : valid, sample : 3259667114579679955, decrypted result : 3259667114579679955, number of encrypted bits(input size) : 62, length of decrypted result : 62
+test: encryption, status : valid, sample : -2859427239820956970, decrypted result : -2859427239820956970, number of encrypted bits(input size) : 63, length of decrypted result : 63
+test: encryption, status : valid, sample : 8811699548772054346, decrypted result : 8811699548772054346, number of encrypted bits(input size) : 63, length of decrypted result : 63
+test: encryption, status : valid, sample : -803780047118298632, decrypted result : -803780047118298632, number of encrypted bits(input size) : 61, length of decrypted result : 61
+test: encryption, status : valid, sample : -9220885683749926214, decrypted result : -9220885683749926214, number of encrypted bits(input size) : 64, length of decrypted result : 64
+test: encryption, status : valid, sample : 1337547419613665988, decrypted result : 1337547419613665988, number of encrypted bits(input size) : 61, length of decrypted result : 61
+test: encryption, status : valid, sample : -9104829626738450419, decrypted result : -9104829626738450419, number of encrypted bits(input size) : 64, length of decrypted result : 64
+test: encryption, status : valid, sample : 256207988237019128, decrypted result : 256207988237019128, number of encrypted bits(input size) : 58, length of decrypted result : 58
+test: encryption, status : valid, sample : 8150984833580369202, decrypted result : 8150984833580369202, number of encrypted bits(input size) : 63, length of decrypted result : 63
+test: encryption, status : valid, sample : -3519971741415075999, decrypted result : -3519971741415075999, number of encrypted bits(input size) : 63, length of decrypted result : 63
+test: encryption, status : valid, sample : 3163105882611383953, decrypted result : 3163105882611383953, number of encrypted bits(input size) : 62, length of decrypted result : 62
+test: encryption, status : valid, sample : -1013489070262415493, decrypted result : -1013489070262415493, number of encrypted bits(input size) : 61, length of decrypted result : 61
+test: encryption, status : valid, sample : 5234518475728142909, decrypted result : 5234518475728142909, number of encrypted bits(input size) : 63, length of decrypted result : 63
+test: encryption, status : valid, sample : -2401508578255401886, decrypted result : -2401508578255401886, number of encrypted bits(input size) : 63, length of decrypted result :63
+test: encryption, status : valid, sample : -3544219259232665840, decrypted result : -3544219259232665840, number of encrypted bits(input size) : 63, length of decrypted result :63
+test: encryption, status : valid, sample : -2286213598324428570, decrypted result : -2286213598324428570, number of encrypted bits(input size) : 62, length of decrypted result :62
+test: encryption, status : valid, sample : 6306508594519698404, decrypted result : 6306508594519698404, number of encrypted bits(input size) : 63, length of decrypted result :63
+test: encryption, status : valid, sample : 1976698041140600138, decrypted result : 1976698041140600138, number of encrypted bits(input size) : 61, length of decrypted result :61
+test: encryption, status : valid, sample : 5034308105380450684, decrypted result : 5034308105380450684, number of encrypted bits(input size) : 63, length of decrypted result :63
+test: encryption, status : valid, sample : 115133217831499085, decrypted result : 115133217831499085, number of encrypted bits(input size) : 57, length of decrypted result :57
+test: encryption, status : valid, sample : -8431092074567711034, decrypted result : -8431092074567711034, number of encrypted bits(input size) : 64, length of decrypted result :64
+test: encryption, status : valid, sample : -6336551801509506146, decrypted result : -6336551801509506146, number of encrypted bits(input size) : 64, length of decrypted result :64
+test: encryption, status : valid, sample : -2210075652537655036, decrypted result : -2210075652537655036, number of encrypted bits(input size) : 62, length of decrypted result :62

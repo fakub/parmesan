@@ -1,0 +1,3 @@
+test: scalar multiplication , status : valid, samples : m1 : 1040400184, k : 0, decrypted result : 1040400184, m1.size : 30, m2.size : 1length of decrypted result : 30
+test: scalar multiplication + addition, status : valid, samples : m1 : 991354990, k : 0, decrypted result : 991354990, m1.size : 30, m2.size : 1length of decrypted result : 30
+test: scalar multiplication + addition, status : valid, samples : m1 : -570175802, k : 0, decrypted result : -570175802, m1.size : 31, m2.size : 1length of decrypted result : 31

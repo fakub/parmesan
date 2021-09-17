@@ -1,0 +1,10 @@
+test: addition , status : valid, samples : m1 : -236, m2 : 192, decrypted result : -45312, m1.size : 9, m2.size : 8, length of decrypted result17
+test: addition , status : valid, samples : m1 : -21, m2 : 177, decrypted result : -3717, m1.size : 6, m2.size : 8, length of decrypted result13
+test: addition , status : valid, samples : m1 : -25, m2 : 10, decrypted result : -250, m1.size : 6, m2.size : 4, length of decrypted result9
+test: addition , status : valid, samples : m1 : -216, m2 : 240, decrypted result : -51840, m1.size : 9, m2.size : 8, length of decrypted result17
+test: addition , status : valid, samples : m1 : -205, m2 : 155, decrypted result : -31775, m1.size : 9, m2.size : 8, length of decrypted result16
+test: addition , status : valid, samples : m1 : -33, m2 : 238, decrypted result : -7854, m1.size : 7, m2.size : 8, length of decrypted result14
+test: addition , status : valid, samples : m1 : -132, m2 : 136, decrypted result : -17952, m1.size : 9, m2.size : 8, length of decrypted result16
+test: addition , status : valid, samples : m1 : -51, m2 : 250, decrypted result : -12750, m1.size : 7, m2.size : 8, length of decrypted result15
+test: addition , status : valid, samples : m1 : -205, m2 : 18, decrypted result : -3690, m1.size : 9, m2.size : 5, length of decrypted result13
+test: addition , status : valid, samples : m1 : -199, m2 : 30, decrypted result : -5970, m1.size : 9, m2.size : 5, length of decrypted result14

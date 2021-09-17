@@ -1,0 +1,5 @@
+test: addition_corner_cases , status : failure, samples : mx : 150, binary_input_m_triv : [1, 0, 0, 1, 0, 1, 1, 0], triv_ct_len : 8, m_triv1 : 97, binary_input_m_triv1 : [0, 0, 0, 1, 1, 0, 0, 0, 0, 1], triv_ct1_len : 10
+test: addition_corner_cases , status : failure, samples : mx : 212, binary_input_m_triv : [1, 1, 0, 1, 0, 1, 0, 0], triv_ct_len : 8, m_triv1 : 764, binary_input_m_triv1 : [1, 0, 1, 1, 1, 1, 1, 1, 0, 0], triv_ct1_len : 10
+test: addition_corner_cases , status : failure, samples : mx : 252, binary_input_m_triv : [1, 1, 1, 1, 1, 1, 0, 0], triv_ct_len : 8, m_triv1 : 846, binary_input_m_triv1 : [1, 1, 0, 1, 0, 0, 1, 1, 1, 0], triv_ct1_len : 10
+test: addition_corner_cases , status : failure, samples : mx : 139, binary_input_m_triv : [1, 0, 0, 0, 1, 0, 1, 1], triv_ct_len : 8, m_triv1 : 979, binary_input_m_triv1 : [1, 1, 1, 1, 0, 1, 0, 0, 1, 1], triv_ct1_len : 10
+test: addition_corner_cases , status : failure, samples : mx : 1, binary_input_m_triv : [0, 1], triv_ct_len : 2, m_triv1 : 1, binary_input_m_triv1 : [0, 1], triv_ct1_len : 2
