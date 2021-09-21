@@ -70,7 +70,7 @@ fn gen_b() -> i32 {
 
 fn gen_nn() -> NeuralNetwork {
     let mut rng = rand::thread_rng();
-    let nb_layers = rng.gen_range(1..5);
+    let nb_layers = 3;
     let wlen = rng.gen_range(1..5);
     let mut vec_layers = vec![];
     for i in 0..nb_layers {
@@ -91,7 +91,7 @@ fn gen_nn() -> NeuralNetwork {
 
 fn gen_m_in() -> Vec<i64> {
     let mut rng = rand::thread_rng();
-    let m_in_len = rng.gen_range(1..5);
+    let m_in_len = 3;
     let mut m_in = vec![];
     let base: i64 = 2;
     let max_range = base.pow(30);
