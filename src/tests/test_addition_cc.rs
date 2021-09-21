@@ -161,7 +161,7 @@ fn gen_ct_triv(
 }
 
 #[test]
-fn add_01 (
+fn add_trivial01 (
 ) -> Result< (), Box<dyn Error>> {
     // Initialization
     // ---------------------------------
@@ -177,13 +177,49 @@ fn add_01 (
     let mut trivial_1 = ParmCiphertext::empty() ; 
     let pub_k = pu.export_pub_keys() ; 
     trivial_1.push(LWE::encrypt_uint_triv(1,&pub_k.encoder)?) ; 
-    trivial_1.push(LWE::encrypt_uint_triv(1,&pub_k.encoder)?) ; 
     let mut trivial_0 = ParmCiphertext::empty() ; 
-    trivial_0.push(LWE::encrypt_uint_triv(0,&pub_k.encoder)?) ;
     trivial_0.push(LWE::encrypt_uint_triv(0,&pub_k.encoder)?) ;
     let enc_add_res = ParmArithmetics::add(&pc,&trivial_1,&trivial_0) ; 
     let dec_add_res = pu.decrypt(&enc_add_res)? ;  
     assert_eq!(1, dec_add_res) ; 
+    Ok(())
+}
+
+#[test]
+fn add_0_to_enc (
+) -> Result< (), Box<dyn Error>> {
+    // Initialization
+    // ---------------------------------
+    //  Global Scope
+    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+                                                   // ---------------------------------
+                                                   //  Userovo Scope
+    let pu = ParmesanUserovo::new(par)?;
+    let pub_k = pu.export_pub_keys();
+    // ---------------------------------
+    //  Cloudovo Scope
+    let pc = ParmesanCloudovo::new(par, &pub_k);
+    let pub_k = pu.export_pub_keys() ; 
+    for i in 2..10 {
+    let nb_enc_bits = message_size(i) ;  
+    let ct_1 = pu.encrypt(i,nb_enc_bits+1)? ; 
+    let mut trivial_0 = ParmCiphertext::empty() ; 
+    trivial_0.push(LWE::encrypt_uint_triv(0,&pub_k.encoder)?) ;
+    let enc_add_res = ParmArithmetics::add(&pc,&ct_1,&trivial_0) ;
+    println!("test: addition_cc, status : - , m1 : {} , m1_len: {} , m2: {}, m2_len: {} , add_res : - ", i, nb_enc_bits, 0, message_size(0)) ; 
+    let dec_add_res = pu.decrypt(&enc_add_res)? ;
+    assert_eq!(i, dec_add_res) ;
+    }
+    for i in 1..10 {
+        let nb_enc_bits = message_size(i) ;  
+        let ct_1 = pu.encrypt(i,nb_enc_bits)? ; 
+        let mut trivial_0 = ParmCiphertext::empty() ; 
+        trivial_0.push(LWE::encrypt_uint_triv(0,&pub_k.encoder)?) ;
+        let enc_add_res = ParmArithmetics::add(&pc,&ct_1,&trivial_0) ;
+        println!("test: addition_cc, status : - , m1 : {} , m1_len: {} , m2: {}, m2_len: {} , add_res : - ", i, nb_enc_bits, 0, message_size(0)) ; 
+        let dec_add_res = pu.decrypt(&enc_add_res)? ;
+        assert_eq!(i, dec_add_res) ;
+    }
     Ok(())
 }
 
