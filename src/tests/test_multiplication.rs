@@ -101,6 +101,110 @@ fn test_mul_m(m1: i64, m2: i64, filename: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+//test squaring 
+fn test_squaring (m1: i64 , filename: &str) -> Result<(), Box<dyn Error>> {
+    // =================================
+    //  Initialization
+
+    // ---------------------------------
+    //  Global Scope
+    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+
+    // ---------------------------------
+    //  Userovo Scope
+    let pu = ParmesanUserovo::new(par)?;
+    let pub_k = pu.export_pub_keys();
+    // ---------------------------------
+    //  Cloudovo Scope
+    let pc = ParmesanCloudovo::new(par, &pub_k);
+    let len_m1 = message_size(m1);
+    println!(
+        "test: squaring , status: - , samples : m1 : {}, decrypted result : - , m1.size : {}, length of decrypted result : - ",
+        m1,len_m1,
+    );
+    let enc_m1 = pu.encrypt(m1, len_m1)?;
+    let enc_res = ParmArithmetics::squ(&pc, &enc_m1);
+    let res: i64 = pu.decrypt(&enc_res)?;
+    let len_res = message_size(res);
+    if (m1 * m1) as i64 == res {
+        println!(
+            "test: multiplication , status: valid , samples : m1 : {} , decrypted result : {} , m1.size : {} , length of decrypted result : {}",
+            m1,res,len_m1,len_res
+        );
+        let line = "test: addition , status : valid, samples : m1 : ".to_owned()
+            + &m1.to_string()
+            + ", decrypted result : "
+            + &res.to_string()
+            + ", m1.size : "
+            + &len_m1.to_string()
+            + ", length of decrypted result"
+            + &len_res.to_string()
+            + "\n";
+        let mut squ_message = OpenOptions::new()
+            .read(true)
+            .append(true)
+            .create(true)
+            .open("src/tests/test_history/".to_owned() + filename + "_samples.txt")
+            .unwrap();
+        squ_message.write_all(line.as_bytes()).unwrap();
+    } else {
+        println!(
+                "test: squaring , status: failure , samples : m1 : {}, decrypted result : {} , m1.size : {}, length of decrypted result : {} ",
+                m1,res,len_m1,len_res
+            );
+        let line = "test: addition , status : valid, samples : m1 : ".to_owned()
+            + &m1.to_string()
+            + ", decrypted result : "
+            + &res.to_string()
+            + ", m1.size : "
+            + &len_m1.to_string()
+            + ", length of decrypted result"
+            + &len_res.to_string()
+            + "\n";
+        let mut squ_message = OpenOptions::new()
+            .read(true)
+            .append(true)
+            .create(true)
+            .open("src/tests/test_history/".to_owned() + filename + "_samples.txt")
+            .unwrap();
+        squ_message.write_all(line.as_bytes()).unwrap();
+    }
+    assert_eq!((m1 * m1) as i64, res);
+    Ok(())
+}
+#[test] 
+fn test_squ() {
+    let filename= "squaring_rd" ; 
+    let mut rng = rand::thread_rng() ;
+    let base: i64 = 2;
+    let max_bitlen = 5;
+    let max_range = base.pow(max_bitlen);  
+    /*for _i in 0..10 {
+        let rand_neg = rng.gen_range(-max_range..0) ;  
+        test_squaring(rand_neg,filename).unwrap() ; 
+    }*/
+    for _i in 0..10 {
+        let rand_neg = rng.gen_range(0..max_range) ;  
+        test_squaring(rand_neg,filename).unwrap() ; 
+    }
+    test_squaring(1,filename).unwrap() ;  
+    test_squaring(0,filename).unwrap() ; 
+    test_squaring(-1,filename).unwrap() ;  
+    test_squaring(2,filename).unwrap() ;  
+    test_squaring(-2,filename).unwrap() ;
+}
+#[test] 
+fn test_hc_squ() {
+    let filename= "squaring_rd" ; 
+    test_squaring(0,filename).unwrap() ; 
+    test_squaring(16,filename).unwrap() ;
+    test_squaring(27,filename).unwrap() ;        
+    test_squaring(1,filename).unwrap() ;
+    test_squaring(500,filename).unwrap() ;
+    test_squaring(814,filename).unwrap() ; 
+    test_squaring(814,filename).unwrap() ;   
+}
+  
 #[test]
 // in this test we generate random values and multiply them (enc(m1)*enc(m2)) and call test_mul_m to test them
 
