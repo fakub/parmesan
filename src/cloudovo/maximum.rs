@@ -1,13 +1,17 @@
 use std::error::Error;
 
-#[cfg(not(feature = "sequential"))]
+// parallelization tools
 use rayon::prelude::*;
-use concrete::LWE;
+use crossbeam_utils::thread;
+
 #[allow(unused_imports)]
 use colored::Colorize;
+
+use concrete::LWE;
+
 use crate::params::Params;
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use crate::userovo::keys::PubKeySet;
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use super::pbs;
 
 /// Implementation of parallel maximum using signum
@@ -68,10 +72,24 @@ pub fn max_impl(
                     let xi_p2s: LWE = xi.add_uint(&s_2).expect("add_uint failed.");
                     // yi - 2s
                     let yi_n2s: LWE = yi.sub_uint(&s_2).expect("sub_uint failed.");
-                    // t, u
-                    //TODO this can be also in parallel
-                    *mi    = pbs::relu_plus__pi_5(pub_keys, &xi_p2s).expect("pbs::relu_plus__pi_5 failed.");   // ti
-                    let ui = pbs::relu_plus__pi_5(pub_keys, &yi_n2s).expect("pbs::relu_plus__pi_5 failed.");
+
+                    // t, u (in parallel)
+                    // init tmp variables in this scope, only references can be passed to threads
+                    let mut ui = LWE::zero(0).expect("LWE::zero failed.");
+                    let uir = &mut ui;
+
+                    // parallel pool: mi, ui
+                    thread::scope(|miui_scope| {
+                        miui_scope.spawn(|_| {
+                            // mi = ReLU+(xi + 2s)
+                            *mi    = pbs::relu_plus__pi_5(pub_keys, &xi_p2s).expect("pbs::relu_plus__pi_5 failed.");   // ti
+                        });
+                        miui_scope.spawn(|_| {
+                            // ui = ReLU+(yi + 2s)
+                            *uir   = pbs::relu_plus__pi_5(pub_keys, &yi_n2s).expect("pbs::relu_plus__pi_5 failed.");
+                        });
+                    }).expect("thread::scope miui_scope failed.");
+
                     // t + u
                     mi.add_uint_inplace(&ui).expect("add_uint_inplace failed.");
                 });

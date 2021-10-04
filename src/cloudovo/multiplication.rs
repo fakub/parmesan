@@ -1,13 +1,16 @@
 use std::error::Error;
 
-#[cfg(not(feature = "sequential"))]
+// parallelization tools
 use rayon::prelude::*;
-use concrete::LWE;
+use crossbeam_utils::thread;
+
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+use concrete::LWE;
+
 use crate::userovo::keys::PubKeySet;
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use super::pbs;
 
 
@@ -298,22 +301,32 @@ fn mul_lwe(
     //~ measure_duration!(
         //~ "Multiplication LWE × LWE",
         //~ [
-            //TODO FIXME these can be done in parallel
-            // tmp = x + y
-            let mut tmp: LWE = x.clone();
-            tmp.add_uint_inplace(y)?;
-            let pos: LWE = pbs::a_2__pi_5(
-                pub_keys,
-                &tmp,
-            )?;
 
-            // tmp = x - y
-            tmp = x.clone();
-            tmp.sub_uint_inplace(y)?;
-            let neg: LWE = pbs::a_2__pi_5(
-                pub_keys,
-                &tmp,
-            )?;
+            // x + y
+            let mut pxpy: LWE = x.clone();
+            pxpy.add_uint_inplace(y)?;
+            // x - y
+            let mut pxny: LWE = x.clone();
+            pxny.sub_uint_inplace(y)?;
+
+            // pos, neg (in parallel)
+            // init tmp variables in this scope, only references can be passed to threads
+            let mut pos = LWE::zero(0).expect("LWE::zero failed.");
+            let mut neg = LWE::zero(0).expect("LWE::zero failed.");
+            let posr = &mut pos;
+            let negr = &mut neg;
+
+            // parallel pool: pos, neg
+            thread::scope(|pn_scope| {
+                pn_scope.spawn(|_| {
+                    // pos = ...
+                    *posr  = pbs::a_2__pi_5(pub_keys, &pxpy).expect("pbs::a_2__pi_5 failed.");
+                });
+                pn_scope.spawn(|_| {
+                    // neg = ...
+                    *negr  = pbs::a_2__pi_5(pub_keys, &pxny).expect("pbs::a_2__pi_5 failed.");
+                });
+            }).expect("thread::scope pn_scope failed.");
 
             // z = pos - neg
             z = pos.clone();
