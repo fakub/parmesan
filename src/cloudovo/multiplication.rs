@@ -320,7 +320,7 @@ fn mul_lwe(
             z.sub_uint_inplace(&neg)?;
 
             //TODO additional identity bootstrapping .. needed?
-            //~ z = pbs::id(
+            //~ z = pbs::id__pi_5(
                 //~ pub_keys,
                 //~ &tmp,   // pos - neg
             //~ )?;

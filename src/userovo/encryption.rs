@@ -17,20 +17,20 @@ use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 //
 
 /// Parmesan encryption of a 64-bit signed integer
-/// * splits signed integer into bits
+/// * splits signed integer into words
 /// * encrypt one-by-one
 pub fn parm_encrypt(
     params: &Params,
     priv_keys: &PrivKeySet,
     m: i64,
-    bits: usize,
+    words: usize,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
     let mut res = ParmCiphertext::empty();
     let m_abs = m.abs();
     let m_pos = m >= 0;
 
-    for i in 0..bits {
-        // calculate i-th bit with sign
+    for i in 0..words {
+        // calculate i-th word with sign
         let mi = if ((m_abs >> i) & 1) == 0 {
             0i32
         } else {
@@ -65,7 +65,7 @@ fn parm_encr_word(
 
     // check that mi is in alphabet
     if mi < -1 || mi > 1 {
-        return Err("Word to be encrypted outside alphabet {-1,0,1}.".into());
+        panic!("Word to be encrypted outside alphabet {{-1,0,1}}.");
     }
 
     // little hack, how to bring mi into positive interval [0, 2^pi)
@@ -95,22 +95,17 @@ pub fn parm_decrypt(
 ) -> Result<i64, Box<dyn Error>> {
     let mut m = 0i64;
 
-    //~ measure_duration!(
-        //~ ["Decrypt"],
-        //~ [
-            for (i, ct) in pc.iter().enumerate() {
-                let mi = parm_decr_word(params, priv_keys, ct)?;
-                // infoln!("m[{}] = {} (pi = {})", i, mi, ct.encoder.nb_bit_precision);
-                // if i >= 63 {dbgln!("i >= 63 !! namely {}", i);}
-                m += match mi {
-                     1 => {  1i64 << i},
-                     0 => {  0i64},
-                    -1 => {-(1i64 << i)},
-                     _ => {return Err(format!("Word m_[{}] out of alphabet: {}.", i, mi).into())},
-                };
-            }
-        //~ ]
-    //~ );
+    for (i, ct) in pc.iter().enumerate() {
+        let mi = parm_decr_word(params, priv_keys, ct)?;
+        // infoln!("m[{}] = {} (pi = {})", i, mi, ct.encoder.nb_bit_precision);
+        // if i >= 63 {dbgln!("i >= 63 !! namely {}", i);}
+        m += match mi {
+             1 => {  1i64 << i},
+             0 => {  0i64},
+            -1 => {-(1i64 << i)},
+             _ => {panic!("Word m_[{}] out of redundant bin alphabet: {}.", i, mi)},
+        };
+    }
 
     Ok(m)
 }
@@ -139,7 +134,7 @@ pub fn convert(mv: &Vec<i32>) -> Result<i64, Box<dyn Error>> {
              1 => {  1i64 << i},
              0 => {  0i64},
             -1 => {-(1i64 << i)},
-             _ => {return Err(format!("Word out of alphabet: {}.", mi).into())},
+             _ => {panic!("Word m_[{}] out of redundant bin alphabet: {}.", i, mi)},
         };
     }
     Ok(m)

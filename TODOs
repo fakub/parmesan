@@ -20,6 +20,13 @@
                -1   |-1 | 0 | 0 |
 
             add: 2y + s == 2, 3 .. +1 or 2y + s == -3 .. -1 otherwise 0
+        * ISSUE:
+            ? at which position shall the number be rounded?
+            ! it may happen that there is a leading zero
+            * devise a "conditional shift": bootstrap the leading position in a maximum-like manner
+            * here, at i-th position, pick either x_i (leading +-1), or x_i-1 (leading 0)
+                0 1 1 0 1 0 0 1 1   / round and cond. shift
+            ->  1 1 0 1 0 1
 
 * cfg for max{} behavior
 * resolve bootstraps before / after / in between operations
