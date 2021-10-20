@@ -1,12 +1,10 @@
 use std::error::Error;
 
-#[cfg(not(feature = "sequential"))]
-//~ use rayon::prelude::*;   //TODO
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use crate::userovo::keys::PubKeySet;
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 
 /// Implementation of signum via parallel reduction
 pub fn scalar_mul_impl(
@@ -53,7 +51,7 @@ pub fn scalar_mul_impl(
     //
     //WISH detect any reusable patterns (honestly, I do not expect much an improvement)
 
-    let mut k_vec: Vec<i32> = Vec::new();   // k_vec: Vec<i32> ??
+    let mut k_vec: Vec<i32> = Vec::new();
     let mut low_1: usize = 0;
     for i in 0..k_len+1 {
         // add a bit of k to the vector

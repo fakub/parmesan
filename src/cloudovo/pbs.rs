@@ -1,8 +1,10 @@
 use std::error::Error;
 
-use concrete::LWE;
 #[allow(unused_imports)]
 use colored::Colorize;
+
+use concrete::LWE;
+
 use crate::userovo::keys::PubKeySet;
 
 //TODO implement evaluation for dimension == 0 (should not be needed at the moment)

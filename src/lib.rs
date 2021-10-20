@@ -13,7 +13,6 @@ use std::error::Error;
 
 #[allow(unused_imports)]
 use colored::Colorize;
-//~ use concrete::LWE;
 
 extern crate chrono;
 use chrono::Utc;
@@ -144,7 +143,7 @@ impl ParmesanCloudovo<'_> {
 
 pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
-    // move to Cloudovo initialization (makes no sense at user, but now I want to have it on the top)
+    // not used at the moment
     #[cfg(not(feature = "sequential"))]
     infobox!("Parallel Arithmetics DEMO ({} threads)", rayon::current_num_threads());
     #[cfg(feature = "sequential")]
@@ -415,7 +414,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
 pub fn nn_demo() -> Result<(), Box<dyn Error>> {
 
-    // move to Cloudovo initialization (makes no sense at user, but now I want to have it on the top)
+    // not used at the moment
     #[cfg(not(feature = "sequential"))]
     infobox!("Parallel Neural Network DEMO ({} threads)", rayon::current_num_threads());
     #[cfg(feature = "sequential")]

@@ -22,5 +22,5 @@ concrete = { path = "../concrete-lib/concrete", features = ["unsafe"] }
 
 [features]
 default = []        # no feature selected by default
-sequential = []     # run (selected) algorithms sequentially
+# sequential = []     # run (selected) algorithms sequentially
 measure = []        # measure duration of selected operations

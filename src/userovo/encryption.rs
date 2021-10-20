@@ -1,10 +1,10 @@
 use std::error::Error;
 
-use concrete::LWE;
 #[allow(unused_imports)]
 use colored::Colorize;
-#[allow(unused_imports)]
-use rayon::prelude::*;
+
+use concrete::LWE;
+
 use crate::params::Params;
 use crate::userovo::keys::PrivKeySet;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
@@ -50,7 +50,7 @@ pub fn parm_encrypt_vec(
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
     let mut res = ParmCiphertext::triv(mv.len())?;
 
-    res.par_iter_mut().zip(mv.par_iter()).for_each(| (ri, mi) | {
+    res.iter_mut().zip(mv.iter()).for_each(| (ri, mi) | {
         *ri = parm_encr_word(params, priv_keys, *mi).expect("parm_encr_word failed.");
     });
 
@@ -65,6 +65,7 @@ fn parm_encr_word(
 
     // check that mi is in alphabet
     if mi < -1 || mi > 1 {
+        #[allow(non_fmt_panics)]
         panic!("Word to be encrypted outside alphabet {{-1,0,1}}.");
     }
 

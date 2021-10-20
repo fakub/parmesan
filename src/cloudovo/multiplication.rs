@@ -280,7 +280,7 @@ fn fill_mulary(
 
     // nested parallel iterators work as expected: they indeed create nested pools
     mulary.par_iter_mut().zip(y.par_iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
-        &x_yj[j..j+len].par_iter_mut().zip(x.par_iter()).for_each(| (xi_yj, xi) | {
+        x_yj[j..j+len].par_iter_mut().zip(x.par_iter()).for_each(| (xi_yj, xi) | {
             *xi_yj = mul_lwe(pub_keys, &xi, &yj).expect("mul_lwe failed.");
         });
     });
@@ -527,7 +527,7 @@ fn fill_squary(
     let mut squary      = vec![ParmCiphertext::triv(2*len)?; len];
 
     squary_tmp.par_iter_mut().zip(x.par_iter().enumerate()).for_each(| (sqi, (i, xi)) | {
-        &sqi[i..].par_iter_mut().zip(x2.par_iter().enumerate()).for_each(| (sqij, (j, x2j)) | {
+        sqi[i..].par_iter_mut().zip(x2.par_iter().enumerate()).for_each(| (sqij, (j, x2j)) | {
             if j < i {
                 *sqij = mul_lwe(pub_keys, &xi, &x2j).expect("mul_lwe failed.");
             } else if j == i {

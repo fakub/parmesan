@@ -1,12 +1,14 @@
 use std::error::Error;
 
-#[cfg(not(feature = "sequential"))]
+// parallelization tools
 use rayon::prelude::*;
+
 #[allow(unused_imports)]
 use colored::Colorize;
+
 use crate::params::Params;
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use crate::userovo::keys::PubKeySet;
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use super::pbs;
 
 /// Implementation of signum via parallel reduction
@@ -51,86 +53,39 @@ pub fn sgn_recursion_raw(
 
     let s: ParmCiphertext;
 
-    // Parallel
-    #[cfg(not(feature = "sequential"))]
-    {
-        measure_duration!(
-            ["Signum recursion in parallel ({}-bit, groups by {})", x.len(), gamma],
-            [
-                let mut b = ParmCiphertext::triv((x.len() - 1) / gamma + 1)?;
+    measure_duration!(
+        ["Signum recursion in parallel ({}-bit, groups by {})", x.len(), gamma],
+        [
+            let mut b = ParmCiphertext::triv((x.len() - 1) / gamma + 1)?;
 
-                // the thread needs to know the index j so that it can check against x.len()
-                b.par_iter_mut().enumerate().for_each(| (j, bj) | {
+            // the thread needs to know the index j so that it can check against x.len()
+            b.par_iter_mut().enumerate().for_each(| (j, bj) | {
 
-                    let mut sj = ParmCiphertext::triv(gamma).expect("LWE::zero failed.");
+                let mut sj = ParmCiphertext::triv(gamma).expect("LWE::zero failed.");
 
-                    sj.par_iter_mut().enumerate().for_each(| (i, sji) | {
-                        if gamma * j + i < x.len() {
-                            *sji = pbs::f_1__pi_5__with_val(
-                                pub_keys,
-                                &x[gamma * j + i],
-                                1 << i,
-                            ).expect("pbs::f_1__pi_5__with_val failed.");
-                        }
-                    });
-
-                    // possibly exchange for parallel reduction (negligible effect expected)
-                    for sji in sj {
-                        bj.add_uint_inplace(&sji).expect("add_uint_inplace failed.");
+                sj.par_iter_mut().enumerate().for_each(| (i, sji) | {
+                    if gamma * j + i < x.len() {
+                        *sji = pbs::f_1__pi_5__with_val(
+                            pub_keys,
+                            &x[gamma * j + i],
+                            1 << i,
+                        ).expect("pbs::f_1__pi_5__with_val failed.");
                     }
                 });
 
-                s = sgn_recursion_raw(
-                    gamma,
-                    pub_keys,
-                    &b,
-                )?;
-            ]
-        );
-    }
-
-    // Sequential
-    #[cfg(feature = "sequential")]
-    {
-        measure_duration!(
-            ["Signum recursion sequential ({}-bit, groups by {})", x.len(), gamma],
-            [
-                //TODO get rid of this shit
-                let dim = x[0].dimension;
-                let encoder = &x[0].encoder;
-
-                let mut b = ParmCiphertext::empty();
-
-                for j in 0..((x.len() - 1) / gamma + 1) {
-                    let mut bj: LWE = LWE::zero(0)?;
-
-                    for i in 0..gamma {
-                        let si: LWE;
-
-                        if gamma * j + i < x.len() {
-                            si = pbs::f_1__pi_5__with_val(
-                                pub_keys,
-                                &x[gamma * j + i],
-                                1 << i,
-                            )?;
-                        } else {
-                            si = LWE::zero(0)?;
-                        }
-
-                        bj.add_uint_inplace(&si)?;
-                    }
-
-                    b.push(bj);
+                // possibly exchange for parallel reduction (negligible effect expected)
+                for sji in sj {
+                    bj.add_uint_inplace(&sji).expect("add_uint_inplace failed.");
                 }
+            });
 
-                s = sgn_recursion_raw(
-                    gamma,
-                    pub_keys,
-                    &b,
-                )?;
-            ]
-        );
-    }
+            s = sgn_recursion_raw(
+                gamma,
+                pub_keys,
+                &b,
+            )?;
+        ]
+    );
 
     Ok(s)
 }

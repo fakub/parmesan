@@ -61,60 +61,35 @@ pub fn max_impl(
                 ya.push(LWE::zero(0)?);
             }
 
-            // Parallel
-            #[cfg(not(feature = "sequential"))]
-            {
-                m = ParmCiphertext::triv(xa.len())?;
+            m = ParmCiphertext::triv(xa.len())?;
 
-                // calc x and y selectors
-                m.par_iter_mut().zip(xa.par_iter().zip(ya.par_iter())).for_each(| (mi, (xi, yi)) | {
-                    // xi + 2s
-                    let xi_p2s: LWE = xi.add_uint(&s_2).expect("add_uint failed.");
-                    // yi - 2s
-                    let yi_n2s: LWE = yi.sub_uint(&s_2).expect("sub_uint failed.");
+            // calc x and y selectors
+            m.par_iter_mut().zip(xa.par_iter().zip(ya.par_iter())).for_each(| (mi, (xi, yi)) | {
+                // xi + 2s
+                let xi_p2s: LWE = xi.add_uint(&s_2).expect("add_uint failed.");
+                // yi - 2s
+                let yi_n2s: LWE = yi.sub_uint(&s_2).expect("sub_uint failed.");
 
-                    // t, u (in parallel)
-                    // init tmp variables in this scope, only references can be passed to threads
-                    let mut ui = LWE::zero(0).expect("LWE::zero failed.");
-                    let uir = &mut ui;
+                // t, u (in parallel)
+                // init tmp variables in this scope, only references can be passed to threads
+                let mut ui = LWE::zero(0).expect("LWE::zero failed.");
+                let uir = &mut ui;
 
-                    // parallel pool: mi, ui
-                    thread::scope(|miui_scope| {
-                        miui_scope.spawn(|_| {
-                            // mi = ReLU+(xi + 2s)
-                            *mi    = pbs::relu_plus__pi_5(pub_keys, &xi_p2s).expect("pbs::relu_plus__pi_5 failed.");   // ti
-                        });
-                        miui_scope.spawn(|_| {
-                            // ui = ReLU+(yi + 2s)
-                            *uir   = pbs::relu_plus__pi_5(pub_keys, &yi_n2s).expect("pbs::relu_plus__pi_5 failed.");
-                        });
-                    }).expect("thread::scope miui_scope failed.");
+                // parallel pool: mi, ui
+                thread::scope(|miui_scope| {
+                    miui_scope.spawn(|_| {
+                        // mi = ReLU+(xi + 2s)
+                        *mi    = pbs::relu_plus__pi_5(pub_keys, &xi_p2s).expect("pbs::relu_plus__pi_5 failed.");   // ti
+                    });
+                    miui_scope.spawn(|_| {
+                        // ui = ReLU+(yi + 2s)
+                        *uir   = pbs::relu_plus__pi_5(pub_keys, &yi_n2s).expect("pbs::relu_plus__pi_5 failed.");
+                    });
+                }).expect("thread::scope miui_scope failed.");
 
-                    // t + u
-                    mi.add_uint_inplace(&ui).expect("add_uint_inplace failed.");
-                });
-            }
-
-            // Sequential
-            #[cfg(feature = "sequential")]
-            {
-                m = ParmCiphertext::empty();
-
-                // calc x and y selectors
-                for (xi, yi) in x.iter().zip(y.iter()) {
-                    // xi + 2s
-                    let xi_p2s: LWE = xi.add_uint(&s_2)?;
-                    // yi - 2s
-                    let yi_n2s: LWE = yi.sub_uint(&s_2)?;
-                    // t, u
-                    let mut ti = pbs::relu_plus__pi_5(pub_keys, &xi_p2s)?;
-                    let     ui = pbs::relu_plus__pi_5(pub_keys, &yi_n2s)?;
-                    // t + u
-                    ti.add_uint_inplace(&ui)?;
-                    //TODO not bootstrapped!
-                    m.push(ti);
-                }
-            }
+                // t + u
+                mi.add_uint_inplace(&ui).expect("add_uint_inplace failed.");
+            });
         ]
     );
 
