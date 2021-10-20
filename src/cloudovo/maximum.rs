@@ -43,7 +43,7 @@ pub fn max_impl(
                 pub_keys,
                 &r,
             )?;
-            //TODO for parallel, copy this into vector (and test if this helps)
+            //WISH copy this into vector (and test if this helps: concurrent memory access might be slow)
             // bootstrap whether >= 0 (val =  2)
             let s_2: LWE = pbs::f_0__pi_5__with_val(
                 pub_keys,

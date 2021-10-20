@@ -42,6 +42,7 @@ pub fn mul_impl(
     //                \ 10
 
     if x.len() != y.len() {
+        //TODO this is important for squaring of non-power-of-2 integers
         return Err(format!("Multiplication for integers of different lengths not implemented ({}- and {}-bit supplied).", x.len(), y.len()).into())
     }
 
@@ -102,7 +103,7 @@ fn mul_karatsuba(
     measure_duration!(
         ["Multiplication Karatsuba ({}-bit)", x.len()],
         [
-            //TODO these can be calculated in parallel
+            //TODO these can be calculated in parallel (check if this helps for short numbers: isn't there too much overhead?)
             //  A = x_1 * y_1                   .. len1-bit multiplication
             let mut a = mul_impl(
                 pub_keys,
@@ -359,7 +360,6 @@ pub fn squ_impl(
             pub_keys,
             x,
         )?,
-        //TODO check for l = 3, fix odd lengths (now they do not work, even in recursion!)
         l if l < 4 => squ_schoolbook(
             pub_keys,
             x,
@@ -410,7 +410,7 @@ fn squ_dnq(
                 &x0,
             )?;
 
-            //  C = x_0 * x_1                   .. len0- x len1-bit multiplication (to be shited len0 + 1 bits where 1 bit is for 2x AB)
+            //  C = x_0 * x_1                   .. len0- x len1-bit multiplication (to be shifted len0 + 1 bits where 1 bit is for 2x AB)
             let mut c = ParmCiphertext::triv(len0 + 1)?;
             let mut c_plain = mul_impl(
                 pub_keys,
