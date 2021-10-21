@@ -7,8 +7,6 @@ use concrete::LWE;
 
 use crate::userovo::keys::PubKeySet;
 
-//TODO implement evaluation for dimension == 0 (should not be needed at the moment)
-
 //
 //  X (positive half)
 //
@@ -16,24 +14,19 @@ pub fn pos_id(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: Positive identity"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| x, pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| x, pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
 
 
-// -----------------------------------------------------------------------------
+// =============================================================================
 //
 //  PI = 5
 //
@@ -46,18 +39,13 @@ pub fn id__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: Identity (around zero, for π = 5)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,2.,3.,4.,5.,6.,7.,8.,7.,6.,5.,4.,3.,2.,1.][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,2.,3.,4.,5.,6.,7.,8.,7.,6.,5.,4.,3.,2.,1.][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -70,18 +58,13 @@ pub fn f_3__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: X ⋛ ±3 (for π = 5)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -94,18 +77,13 @@ pub fn f_4__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: X ⋛ ±4 (for π = 5)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.,0.][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.,0.][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -118,18 +96,13 @@ pub fn f_5__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: X ⋛ ±5 (for π = 5)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,0.,0.,0.,0.][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,0.,0.,0.,0.][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -143,19 +116,15 @@ pub fn g_2__pi_5__with_val(
     c: &LWE,
     val: u32,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
     let val_f = val as f64;
-    //~ measure_duration!(
-        //~ ["PBS: X ≡ ±2 (× val, for π = 5)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,val_f,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,val_f,0.,][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,val_f,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,val_f,0.,][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -169,19 +138,15 @@ pub fn f_1__pi_5__with_val(
     c: &LWE,
     val: u32,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
     let val_f = val as f64;
-    //~ measure_duration!(
-        //~ ["PBS: X ⋛ ±1 /sgn/ (× val, for π = 5)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -201,13 +166,9 @@ pub fn f_0__pi_5__with_val(
     //~ }
 
     let val_f = val as f64;
-    //~ measure_duration!(
-        //~ ["PBS: X ≥ 0 /sgn+/ (× val, for π = 5)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -220,18 +181,13 @@ pub fn a_2__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: |X| ≥ 2 (for π = 5)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,1.,1.,1.,1.,1.,1.,31.,31.,31.,31.,31.,31.,31.,0.][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,1.,1.,1.,1.,1.,1.,31.,31.,31.,31.,31.,31.,31.,0.][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -246,16 +202,13 @@ pub fn a_1__pi_5(
 ) -> Result<LWE, Box<dyn Error>> {
     // resolve trivial case
     if c.dimension == 0 {
-        return Ok(c.clone());
+        let  m = c.decrypt_uint_triv()?;
+        let fm = if m == 0 { 0 } else { 1 };
+        return Ok(LWE::encrypt_uint_triv(fm, &pub_keys.encoder)?);
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: |X| ≥ 1 (for π = 5)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,1.,1.,1.,1.,1.,1.,31.,31.,31.,31.,31.,31.,31.,31.][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,1.,1.,1.,1.,1.,1.,31.,31.,31.,31.,31.,31.,31.,31.][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -271,19 +224,14 @@ pub fn relu_plus__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    //~ measure_duration!(
-        //~ ["PBS: ReLU+ (for π = 5)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,31.,0.,1.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,31.,0.,1.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
 
 
-// -----------------------------------------------------------------------------
+// =============================================================================
 //
 //  Logical (represented with pi = 3)
 //
@@ -297,18 +245,13 @@ pub fn XOR(
     x: &LWE,
     y: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    //~ measure_duration!(
-        //~ ["PBS: XOR"],
-        //~ [
-            // t = 2x + 2y
-            let mut t = x.mul_uint_constant(2)?;
-            t.add_uint_inplace(y)?; t.add_uint_inplace(y)?;
-            // bootstrap
-            //FIXME resolve corner values: 1 1 1/-1 -1 .. shift by 1/16 .. pi = 4, change encoding
-            let res = t.bootstrap_with_function(pub_keys.bsk, |x| [1.,1.,1.,7.,][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    // t = 2x + 2y
+    let mut t = x.mul_uint_constant(2)?;
+    t.add_uint_inplace(y)?; t.add_uint_inplace(y)?;
+    // bootstrap
+    //FIXME resolve corner values: 1 1 1/-1 -1 .. shift by 1/16 .. pi = 4, change encoding
+    let res = t.bootstrap_with_function(pub_keys.bsk, |x| [1.,1.,1.,7.,][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -322,17 +265,12 @@ pub fn AND(
     x: &LWE,
     y: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    //~ measure_duration!(
-        //~ ["PBS: AND"],
-        //~ [
-            // t = x + y
-            let t = x.add_uint(y)?;
-            // bootstrap
-            //FIXME resolve corner values: -1 -1/1 1 1 .. shift by 1/16 .. pi = 4, change encoding
-            let res = t.bootstrap_with_function(pub_keys.bsk, |x| [7.,7.,1.,1.,][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    // t = x + y
+    let t = x.add_uint(y)?;
+    // bootstrap
+    //FIXME resolve corner values: -1 -1/1 1 1 .. shift by 1/16 .. pi = 4, change encoding
+    let res = t.bootstrap_with_function(pub_keys.bsk, |x| [7.,7.,1.,1.,][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -347,19 +285,14 @@ pub fn XOR_THREE(
     y: &LWE,
     z: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    //~ measure_duration!(
-        //~ ["PBS: XOR3"],
-        //~ [
-            // t = 2(x + y + z)
-            let mut t = x.mul_uint_constant(2)?;
-            t.add_uint_inplace(y)?; t.add_uint_inplace(y)?;
-            t.add_uint_inplace(z)?; t.add_uint_inplace(z)?;
-            // bootstrap
-            //FIXME resolve corner values: 1/-1 -1 -1 -1 .. shift by 1/16 .. pi = 4, change encoding
-            let res = t.bootstrap_with_function(pub_keys.bsk, |x| [7.,7.,7.,7.,][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    // t = 2(x + y + z)
+    let mut t = x.mul_uint_constant(2)?;
+    t.add_uint_inplace(y)?; t.add_uint_inplace(y)?;
+    t.add_uint_inplace(z)?; t.add_uint_inplace(z)?;
+    // bootstrap
+    //FIXME resolve corner values: 1/-1 -1 -1 -1 .. shift by 1/16 .. pi = 4, change encoding
+    let res = t.bootstrap_with_function(pub_keys.bsk, |x| [7.,7.,7.,7.,][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -374,24 +307,19 @@ pub fn TWO_OF_THREE(
     y: &LWE,
     z: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    //~ measure_duration!(
-        //~ ["PBS: 2OF3"],
-        //~ [
-            // t = x + y + z
-            let mut t = x.add_uint(y)?;
-            t.add_uint_inplace(z)?;
-            // bootstrap
-            //FIXME resolve corner values: 1/-1 -1 -1 -1 .. shift by 1/16 .. pi = 4, change encoding
-            let res = t.bootstrap_with_function(pub_keys.bsk, |x| [1.,1.,1.,1.,][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    // t = x + y + z
+    let mut t = x.add_uint(y)?;
+    t.add_uint_inplace(z)?;
+    // bootstrap
+    //FIXME resolve corner values: 1/-1 -1 -1 -1 .. shift by 1/16 .. pi = 4, change encoding
+    let res = t.bootstrap_with_function(pub_keys.bsk, |x| [1.,1.,1.,1.,][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
 
 
-// -----------------------------------------------------------------------------
+// =============================================================================
 //
 //  Special function for Scenario C
 //
@@ -404,24 +332,19 @@ pub fn c_4__pi_2x4(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: X ≥ 2*4 (for π = 4)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [15.,15.,15.,15.,15.,15.,15.,15.,][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [15.,15.,15.,15.,15.,15.,15.,15.,][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
 
 
-// -----------------------------------------------------------------------------
+// =============================================================================
 //
 //  PI = 3
 //
@@ -434,18 +357,13 @@ pub fn id__pi_3(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: Identity (around zero, for π = 3)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,2.,1.][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,2.,1.][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -458,18 +376,13 @@ pub fn f_1__pi_3(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: X ⋛ ±1 (for π = 3)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,1.,1.,][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,1.,1.,][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -482,18 +395,13 @@ pub fn f_2__pi_3(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: X ⋛ ±2 (for π = 3)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,1.,0.,][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,1.,0.,][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -506,18 +414,13 @@ pub fn g_1__pi_3(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: X ≡ ±1 (for π = 3)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,0.,1.,][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,0.,1.,][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -535,7 +438,7 @@ pub fn g_2__pi_3(
 }
 
 
-// -----------------------------------------------------------------------------
+// =============================================================================
 //
 //  PI = 4
 //
@@ -548,18 +451,13 @@ pub fn id__pi_4(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: Identity (around zero, for π = 4)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,2.,3.,4.,3.,2.,1.][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,2.,3.,4.,3.,2.,1.][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -572,18 +470,13 @@ pub fn f_2__pi_4(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: X ⋛ ±2 (for π = 4)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,1.,1.,1.,1.,1.,0.,][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,1.,1.,1.,1.,1.,0.,][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -596,18 +489,13 @@ pub fn f_3__pi_4(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: X ⋛ ±3 (for π = 4)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,1.,1.,1.,0.,0.,][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,1.,1.,1.,0.,0.,][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -620,18 +508,13 @@ pub fn g_2__pi_4(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: X ≡ ±2 (for π = 4)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,1.,0.,0.,0.,1.,0.,][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,1.,0.,0.,0.,1.,0.,][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -645,25 +528,21 @@ pub fn g_1__pi_4__with_val(
     c: &LWE,
     val: u32,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
     let val_f = val as f64;
-    //~ measure_duration!(
-        //~ ["PBS: X ≡ ±1 (× val, for π = 4)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,val_f,0.,0.,0.,0.,0.,val_f][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,val_f,0.,0.,0.,0.,0.,val_f][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
 
 
-// -----------------------------------------------------------------------------
+// =============================================================================
 //
 //  PI = 7
 //
@@ -676,18 +555,13 @@ pub fn id__pi_7(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: Identity (around zero, for π = 7)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15.,16.,17.,18.,19.,20.,21.,22.,23.,24.,25.,26.,27.,28.,29.,30.,31.,32.,31.,30.,29.,28.,27.,26.,25.,24.,23.,22.,21.,20.,19.,18.,17.,16.,15.,14.,13.,12.,11.,10.,9.,8.,7.,6.,5.,4.,3.,2.,1.][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12.,13.,14.,15.,16.,17.,18.,19.,20.,21.,22.,23.,24.,25.,26.,27.,28.,29.,30.,31.,32.,31.,30.,29.,28.,27.,26.,25.,24.,23.,22.,21.,20.,19.,18.,17.,16.,15.,14.,13.,12.,11.,10.,9.,8.,7.,6.,5.,4.,3.,2.,1.][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
@@ -700,18 +574,13 @@ pub fn f_14__pi_7(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
+    //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
     }
 
-    //~ measure_duration!(
-        //~ ["PBS: X ⋛ ±14 (for π = 7)"],
-        //~ [
-            let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,][x as usize], pub_keys.encoder)?
-                       .keyswitch(pub_keys.ksk)?;
-        //~ ]
-    //~ );
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,][x as usize], pub_keys.encoder)?
+               .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
 }
