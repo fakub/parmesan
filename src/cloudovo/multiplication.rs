@@ -50,7 +50,7 @@ pub fn mul_impl(
 
         let len_diff = ((y_in.len() as i32) - (x_in.len() as i32)).abs();
 
-        for i in 0..len_diff {
+        for _i in 0..len_diff {
             if x_in.len() < y_in.len() {
                 x_in.push(LWE::zero(0)?);
             } else {
@@ -311,6 +311,21 @@ fn mul_lwe(
 ) -> Result<LWE, Box<dyn Error>> {
 
     let mut z: LWE;
+
+    // resolve trivial cases
+    //TODO check correctness
+    let pi = x.encoder.nb_bit_precision;
+    if x.dimension == 0 {
+        let mut mx: i32 = x.decrypt_uint_triv()? as i32;
+        // convert to signed domain
+        if mx > 1 << (pi - 1) {mx -= 1 << pi}
+        return Ok(y.mul_uint_constant(mx)?);
+    } else if y.dimension == 0 {
+        let mut my: i32 = y.decrypt_uint_triv()? as i32;
+        // convert to signed domain
+        if my > 1 << (pi - 1) {my -= 1 << pi}
+        return Ok(x.mul_uint_constant(my)?);
+    }
 
     //~ measure_duration!(
         //~ "Multiplication LWE × LWE",
