@@ -17,6 +17,9 @@ use colored::Colorize;
 extern crate chrono;
 use chrono::Utc;
 
+#[allow(unused_imports)]
+use concrete::LWE;
+
 #[cfg(test)]
 mod tests;
 
@@ -256,6 +259,15 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
         //~ );
     //~ }                                                  .
 
+    //~ // testing PBS
+    //~ for m_triv in 0 .. ((1 << 5) + 1) {
+        //~ let c_triv = LWE::encrypt_uint_triv(m_triv, pc.pub_keys.encoder)?;
+        //~ let c_triv_sq1 = pbs::a_2__pi_5(pc.pub_keys, &c_triv)?;
+        //~ let m_triv_sq1 = c_triv_sq1.decrypt_uint_triv()?;
+        //~ println!("|X| ≥ 2\n\t  X = {}\n\tres = {}", m_triv, m_triv_sq1);
+    //~ }
+    //~ return Ok(());
+
     let c_add  = ParmArithmetics::add(&pc, &c[0], &c[1]);
     let c_sub  = ParmArithmetics::sub(&pc, &c[1], &c[0]);
     let c_adc  = ParmArithmetics::add_const(&pc,  &c[0], DEMO_ADC);
@@ -272,6 +284,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let c_xx4  = ParmArithmetics::squ(&pc, &cx4 );
     let c_xx8  = ParmArithmetics::squ(&pc, &cx8 );
     let c_xx16 = ParmArithmetics::squ(&pc, &cx16);
+    let c_xx17 = ParmArithmetics::squ(&pc, &cx17);
     let c_xx32 = ParmArithmetics::squ(&pc, &cx32);
 
     let c_n121x16 = ParmArithmetics::scalar_mul(&pc, -121, &cx16);
@@ -298,6 +311,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let m_xx4  = pu.decrypt(&c_xx4 )?;
     let m_xx8  = pu.decrypt(&c_xx8 )?;
     let m_xx16 = pu.decrypt(&c_xx16)?;
+    let m_xx17 = pu.decrypt(&c_xx17)?;
     let m_xx32 = pu.decrypt(&c_xx32)?;
 
     let m_n121x16 = pu.decrypt(&c_n121x16)?;
@@ -376,6 +390,11 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
                             m_xx16,
                             if m_xx16 == m_x16 * m_x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             m_x16 * m_x16
+    );
+    summary_text = format!("{}\nx_17 ^ 2      = {:12} :: {} (exp. {})", summary_text,
+                            m_xx17,
+                            if m_xx17 == m_x17 * m_x17 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            m_x17 * m_x17
     );
     summary_text = format!("{}\nx_32 ^ 2      = {:24} :: {} (exp. {})", summary_text,
                             m_xx32,

@@ -181,9 +181,11 @@ pub fn a_2__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    //TODO resolve trivial case
+    // resolve trivial case
     if c.dimension == 0 {
-        return Ok(c.clone());
+        let  m = c.decrypt_uint_triv()?;
+        let fm = if m >= 2 && m <= (1 << 5) - 2  { 1 } else { 0 };
+        return Ok(LWE::encrypt_uint_triv(fm, &pub_keys.encoder)?);
     }
 
     let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,1.,1.,1.,1.,1.,1.,31.,31.,31.,31.,31.,31.,31.,0.][x as usize], pub_keys.encoder)?
@@ -203,7 +205,7 @@ pub fn a_1__pi_5(
     // resolve trivial case
     if c.dimension == 0 {
         let  m = c.decrypt_uint_triv()?;
-        let fm = if m == 0 { 0 } else { 1 };
+        let fm = if m >= 1 && m <= (1 << 5) - 1  { 1 } else { 0 };
         return Ok(LWE::encrypt_uint_triv(fm, &pub_keys.encoder)?);
     }
 

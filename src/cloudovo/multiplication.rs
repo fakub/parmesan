@@ -41,28 +41,41 @@ pub fn mul_impl(
     //          17  ---  9
     //                \ 10
 
-    if x.len() != y.len() {
-        //TODO this is important for squaring of non-power-of-2 integers
-        return Err(format!("Multiplication for integers of different lengths not implemented ({}- and {}-bit supplied).", x.len(), y.len()).into())
+    let mut x_in = x.clone();
+    let mut y_in = y.clone();
+
+    // align lengths of x & y
+    if x_in.len() != y_in.len() {
+        //TODO check if this is efficient
+
+        let len_diff = ((y_in.len() as i32) - (x_in.len() as i32)).abs();
+
+        for i in 0..len_diff {
+            if x_in.len() < y_in.len() {
+                x_in.push(LWE::zero(0)?);
+            } else {
+                y_in.push(LWE::zero(0)?);
+            }
+        }
     }
 
-    let p = match x.len() {
+    let p = match x_in.len() {
         l if l == 1 => mul_1word(
             pub_keys,
-            x,
-            y,
+            &x_in,
+            &y_in,
         )?,
         l if l < 14 || l == 15 => mul_schoolbook(
             pub_keys,
-            x,
-            y,
+            &x_in,
+            &y_in,
         )?,
         l if l <= 32 => mul_karatsuba(
             pub_keys,
-            x,
-            y,
+            &x_in,
+            &y_in,
         )?,
-        _ => return Err(format!("Multiplication for {}-word integers not implemented.", x.len()).into()),
+        _ => return Err(format!("Multiplication for {}-word integers not implemented.", x_in.len()).into()),
     };
 
     Ok(p)
