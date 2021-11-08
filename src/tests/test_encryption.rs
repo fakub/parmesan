@@ -11,8 +11,8 @@ use crate::userovo::encryption;
 #[test]
 /// Decryption of trivial sample (no encryption of zero).
 fn t_decrypt_triv() {
-    // trivial ciphertext of length TESTS_PLAIN_BITLEN_FULL
-    let c = ParmCiphertext::triv(TESTS_PLAIN_BITLEN_FULL).expect("ParmCiphertext::triv failed.");
+    // trivial ciphertext of length TESTS_BITLEN_FULL
+    let c = ParmCiphertext::triv(TESTS_BITLEN_FULL).expect("ParmCiphertext::triv failed.");
     // decryption
     let m = encryption::parm_decrypt(
         tests::PARAMS,
@@ -30,14 +30,14 @@ fn t_encrypt_decrypt_int() {
 
     for _ in 0..TESTS_REPEAT_ENCR {
         // generate random integer
-        let mi: i64 = rng.gen_range(-((1i64 << TESTS_PLAIN_BITLEN_FULL) - 1)..(1i64 << TESTS_PLAIN_BITLEN_FULL));
+        let mi: i64 = rng.gen_range(-((1i64 << TESTS_BITLEN_FULL) - 1)..(1i64 << TESTS_BITLEN_FULL));
 
         // encrypt & decrypt
         let c = encryption::parm_encrypt(
             tests::PARAMS,
             &tests::PRIV_KEYS,
             mi,
-            TESTS_PLAIN_BITLEN_FULL,
+            TESTS_BITLEN_FULL,
         ).expect("parm_encrypt_vec failed.");
         let mp = encryption::parm_decrypt(
             tests::PARAMS,
@@ -54,7 +54,7 @@ fn t_encrypt_decrypt_int() {
 fn t_encrypt_decrypt_vec() {
     for _ in 0..TESTS_REPEAT_ENCR {
         // generate random vector
-        let m_vec = gen_rand_vec(TESTS_PLAIN_BITLEN_FULL);
+        let m_vec = gen_rand_vec(TESTS_BITLEN_FULL);
 
         // encrypt & decrypt
         let c = encryption::parm_encrypt_vec(
@@ -101,7 +101,7 @@ fn t_decrypt_some_triv() {
 fn t_impl_decr_with_mode(mode: EncrVsTriv) {
     for _ in 0..TESTS_REPEAT_ENCR {
         // generate random vector(s)
-        let m1_vec = gen_rand_vec(TESTS_PLAIN_BITLEN_FULL);
+        let m1_vec = gen_rand_vec(TESTS_BITLEN_FULL);
         // convert to integer(s)
         let m1 = encryption::convert(&m1_vec).expect("convert failed.");
 

@@ -38,7 +38,7 @@ fn t_sgn_non_triv() {
 fn t_impl_sgn_with_mode(mode: EncrVsTriv) {
     for _ in 0..TESTS_REPEAT_SGN {
         // generate random vector(s)
-        let m1_vec = gen_rand_vec(TESTS_PLAIN_BITLEN_MED);
+        let m1_vec = gen_rand_vec(TESTS_BITLEN_SGN);
         // convert to integer(s)
         let m1 = encryption::convert(&m1_vec).expect("convert failed.");
 

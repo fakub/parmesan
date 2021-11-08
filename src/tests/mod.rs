@@ -34,26 +34,35 @@ lazy_static! {
 //
 //  Modules
 //
-pub mod test_addition;
-pub mod test_addition_cc;
 pub mod test_encryption;
+pub mod test_signum;
 pub mod test_maximum;
 pub mod test_multiplication;
+pub mod test_squaring;
+//TODO
+pub mod test_addition;
+pub mod test_addition_cc;
 pub mod test_nn;
 pub mod test_scalar_multiplication;
-pub mod test_signum;
 
 
 // =============================================================================
 //
 //  Constants, Enums, ...
 //
-static TESTS_PLAIN_BITLEN_FULL: usize = 62;
-static TESTS_PLAIN_BITLEN_MED:  usize = 7;
+static TESTS_BITLEN_FULL:       usize     = 62;
+static TESTS_BITLEN_MAX:        usize     =  7;
+static TESTS_BITLEN_SGN:        usize     =  7;
+static TESTS_BITLEN_MUL:        usize     =  5;
+static TESTS_EXTRA_BITLEN_MUL: [usize; 2] = [8,9];
+static TESTS_BITLEN_SQU:        usize     = 7;
+static TESTS_EXTRA_BITLEN_SQU: [usize; 2] = [8,9];
 
 static TESTS_REPEAT_ENCR: usize = 100;
 static TESTS_REPEAT_MAX:  usize = 3;
 static TESTS_REPEAT_SGN:  usize = 3;
+//~ static TESTS_REPEAT_MUL:  usize = 1;
+//~ static TESTS_REPEAT_SQU:  usize = 1;
 
 #[derive(Clone,Copy)]
 pub enum EncrVsTriv {
@@ -75,7 +84,7 @@ pub enum EncrVsTriv {
 pub fn gen_rand_vec(len: usize) -> Vec<i32> {
     let mut rng = rand::thread_rng();
     let mut res: Vec<i32>  = Vec::new();
-    for _ in 0..len {res.push(rng.gen_range(-1..2));}
+    for _ in 0..len {res.push(rng.gen_range(-1..=1));}
     res
 }
 

@@ -3,31 +3,31 @@ use crate::userovo::encryption;
 use crate::arithmetics::ParmArithmetics;
 
 #[test]
-/// Maximum of encrypted sub-samples only.
-fn t_max_non_triv() {
+/// Squaring of encrypted sub-samples only.
+fn t_squ_non_triv_aligned() {
     //DBG
     println!("Non-Triv ...");
 
-    t_impl_max_with_mode(EncrVsTriv::ENCR);
+    t_impl_squ_with_mode(EncrVsTriv::ENCR);
 }
 
 //WISH
 //~ #[test]
-//~ /// Maximum of trivial sub-samples only.
-//~ fn t_max_all_triv() {
+//~ /// Squaring of trivial sub-samples only.
+//~ fn t_squ_all_triv() {
     //~ //DBG
     //~ println!("All-Triv ...");
 
-    //~ t_impl_max_with_mode(EncrVsTriv::TRIV);
+    //~ t_impl_squ_with_mode(EncrVsTriv::TRIV);
 //~ }
 
 //~ #[test]
-//~ /// Maximum of mixed sub-samples.
-//~ fn t_max_some_triv() {
+//~ /// Squaring of mixed sub-samples.
+//~ fn t_squ_some_triv() {
     //~ //DBG
     //~ println!("Mixed ...");
 
-    //~ t_impl_max_with_mode(EncrVsTriv::ENCRTRIV);
+    //~ t_impl_squ_with_mode(EncrVsTriv::ENCRTRIV);
 //~ }
 
 
@@ -35,31 +35,30 @@ fn t_max_non_triv() {
 //  Test Implementations
 
 /// Implementation for three variants of vector to be evaluated.
-fn t_impl_max_with_mode(mode: EncrVsTriv) {
-    for _ in 0..TESTS_REPEAT_MAX {
+fn t_impl_squ_with_mode(mode: EncrVsTriv) {
+    // set up bit-lengths
+    let mut range: Vec<_> = (0..=TESTS_BITLEN_SQU).collect();
+    range.extend(TESTS_EXTRA_BITLEN_SQU);
+
+    for bl in range {
         // generate random vector(s)
-        let m1_vec = gen_rand_vec(TESTS_BITLEN_MAX);
-        let m2_vec = gen_rand_vec(TESTS_BITLEN_MAX);
+        let m1_vec = gen_rand_vec(bl);
         // convert to integer(s)
         let m1 = encryption::convert(&m1_vec).expect("convert failed.");
-        let m2 = encryption::convert(&m2_vec).expect("convert failed.");
 
         //DBG
-        println!("  m1 = {}, m2 = {}", m1, m2);
+        println!("  m1 = {} ({}-bit)", m1, bl);
 
         // encrypt -> homomorphic eval -> decrypt
         let c1 = encrypt_with_mode(&m1_vec, mode);
-        let c2 = encrypt_with_mode(&m2_vec, mode);
-
-        let c_he = ParmArithmetics::max(&tests::PC, &c1, &c2);
-
+        let c_he = ParmArithmetics::squ(&tests::PC, &c1);
         let m_he = PU.decrypt(&c_he).expect("ParmesanUserovo::decrypt failed.");
 
         // plain eval
-        let m_pl = ParmArithmetics::max(&tests::PC, &m1, &m2);
+        let m_pl = ParmArithmetics::squ(&tests::PC, &m1);
 
         //DBG
-        println!("  max = {} (exp. {})", m_he, m_pl);
+        println!("  squ = {} (exp. {})", m_he, m_pl);
 
         // compare results
         assert_eq!(m_he, m_pl);
