@@ -1,8 +1,13 @@
-use super::*;
-#[cfg(test)]
-use rand::Rng;
+use std::error::Error;
 use std::fs::OpenOptions;
 use std::io::Write;
+
+use rand::Rng;
+
+use crate::params;
+use crate::ParmesanUserovo;
+use crate::ParmesanCloudovo;
+use crate::arithmetics::ParmArithmetics;
 
 // this function takes as input a message m and returns its size in bits
 fn message_size(m: i64) -> usize {
@@ -25,7 +30,7 @@ fn test_mul_m(m1: i64, m2: i64, filename: &str) -> Result<(), Box<dyn Error>> {
 
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+    let par = &params::PARM90__PI_5__D_20__F; //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
 
     // ---------------------------------
     //  Userovo Scope
@@ -101,14 +106,14 @@ fn test_mul_m(m1: i64, m2: i64, filename: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-//test squaring 
+//test squaring
 fn test_squaring (m1: i64 , filename: &str) -> Result<(), Box<dyn Error>> {
     // =================================
     //  Initialization
 
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+    let par = &params::PARM90__PI_5__D_20__F; //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
 
     // ---------------------------------
     //  Userovo Scope
@@ -172,39 +177,39 @@ fn test_squaring (m1: i64 , filename: &str) -> Result<(), Box<dyn Error>> {
     assert_eq!((m1 * m1) as i64, res);
     Ok(())
 }
-#[test] 
+#[test]
 fn test_squ() {
-    let filename= "squaring_rd" ; 
+    let filename= "squaring_rd" ;
     let mut rng = rand::thread_rng() ;
     let base: i64 = 2;
     let max_bitlen = 5;
-    let max_range = base.pow(max_bitlen);  
+    let max_range = base.pow(max_bitlen);
     /*for _i in 0..10 {
-        let rand_neg = rng.gen_range(-max_range..0) ;  
-        test_squaring(rand_neg,filename).unwrap() ; 
+        let rand_neg = rng.gen_range(-max_range..0) ;
+        test_squaring(rand_neg,filename).unwrap() ;
     }*/
     for _i in 0..10 {
-        let rand_neg = rng.gen_range(0..max_range) ;  
-        test_squaring(rand_neg,filename).unwrap() ; 
+        let rand_neg = rng.gen_range(0..max_range) ;
+        test_squaring(rand_neg,filename).unwrap() ;
     }
-    test_squaring(1,filename).unwrap() ;  
-    test_squaring(0,filename).unwrap() ; 
-    test_squaring(-1,filename).unwrap() ;  
-    test_squaring(2,filename).unwrap() ;  
+    test_squaring(1,filename).unwrap() ;
+    test_squaring(0,filename).unwrap() ;
+    test_squaring(-1,filename).unwrap() ;
+    test_squaring(2,filename).unwrap() ;
     test_squaring(-2,filename).unwrap() ;
 }
-#[test] 
+#[test]
 fn test_hc_squ() {
-    let filename= "squaring_rd" ; 
-    test_squaring(0,filename).unwrap() ; 
+    let filename= "squaring_rd" ;
+    test_squaring(0,filename).unwrap() ;
     test_squaring(16,filename).unwrap() ;
-    test_squaring(27,filename).unwrap() ;        
+    test_squaring(27,filename).unwrap() ;
     test_squaring(1,filename).unwrap() ;
     test_squaring(500,filename).unwrap() ;
-    test_squaring(814,filename).unwrap() ; 
-    test_squaring(814,filename).unwrap() ;   
+    test_squaring(814,filename).unwrap() ;
+    test_squaring(814,filename).unwrap() ;
 }
-  
+
 #[test]
 // in this test we generate random values and multiply them (enc(m1)*enc(m2)) and call test_mul_m to test them
 

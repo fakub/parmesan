@@ -1,159 +1,164 @@
-use super::*;
-#[cfg(test)]
+use std::error::Error;
+
 use rand::Rng;
-use std::fs::OpenOptions;
-use std::io::Write;
+use concrete::LWE;
 
-// this function takes as input a message m and returns its size in bits
+use crate::tests::{self,*};
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+use crate::userovo::{encryption,keys::PrivKeySet};
 
-fn message_size(m: i64) -> usize {
-    if m >= 0 {
-        let m_bin = format!("{:b}", m);
-        return m_bin.to_string().len();
-    } else {
-        let m_abs = m.abs();
-        let m_abs_bin = format!("{:b}", m_abs);
-        return m_abs_bin.to_string().len() + 1;
-    }
-}
 
-// In this function we encrypt an integer m than decrypt it and compare the result with the input value m
-// we save the result of tests into specific files related to each test
+// -----------------------------------------------------------------------------
+//  Test Cases
 
-fn test_encrypt_decrypt_m(m: i64, filename: &str) -> Result<(), Box<dyn Error>> {
-    // =================================
-    //  Initialization
+#[test]
+/// Decryption of trivial sample (no encryption of zero).
+fn decrypt_triv() {
+    // trivial ciphertext of length PLAIN_BITLEN_TESTS
+    let c = ParmCiphertext::triv(PLAIN_BITLEN_TESTS).expect("ParmCiphertext::triv failed.");
+    // decryption
+    let m = encryption::parm_decrypt(
+        tests::PARAMS,
+        &tests::PRIV_KEYS,
+        &c,
+    ).expect("parm_decrypt failed.");
 
-    // ---------------------------------
-    //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
-
-    // ---------------------------------
-    //  Userovo Scope
-    let pu = ParmesanUserovo::new(par)?;
-
-    // we encrypt m with a number of encrypted bits = message_size than decrypt to compare the result to the input value
-
-    let nb_enc_bits = message_size(m);
-    let enc_m = pu.encrypt(m, nb_enc_bits)?;
-    let res: i64 = pu.decrypt(&enc_m)?;
-    let res_len = message_size(res);
-    if m == res {
-        println!(
-            "test status: valid, sample : {} , decrypted result : {} , number of encrypted bits (input size) : {}, length of decrypted result : {} ",
-            m, res, nb_enc_bits, res_len
-        );
-
-        // if the test succeeds , we write the test result into a file "filename_samples.txt"
-
-        let line = "test: encryption, status : valid, sample : ".to_owned()
-            + &m.to_string()
-            + ", decrypted result : "
-            + &res.to_string()
-            + ", number of encrypted bits(input size) : "
-            + &nb_enc_bits.to_string()
-            + ", length of decrypted result :"
-            + &res_len.to_string()
-            + "\n";
-        let mut enc_message = OpenOptions::new()
-            .read(true)
-            .append(true)
-            .create(true)
-            .open("src/tests/test_history/".to_owned() + filename + "_samples.txt")
-            .unwrap();
-        enc_message.write_all(line.as_bytes())?;
-    } else {
-        println!(
-                "test status: failure , sample : {} , decrypted result : {} , number of encrypted bits (input size) {}, decrypted result: length{} ",
-                m, res, nb_enc_bits, res_len
-            );
-
-        // if the test fails, we write the test result into a file "filename_failures.txt"
-
-        let line = "test: encryption, status : failur, sample : ".to_owned()
-            + &m.to_string()
-            + ", decrypted result : "
-            + &res.to_string()
-            + ", number of encrypted bits(input size) : "
-            + &nb_enc_bits.to_string()
-            + ", length of decrypted result :"
-            + &res_len.to_string()
-            + "\n";
-        let mut enc_message = OpenOptions::new()
-            .read(true)
-            .append(true)
-            .create(true)
-            .open("src/tests/test_history/".to_owned() + filename + "_failures.txt")
-            .unwrap();
-        enc_message.write_all(line.as_bytes())?;
-    }
-    assert_eq!(res, m);
-    Ok(())
+    assert_eq!(m, 0);
 }
 
 #[test]
-// In this test we encrypt and decrypt specific values we give as input
-
-fn encrypt_decrypt_m() {
-    let filename = "enc_message";
-    test_encrypt_decrypt_m(-1008599095, filename).unwrap();
-}
-
-#[test]
-// in this test we generate random positive values and call test_encrypt_decrypt_m to test them
-fn encrypt_decrypt_positive() {
-    let filename = "enc_positive";
+/// Encryption & decryption of random integers.
+fn encrypt_decrypt_int() {
     let mut rng = rand::thread_rng();
-    let mut m1: i64;
-    for _i in 0..10 {
-        m1 = rng.gen_range(0..i64::max_value());
-        test_encrypt_decrypt_m(m1, filename).unwrap();
+
+    for _ in 0..REPEAT_ENCR_TESTS {
+        // generate random integer
+        let mi: i64 = rng.gen_range(-((1i64 << PLAIN_BITLEN_TESTS) - 1)..(1i64 << PLAIN_BITLEN_TESTS));
+
+        // encrypt & decrypt
+        let c = encryption::parm_encrypt(
+            tests::PARAMS,
+            &tests::PRIV_KEYS,
+            mi,
+            PLAIN_BITLEN_TESTS,
+        ).expect("parm_encrypt_vec failed.");
+        let mp = encryption::parm_decrypt(
+            tests::PARAMS,
+            &tests::PRIV_KEYS,
+            &c,
+        ).expect("parm_decrypt failed.");
+
+        assert_eq!(mp, mi);
     }
 }
 
 #[test]
-// in this test we generate random negative values and call test_encrypt_decrypt_m to test them
-fn encrypt_decrypt_negative() {
-    let filename = "enc_negative";
+/// Encryption & decryption of random vectors of {-1,0,1}.
+fn encrypt_decrypt_vec() {
     let mut rng = rand::thread_rng();
-    let mut m1: i64;
-    for _i in 0..10 {
-        m1 = rng.gen_range(i64::min_value()..0);
-        test_encrypt_decrypt_m(m1, filename).unwrap();
+
+    for _ in 0..REPEAT_ENCR_TESTS {
+        // generate random vector
+        let mut m_vec: Vec<i32>  = Vec::new();
+        for _ in 0..PLAIN_BITLEN_TESTS {
+            m_vec.push(rng.gen_range(-1..2));
+        }
+
+        // encrypt & decrypt
+        let c = encryption::parm_encrypt_vec(
+            tests::PARAMS,
+            &tests::PRIV_KEYS,
+            &m_vec,
+        ).expect("parm_encrypt_vec failed.");
+        let mp = encryption::parm_decrypt(
+            tests::PARAMS,
+            &tests::PRIV_KEYS,
+            &c,
+        ).expect("parm_decrypt failed.");
+
+        // decode for reference
+        let md = encryption::convert(&m_vec).expect("convert failed.");
+
+        assert_eq!(mp, md);
     }
 }
 
 #[test]
-// in this test we generate random ( positive or negative ) values and call test_encrypt_decrypt_m to test them
-fn encrypt_decrypt_rd() {
-    let filename = "enc_rand";
+/// Decryption of vectors of encrypted {-1,0,1}.
+fn decrypt_non_triv() {
+    test_decrypt_with_mode(EncrTrivWords::ENCR);
+}
+
+#[test]
+/// Decryption of vectors of "encrypted" {-1,0,1} -- trivial samples only.
+fn decrypt_all_triv() {
+    test_decrypt_with_mode(EncrTrivWords::TRIV);
+}
+
+#[test]
+/// Decryption of vectors of encrypted {-1,0,1} with trivial samples at random positions.
+fn decrypt_some_triv() {
+    test_decrypt_with_mode(EncrTrivWords::ENCRTRIV);
+}
+
+
+// -----------------------------------------------------------------------------
+//  Auxilliary Functions
+
+/// Implementation for three variants of vector to be decrypted.
+fn test_decrypt_with_mode(mode: EncrTrivWords) {
     let mut rng = rand::thread_rng();
-    let mut m1: i64;
-    for _i in 0..10 {
-        m1 = rng.gen::<i64>();
-        test_encrypt_decrypt_m(m1, filename).unwrap();
+
+    for _ in 0..REPEAT_ENCR_TESTS {
+        // generate random vectors: values and encryption flags (DO or DO NOT encrypt)
+        let mut m_vec: Vec<i32>  = Vec::new();
+        let mut m_flg: Vec<bool> = Vec::new();
+        for _ in 0..PLAIN_BITLEN_TESTS {
+            m_vec.push(rng.gen_range(-1..2));
+            match mode {
+                EncrTrivWords::ENCR => m_flg.push(true),
+                EncrTrivWords::TRIV => m_flg.push(false),
+                EncrTrivWords::ENCRTRIV => m_flg.push(rand::random()),
+            }
+        }
+
+        // encrypt & decrypt
+        let c = encrypt_custom(
+            tests::PARAMS,
+            &tests::PRIV_KEYS,
+            &m_vec,
+            &m_flg,
+        ).expect("encrypt_custom failed.");
+        let mp = encryption::parm_decrypt(
+            tests::PARAMS,
+            &tests::PRIV_KEYS,
+            &c,
+        ).expect("parm_decrypt failed.");
+
+        // decode for reference
+        let md = encryption::convert(&m_vec).expect("convert failed.");
+
+        assert_eq!(mp, md);
     }
 }
-#[test]
-// This test is specifically related to a failure we found in scalar multiplication
-// we try to decrypt a trivial ciphertext generated by ParmCiphertext
-fn decrypt_triv() -> Result<(), Box<dyn Error>> {
-    // =================================
-    //  Initialization
 
-    // ---------------------------------
-    //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+/// Encrypt input vector `m_vec` at positions given by `m_flags` vector (other samples trivial).
+pub fn encrypt_custom(
+    par: &Params,
+    priv_keys: &PrivKeySet,
+    m_vec: &Vec<i32>,
+    m_flags: &Vec<bool>,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
+    let mut res = ParmCiphertext::triv(m_vec.len())?;
 
-    // ---------------------------------
-    //  Userovo Scope
-    let pu = ParmesanUserovo::new(par)?;
+    res.iter_mut().zip(m_vec.iter().zip(m_flags.iter())).for_each(| (ri, (mi, fi)) | {
+        let mi_pos = (mi & par.plaintext_mask()) as u32;
+        *ri = if *fi {
+            LWE::encrypt_uint(&priv_keys.sk, mi_pos, &priv_keys.encoder).expect("LWE::encrypt_uint failed.")
+        } else {
+            LWE::encrypt_uint_triv(mi_pos, &priv_keys.encoder).expect("LWE::encrypt_uint_triv failed.")
+        };
+    });
 
-    // generate a ciphertext trivial 1
-    let enc_r1 = ParmCiphertext::triv(1)?;
-
-    // decrypt the generated ciphertext
-    let dec_r1: i64 = pu.decrypt(&enc_r1)?;
-    assert_eq!(dec_r1, 0);
-    Ok(())
+    Ok(res)
 }

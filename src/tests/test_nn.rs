@@ -1,6 +1,12 @@
-use super::*;
-#[cfg(test)]
+use std::error::Error;
+
 use rand::Rng;
+
+use crate::cloudovo::neural_network::*;
+use crate::params;
+use crate::ParmesanUserovo;
+use crate::ParmesanCloudovo;
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 
 // this function takes as input a message m and returns its size in bits
 fn message_size(m: i64) -> usize {
@@ -61,7 +67,7 @@ fn gen_w(wlen: i32) -> Vec<i32> {
     return w;
 }
 
-fn gen_b() -> i32 {
+fn gen_b() -> i64 {
     let mut rng = rand::thread_rng();
     let b = rng.gen_range(-3..3);
     println!("b : {} \n", b);
@@ -105,20 +111,12 @@ fn gen_m_in() -> Vec<i64> {
 
 #[test]
 fn nn_eval() -> Result<(), Box<dyn Error>> {
-    #[cfg(not(feature = "sequential"))]
-    infobox!(
-        "Parallel Neural Network DEMO ({} threads)",
-        rayon::current_num_threads()
-    );
-    #[cfg(feature = "sequential")]
-    infobox!("Sequential Neural Network DEMO");
-
     // =================================
     //  Initialization
 
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+    let par = &params::PARM90__PI_5__D_20__F; //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
 
     // ---------------------------------
     //  Userovo Scope
@@ -132,7 +130,6 @@ fn nn_eval() -> Result<(), Box<dyn Error>> {
     // =================================
     // NN input layer
     let m_in = gen_m_in();
-    let input_size: usize = m_in.len();
     // encrypt all values
     let mut c_in: Vec<ParmCiphertext> = vec![];
     for _i in 0..m_in.len() {
@@ -141,24 +138,6 @@ fn nn_eval() -> Result<(), Box<dyn Error>> {
     for (ci, mi) in c_in.iter_mut().zip(m_in.iter()) {
         *ci = pu.encrypt(*mi, message_size(*mi))?;
     }
-
-    // print input layer
-    let mut intro_text = format!(
-        "{}: input layer ({} elements)",
-        String::from("User").bold().yellow(),
-        input_size
-    );
-    for (i, mi) in m_in.iter().enumerate() {
-        intro_text = format!(
-            "{}\nIN[{}] = {}{:08b} ({:4})",
-            intro_text,
-            i,
-            if *mi >= 0 { " " } else { "-" },
-            (*mi).abs(),
-            mi
-        );
-    }
-    infoln!("{}", intro_text);
 
     // =================================
     //  C: Evaluation
@@ -182,20 +161,12 @@ fn nn_eval() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn nn_demo() -> Result<(), Box<dyn Error>> {
-    #[cfg(not(feature = "sequential"))]
-    infobox!(
-        "Parallel Neural Network DEMO ({} threads)",
-        rayon::current_num_threads()
-    );
-    #[cfg(feature = "sequential")]
-    infobox!("Sequential Neural Network DEMO");
-
     // =================================
     //  Initialization
 
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+    let par = &params::PARM90__PI_5__D_20__F; //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
 
     // ---------------------------------
     //  Userovo Scope
@@ -203,7 +174,6 @@ fn nn_demo() -> Result<(), Box<dyn Error>> {
     let pub_k = pu.export_pub_keys();
 
     const INPUT_BITLEN: usize = 8;
-    const INPUT_SIZE: usize = 6;
 
     // ---------------------------------
     //  Cloudovo Scope
@@ -234,24 +204,6 @@ fn nn_demo() -> Result<(), Box<dyn Error>> {
     for (ci, mi) in c_in.iter_mut().zip(m_in.iter()) {
         *ci = pu.encrypt(*mi, INPUT_BITLEN)?;
     }
-
-    // print input layer
-    let mut intro_text = format!(
-        "{}: input layer ({} elements)",
-        String::from("User").bold().yellow(),
-        INPUT_SIZE
-    );
-    for (i, mi) in m_in.iter().enumerate() {
-        intro_text = format!(
-            "{}\nIN[{}] = {}{:08b} ({:4})",
-            intro_text,
-            i,
-            if *mi >= 0 { " " } else { "-" },
-            (*mi).abs(),
-            mi
-        );
-    }
-    infoln!("{}", intro_text);
 
     // =================================
     //  C: Evaluation

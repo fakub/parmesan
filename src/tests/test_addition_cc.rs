@@ -1,9 +1,15 @@
-use super::*;
-use concrete::LWE;
-#[cfg(test)]
-use rand::Rng;
+use std::error::Error;
 use std::fs::OpenOptions;
 use std::io::Write;
+
+use rand::Rng;
+use concrete::LWE;
+
+use crate::params;
+use crate::ParmesanUserovo;
+use crate::ParmesanCloudovo;
+use crate::arithmetics::ParmArithmetics;
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 
 fn message_size(m: i64) -> usize {
     if m >= 0 {
@@ -31,7 +37,7 @@ fn test_encrypt_decrypt_cc(m: i64) -> Result<(), Box<dyn Error>> {
 
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+    let par = &params::PARM90__PI_5__D_20__F; //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
 
     // ---------------------------------
     //  Userovo Scope
@@ -166,7 +172,7 @@ fn add_trivial01 (
     // Initialization
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+    let par = &params::PARM90__PI_5__D_20__F; //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
                                                    // ---------------------------------
                                                    //  Userovo Scope
     let pu = ParmesanUserovo::new(par)?;
@@ -174,14 +180,14 @@ fn add_trivial01 (
     // ---------------------------------
     //  Cloudovo Scope
     let pc = ParmesanCloudovo::new(par, &pub_k);
-    let mut trivial_1 = ParmCiphertext::empty() ; 
-    let pub_k = pu.export_pub_keys() ; 
-    trivial_1.push(LWE::encrypt_uint_triv(1,&pub_k.encoder)?) ; 
-    let mut trivial_0 = ParmCiphertext::empty() ; 
+    let mut trivial_1 = ParmCiphertext::empty() ;
+    let pub_k = pu.export_pub_keys() ;
+    trivial_1.push(LWE::encrypt_uint_triv(1,&pub_k.encoder)?) ;
+    let mut trivial_0 = ParmCiphertext::empty() ;
     trivial_0.push(LWE::encrypt_uint_triv(0,&pub_k.encoder)?) ;
-    let enc_add_res = ParmArithmetics::add(&pc,&trivial_1,&trivial_0) ; 
-    let dec_add_res = pu.decrypt(&enc_add_res)? ;  
-    assert_eq!(1, dec_add_res) ; 
+    let enc_add_res = ParmArithmetics::add(&pc,&trivial_1,&trivial_0) ;
+    let dec_add_res = pu.decrypt(&enc_add_res)? ;
+    assert_eq!(1, dec_add_res) ;
     Ok(())
 }
 
@@ -191,7 +197,7 @@ fn add_0_to_enc (
     // Initialization
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+    let par = &params::PARM90__PI_5__D_20__F; //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
                                                    // ---------------------------------
                                                    //  Userovo Scope
     let pu = ParmesanUserovo::new(par)?;
@@ -199,24 +205,24 @@ fn add_0_to_enc (
     // ---------------------------------
     //  Cloudovo Scope
     let pc = ParmesanCloudovo::new(par, &pub_k);
-    let pub_k = pu.export_pub_keys() ; 
+    let pub_k = pu.export_pub_keys() ;
     for i in 2..10 {
-    let nb_enc_bits = message_size(i) ;  
-    let ct_1 = pu.encrypt(i,nb_enc_bits+1)? ; 
-    let mut trivial_0 = ParmCiphertext::empty() ; 
+    let nb_enc_bits = message_size(i) ;
+    let ct_1 = pu.encrypt(i,nb_enc_bits+1)? ;
+    let mut trivial_0 = ParmCiphertext::empty() ;
     trivial_0.push(LWE::encrypt_uint_triv(0,&pub_k.encoder)?) ;
     let enc_add_res = ParmArithmetics::add(&pc,&ct_1,&trivial_0) ;
-    println!("test: addition_cc, status : - , m1 : {} , m1_len: {} , m2: {}, m2_len: {} , add_res : - ", i, nb_enc_bits, 0, message_size(0)) ; 
+    println!("test: addition_cc, status : - , m1 : {} , m1_len: {} , m2: {}, m2_len: {} , add_res : - ", i, nb_enc_bits, 0, message_size(0)) ;
     let dec_add_res = pu.decrypt(&enc_add_res)? ;
     assert_eq!(i, dec_add_res) ;
     }
     for i in 1..10 {
-        let nb_enc_bits = message_size(i) ;  
-        let ct_1 = pu.encrypt(i,nb_enc_bits)? ; 
-        let mut trivial_0 = ParmCiphertext::empty() ; 
+        let nb_enc_bits = message_size(i) ;
+        let ct_1 = pu.encrypt(i,nb_enc_bits)? ;
+        let mut trivial_0 = ParmCiphertext::empty() ;
         trivial_0.push(LWE::encrypt_uint_triv(0,&pub_k.encoder)?) ;
         let enc_add_res = ParmArithmetics::add(&pc,&ct_1,&trivial_0) ;
-        println!("test: addition_cc, status : - , m1 : {} , m1_len: {} , m2: {}, m2_len: {} , add_res : - ", i, nb_enc_bits, 0, message_size(0)) ; 
+        println!("test: addition_cc, status : - , m1 : {} , m1_len: {} , m2: {}, m2_len: {} , add_res : - ", i, nb_enc_bits, 0, message_size(0)) ;
         let dec_add_res = pu.decrypt(&enc_add_res)? ;
         assert_eq!(i, dec_add_res) ;
     }
@@ -234,7 +240,7 @@ fn scalar_add(
     //  Initialization
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+    let par = &params::PARM90__PI_5__D_20__F; //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
                                                    // ---------------------------------
                                                    //  Userovo Scope
     let pu = ParmesanUserovo::new(par)?;
@@ -329,7 +335,7 @@ fn plain_add(triv_ct_len: i32, triv_ct1_len: i32) -> Result<Vec<u32>, Box<dyn Er
     //  Initialization
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+    let par = &params::PARM90__PI_5__D_20__F; //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
                                                    // ---------------------------------
                                                    //  Userovo Scope
     let pu = ParmesanUserovo::new(par)?;
@@ -464,7 +470,7 @@ fn add_cc_hc(
     //  Initialization
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+    let par = &params::PARM90__PI_5__D_20__F; //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
                                                    // ---------------------------------
                                                    //  Userovo Scope
     let pu = ParmesanUserovo::new(par)?;
@@ -569,14 +575,14 @@ fn add_cc_hc1() {
     let y2 = [0, 0, 1, 1, 0, 0, 1, 0, 0, 1];
     let y2_wlen = 9;
     let y2_triv = 8;
-    add_cc_hc(&x2, x2_wlen, x2_triv, &y2, y2_wlen, y2_triv).unwrap(); */ 
+    add_cc_hc(&x2, x2_wlen, x2_triv, &y2, y2_wlen, y2_triv).unwrap(); */
     let x3 = [0, 0, 0, 0, 0, 0, 1, 0, 0, 0];
     let x3_wlen = 4;
     let x3_triv = 2;
     let y3 = [0, 0, 0, 0, 1, 0, 0, 0, 0];
     let y3_wlen = 6;
     let y3_triv = 5;
-    add_cc_hc(&x3, x3_wlen, x3_triv, &y3, y3_wlen, y3_triv).unwrap(); 
+    add_cc_hc(&x3, x3_wlen, x3_triv, &y3, y3_wlen, y3_triv).unwrap();
 }
 fn add_cc_nz(
     x_len: i32,
@@ -591,7 +597,7 @@ fn add_cc_nz(
     //  Initialization
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+    let par = &params::PARM90__PI_5__D_20__F; //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
                                                    // ---------------------------------
                                                    //  Userovo Scope
     let pu = ParmesanUserovo::new(par)?;
@@ -665,7 +671,7 @@ fn add_cc(
     //  Initialization
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+    let par = &params::PARM90__PI_5__D_20__F; //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
                                                    // ---------------------------------
                                                    //  Userovo Scope
     let pu = ParmesanUserovo::new(par)?;

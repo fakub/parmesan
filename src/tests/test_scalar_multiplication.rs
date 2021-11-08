@@ -1,8 +1,13 @@
-use super::*;
-#[cfg(test)]
-use rand::Rng;
+use std::error::Error;
 use std::fs::OpenOptions;
 use std::io::Write;
+
+use rand::Rng;
+
+use crate::params;
+use crate::ParmesanUserovo;
+use crate::ParmesanCloudovo;
+use crate::arithmetics::ParmArithmetics;
 
 // this function takes as input a message m and returns its size in bits
 fn message_size(m: i64) -> usize {
@@ -24,7 +29,7 @@ fn test_scalar_mul_m(k: i32, m1: i64, filename: &str) -> Result<(), Box<dyn Erro
     //  Initialization
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+    let par = &params::PARM90__PI_5__D_20__F; //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
                                                    // ---------------------------------
                                                    //  Userovo Scope
     let pu = ParmesanUserovo::new(par)?;
@@ -125,7 +130,7 @@ fn test_scalar_mul_add_m(k: i32, m1: i64, filename: &str) -> Result<(), Box<dyn 
     //  Initialization
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__LEN_32; //     PARM90__PI_5__D_20__LEN_32      PARMXX__TRIVIAL
+    let par = &params::PARM90__PI_5__D_20__F; //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
                                                    // ---------------------------------
                                                    //  Userovo Scope
     let pu = ParmesanUserovo::new(par)?;

@@ -1,2 +1,4 @@
 test: encryption, status : valid, sample : 0, decrypted result : 0, number of encrypted bits(input size) : 1, length of decrypted result :1
 test: encryption, status : valid, sample : -1008599095, decrypted result : -1008599095, number of encrypted bits(input size) : 31, length of decrypted result :31
+test: encryption, status : valid, sample : -1008599095, decrypted result : -1008599095, number of encrypted bits(input size) : 31, length of decrypted result :31
+test: encryption, status : valid, sample : -1008599095, decrypted result : -1008599095, number of encrypted bits(input size) : 31, length of decrypted result :31
