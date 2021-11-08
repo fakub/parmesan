@@ -1,50 +1,67 @@
-use std::error::Error;
-
-use rand::Rng;
-
-use crate::params;
-use crate::ParmesanUserovo;
-use crate::ParmesanCloudovo;
+use crate::tests::{self,*};
+use crate::userovo::encryption;
 use crate::arithmetics::ParmArithmetics;
 
 #[test]
-fn test_max() -> Result<(), Box<dyn Error>> {
-    // =================================
-    //  Initialization
+/// Maximum of encrypted sub-samples only.
+fn t_max_non_triv() {
+    //DBG
+    println!("Non-Triv ...");
 
-    // ---------------------------------
-    //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__F; //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
+    t_impl_max_with_mode(EncrVsTriv::ENCR);
+}
 
-    // ---------------------------------
-    //  Userovo Scope
-    let pu = ParmesanUserovo::new(par)?;
-    let pub_k = pu.export_pub_keys();
-    // ---------------------------------
-    //  Cloudovo Scope
-    let pc = ParmesanCloudovo::new(par, &pub_k);
-    // generate 10 random samples to test
-    for _i in 0..10 {
-        let mut rng = rand::thread_rng();
-        let m1 = rng.gen::<i64>();
-        let m2 = rng.gen::<i64>();
-        //let nb_enc_bits = rng.gen_range(1..20) ;
-        let m1_bin = format!("{:b}", m1);
-        let nb_enc_bits = m1_bin.to_string().len();
-        println!(
-            "parallel maximum test for {} {} with a number of encrypted bits{}",
-            m1, m2, nb_enc_bits
-        );
-        let mut enc_r1 = pu.encrypt(m1, nb_enc_bits)?;
-        let enc_r2 = pu.encrypt(m2, nb_enc_bits)?;
-        enc_r1 = ParmArithmetics::max(&pc, &enc_r1, &enc_r2);
-        let r1: i64 = pu.decrypt(&enc_r1)?;
-        if (std::cmp::max(m1, m2) - r1) % nb_enc_bits as i64 == 0 {
-            println!(" valid test of the parallel maximum of {} and {} with a number of encrypted bits {} ", m1,m2,nb_enc_bits);
-        } else {
-            println!(" failure in the test of the parallel maximum of {} and {} with a number of encrypted bits {} ", m1,m2,nb_enc_bits);
-        }
-        assert_eq!(std::cmp::max(m1, m2), r1);
+//WISH
+//~ #[test]
+//~ /// Maximum of trivial sub-samples only.
+//~ fn t_max_all_triv() {
+    //~ //DBG
+    //~ println!("All-Triv ...");
+
+    //~ t_impl_max_with_mode(EncrVsTriv::TRIV);
+//~ }
+
+//~ #[test]
+//~ /// Maximum of mixed sub-samples.
+//~ fn t_max_some_triv() {
+    //~ //DBG
+    //~ println!("Mixed ...");
+
+    //~ t_impl_max_with_mode(EncrVsTriv::ENCRTRIV);
+//~ }
+
+
+// -----------------------------------------------------------------------------
+//  Test Implementations
+
+/// Implementation for three variants of vector to be evaluated.
+fn t_impl_max_with_mode(mode: EncrVsTriv) {
+    for _ in 0..TESTS_REPEAT_MAX {
+        // generate random vector(s)
+        let m1_vec = gen_rand_vec(TESTS_PLAIN_BITLEN_MED);
+        let m2_vec = gen_rand_vec(TESTS_PLAIN_BITLEN_MED);
+        // convert to integer(s)
+        let m1 = encryption::convert(&m1_vec).expect("convert failed.");
+        let m2 = encryption::convert(&m2_vec).expect("convert failed.");
+
+        // encrypt -> homomorphic eval -> decrypt
+        let c1 = encrypt_with_mode(&m1_vec, mode);
+        let c2 = encrypt_with_mode(&m2_vec, mode);
+
+        //DBG
+        println!("  m1 = {}, m2 = {}", m1, m2);
+
+        let c_he = ParmArithmetics::max(&tests::PC, &c1, &c2);
+
+        let m_he = PU.decrypt(&c_he).expect("ParmesanUserovo::decrypt failed.");
+
+        // plain eval
+        let m_pl = ParmArithmetics::max(&tests::PC, &m1, &m2);
+
+        //DBG
+        println!("  max = {} (exp. {})", m_he, m_pl);
+
+        // compare results
+        assert_eq!(m_he, m_pl);
     }
-    Ok(())
 }

@@ -1,11 +1,8 @@
-use std::error::Error;
-
 use rand::Rng;
-use concrete::LWE;
 
 use crate::tests::{self,*};
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
-use crate::userovo::{encryption,keys::PrivKeySet};
+use crate::userovo::encryption;
 
 
 // -----------------------------------------------------------------------------
@@ -13,9 +10,9 @@ use crate::userovo::{encryption,keys::PrivKeySet};
 
 #[test]
 /// Decryption of trivial sample (no encryption of zero).
-fn decrypt_triv() {
-    // trivial ciphertext of length PLAIN_BITLEN_TESTS
-    let c = ParmCiphertext::triv(PLAIN_BITLEN_TESTS).expect("ParmCiphertext::triv failed.");
+fn t_decrypt_triv() {
+    // trivial ciphertext of length TESTS_PLAIN_BITLEN_FULL
+    let c = ParmCiphertext::triv(TESTS_PLAIN_BITLEN_FULL).expect("ParmCiphertext::triv failed.");
     // decryption
     let m = encryption::parm_decrypt(
         tests::PARAMS,
@@ -28,19 +25,19 @@ fn decrypt_triv() {
 
 #[test]
 /// Encryption & decryption of random integers.
-fn encrypt_decrypt_int() {
+fn t_encrypt_decrypt_int() {
     let mut rng = rand::thread_rng();
 
-    for _ in 0..REPEAT_ENCR_TESTS {
+    for _ in 0..TESTS_REPEAT_ENCR {
         // generate random integer
-        let mi: i64 = rng.gen_range(-((1i64 << PLAIN_BITLEN_TESTS) - 1)..(1i64 << PLAIN_BITLEN_TESTS));
+        let mi: i64 = rng.gen_range(-((1i64 << TESTS_PLAIN_BITLEN_FULL) - 1)..(1i64 << TESTS_PLAIN_BITLEN_FULL));
 
         // encrypt & decrypt
         let c = encryption::parm_encrypt(
             tests::PARAMS,
             &tests::PRIV_KEYS,
             mi,
-            PLAIN_BITLEN_TESTS,
+            TESTS_PLAIN_BITLEN_FULL,
         ).expect("parm_encrypt_vec failed.");
         let mp = encryption::parm_decrypt(
             tests::PARAMS,
@@ -54,15 +51,10 @@ fn encrypt_decrypt_int() {
 
 #[test]
 /// Encryption & decryption of random vectors of {-1,0,1}.
-fn encrypt_decrypt_vec() {
-    let mut rng = rand::thread_rng();
-
-    for _ in 0..REPEAT_ENCR_TESTS {
+fn t_encrypt_decrypt_vec() {
+    for _ in 0..TESTS_REPEAT_ENCR {
         // generate random vector
-        let mut m_vec: Vec<i32>  = Vec::new();
-        for _ in 0..PLAIN_BITLEN_TESTS {
-            m_vec.push(rng.gen_range(-1..2));
-        }
+        let m_vec = gen_rand_vec(TESTS_PLAIN_BITLEN_FULL);
 
         // encrypt & decrypt
         let c = encryption::parm_encrypt_vec(
@@ -84,81 +76,44 @@ fn encrypt_decrypt_vec() {
 }
 
 #[test]
-/// Decryption of vectors of encrypted {-1,0,1}.
-fn decrypt_non_triv() {
-    test_decrypt_with_mode(EncrTrivWords::ENCR);
+/// Decryption of encrypted sub-samples only.
+fn t_decrypt_non_triv() {
+    t_impl_decr_with_mode(EncrVsTriv::ENCR);
 }
 
 #[test]
-/// Decryption of vectors of "encrypted" {-1,0,1} -- trivial samples only.
-fn decrypt_all_triv() {
-    test_decrypt_with_mode(EncrTrivWords::TRIV);
+/// Decryption of trivial sub-samples only.
+fn t_decrypt_all_triv() {
+    t_impl_decr_with_mode(EncrVsTriv::TRIV);
 }
 
 #[test]
-/// Decryption of vectors of encrypted {-1,0,1} with trivial samples at random positions.
-fn decrypt_some_triv() {
-    test_decrypt_with_mode(EncrTrivWords::ENCRTRIV);
+/// Decryption of mixed sub-samples.
+fn t_decrypt_some_triv() {
+    t_impl_decr_with_mode(EncrVsTriv::ENCRTRIV);
 }
 
 
 // -----------------------------------------------------------------------------
-//  Auxilliary Functions
+//  Test Implementations
 
-/// Implementation for three variants of vector to be decrypted.
-fn test_decrypt_with_mode(mode: EncrTrivWords) {
-    let mut rng = rand::thread_rng();
+/// Implementation for three variants of vector to be evaluated.
+fn t_impl_decr_with_mode(mode: EncrVsTriv) {
+    for _ in 0..TESTS_REPEAT_ENCR {
+        // generate random vector(s)
+        let m1_vec = gen_rand_vec(TESTS_PLAIN_BITLEN_FULL);
+        // convert to integer(s)
+        let m1 = encryption::convert(&m1_vec).expect("convert failed.");
 
-    for _ in 0..REPEAT_ENCR_TESTS {
-        // generate random vectors: values and encryption flags (DO or DO NOT encrypt)
-        let mut m_vec: Vec<i32>  = Vec::new();
-        let mut m_flg: Vec<bool> = Vec::new();
-        for _ in 0..PLAIN_BITLEN_TESTS {
-            m_vec.push(rng.gen_range(-1..2));
-            match mode {
-                EncrTrivWords::ENCR => m_flg.push(true),
-                EncrTrivWords::TRIV => m_flg.push(false),
-                EncrTrivWords::ENCRTRIV => m_flg.push(rand::random()),
-            }
-        }
+        // encrypt -> homomorphic eval -> decrypt
+        let c1 = encrypt_with_mode(&m1_vec, mode);
+        // --- no evaluation ---
+        let m_he = PU.decrypt(&c1).expect("ParmesanUserovo::decrypt failed.");
 
-        // encrypt & decrypt
-        let c = encrypt_custom(
-            tests::PARAMS,
-            &tests::PRIV_KEYS,
-            &m_vec,
-            &m_flg,
-        ).expect("encrypt_custom failed.");
-        let mp = encryption::parm_decrypt(
-            tests::PARAMS,
-            &tests::PRIV_KEYS,
-            &c,
-        ).expect("parm_decrypt failed.");
+        // plain eval
+        let m_pl = m1;
 
-        // decode for reference
-        let md = encryption::convert(&m_vec).expect("convert failed.");
-
-        assert_eq!(mp, md);
+        // compare results
+        assert_eq!(m_he, m_pl);
     }
-}
-
-/// Encrypt input vector `m_vec` at positions given by `m_flags` vector (other samples trivial).
-pub fn encrypt_custom(
-    par: &Params,
-    priv_keys: &PrivKeySet,
-    m_vec: &Vec<i32>,
-    m_flags: &Vec<bool>,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
-    let mut res = ParmCiphertext::triv(m_vec.len())?;
-
-    res.iter_mut().zip(m_vec.iter().zip(m_flags.iter())).for_each(| (ri, (mi, fi)) | {
-        let mi_pos = (mi & par.plaintext_mask()) as u32;
-        *ri = if *fi {
-            LWE::encrypt_uint(&priv_keys.sk, mi_pos, &priv_keys.encoder).expect("LWE::encrypt_uint failed.")
-        } else {
-            LWE::encrypt_uint_triv(mi_pos, &priv_keys.encoder).expect("LWE::encrypt_uint_triv failed.")
-        };
-    });
-
-    Ok(res)
 }
