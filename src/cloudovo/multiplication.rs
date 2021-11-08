@@ -60,6 +60,7 @@ pub fn mul_impl(
     }
 
     let p = match x_in.len() {
+        l if l == 0 => ParmCiphertext::triv(1)?,
         l if l == 1 => mul_1word(
             pub_keys,
             &x_in,
@@ -384,6 +385,7 @@ pub fn squ_impl(
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     let s = match x.len() {
+        l if l == 0 => ParmCiphertext::triv(1)?,
         l if l == 1 => squ_1word(
             pub_keys,
             x,
