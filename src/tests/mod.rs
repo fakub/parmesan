@@ -57,6 +57,8 @@ static TESTS_BITLEN_MUL:        usize     =  5;
 static TESTS_EXTRA_BITLEN_MUL: [usize; 2] = [8,9];
 static TESTS_BITLEN_SQU:        usize     = 7;
 static TESTS_EXTRA_BITLEN_SQU: [usize; 2] = [8,9];
+static TESTS_BITLEN_ADD:        usize     =  2;
+static TESTS_EXTRA_BITLEN_ADD: [usize; 2] = [15,TESTS_BITLEN_FULL-1];
 
 static TESTS_REPEAT_ENCR: usize = 100;
 static TESTS_REPEAT_MAX:  usize = 3;
