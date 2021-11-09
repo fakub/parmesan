@@ -60,10 +60,10 @@ pub fn add_sub_impl(
     let r_triv = std::cmp::max(x_rzero, y_rzero);
 
     // calculate length of w that is to be calculated (incl. right zeros)
-    //    _____________
-    //  001001███010000
-    //     0010█████100
-    //
+    //    _____________                                                           _________   wlen      \
+    //  001001███010000         n.b.:   0000 .. wlen == 0, but r_triv == 4      001██000000              |  =>  apparently wlen <= r_triv iff wlen == 0,
+    //     0010█████100                                                         000000001█0              |      in which case the result is zero
+    //                                                                               ------   r_triv    /
     let mut x_lzero  = 0usize;
     let mut y_lzero  = 0usize;
     for xi in x.iter().rev() {
@@ -73,6 +73,8 @@ pub fn add_sub_impl(
         if yi.dimension == 0 && yi.ciphertext.get_body().0 == 0 {y_lzero += 1;} else {break;}
     }
     let wlen = std::cmp::max(x.len() - x_lzero, y.len() - y_lzero);
+    // resolve a very peculiar case, when wlen == 0 (there's nothing but trivial zeros, if any..)
+    if wlen == 0 {return Ok(ParmCiphertext::triv(1)?);}
 
     let mut z: ParmCiphertext;
 
@@ -124,6 +126,10 @@ pub fn add_sub_impl(
             z = w.clone();
             // one more word for "carry"
             z.push(LWE::zero(0)?);
+
+            //FIXME
+            //  it may happen that r_triv is more than q.len() == wlen (at least this happens for m1 = [] and m2 = [0] -- trivial -- then r_triv = 1 and wlen = 0)
+            //  well, it hapens iff one of numbers only consists of trivial samples
 
             q[r_triv..].par_iter_mut().zip(w[r_triv..].par_iter().enumerate()).for_each(| (qi, (i0, wi)) | {
                 let i = i0 + r_triv;
