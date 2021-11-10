@@ -1,46 +1,147 @@
-//~ use std::error::Error;
+extern crate rand;
+use rand::{Rand,Rng};
 
-//~ use rand::Rng;
+use crate::tests::{self,*};
+use crate::userovo::encryption;
+use crate::arithmetics::ParmArithmetics;
+use crate::*;
 
-//~ use crate::cloudovo::neural_network::*;
-//~ use crate::params;
-//~ use crate::ParmesanUserovo;
-//~ use crate::ParmesanCloudovo;
-//~ use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+#[test]
+/// NN Evaluation over encrypted sub-samples only.
+fn t_nn_eval_non_triv() {
+    println!("Non-Triv ...");
+    t_impl_nn_eval_with_mode(EncrVsTriv::ENCR);
+}
 
-//~ // this function takes as input a message m and returns its size in bits
-//~ fn message_size(m: i64) -> usize {
-    //~ if m >= 0 {
-        //~ let m_bin = format!("{:b}", m);
-        //~ return m_bin.to_string().len();
-    //~ } else {
-        //~ let m_abs = m.abs();
-        //~ let m_abs_bin = format!("{:b}", m_abs);
-        //~ return m_abs_bin.to_string().len() + 1;
-    //~ }
-//~ }
+#[test]
+/// NN Evaluation over trivial sub-samples only.
+fn t_nn_eval_all_triv() {
+    println!("All-Triv ...");
+    t_impl_nn_eval_with_mode(EncrVsTriv::TRIV);
+}
 
-//~ fn demo_nn() -> NeuralNetwork {
-    //~ NeuralNetwork {
-        //~ layers: vec![vec![
-            //~ Perceptron {
-                //~ t: PercType::MAX,
-                //~ w: vec![1, -2, -2],
-                //~ b: 2,
-            //~ },
-            //~ Perceptron {
-                //~ t: PercType::LIN,
-                //~ w: vec![1, 3, -1],
-                //~ b: -5,
-            //~ },
-            //~ Perceptron {
-                //~ t: PercType::ACT,
-                //~ w: vec![1, 3, -1],
-                //~ b: 3,
-            //~ },
-        //~ ]],
-    //~ }
-//~ }
+#[test]
+/// NN Evaluation over mixed sub-samples.
+fn t_nn_eval_some_triv() {
+    println!("Mixed ...");
+    t_impl_nn_eval_with_mode(EncrVsTriv::ENCRTRIV);
+}
+
+
+// -----------------------------------------------------------------------------
+//  Test Implementations
+
+/// Implementation for three variants of vector to be evaluated.
+fn t_impl_nn_eval_with_mode(mode: EncrVsTriv) {
+    // generate random NN
+    let nn = t_gen_nn();
+
+    for _ in 0..TESTS_REPEAT_NNE {
+        let mut m_in_vec = vec![];
+        let mut m_in = vec![];
+        let mut c_in = vec![];
+
+        for i in 0..nn.n_inputs() {
+            // generate random input
+            let m_vec = gen_rand_vec(TESTS_BITLEN_NNE);
+            // convert to integer
+            let m = encryption::convert(&m_vec).expect("convert failed.");
+
+            println!("  m[{}] = {} ({}-bit: {:?})", i, m, TESTS_BITLEN_NNE, m_vec);
+
+            // encrypt
+            let c = encrypt_with_mode(&m_vec, mode);
+
+            // push to input vectors
+            m_in_vec.push(m_vec);
+            m_in.push(m);
+            c_in.push(c);
+        }
+
+        // homomorphic eval
+        let c_he = nn.eval(&tests::PC, &c_in);
+
+        // decrypt
+        let mut m_he = vec![];
+        for co in c_he {
+            m_he.push(PU.decrypt(&co).expect("ParmesanUserovo::decrypt failed."));
+
+        }
+
+        // plain eval
+        let m_pl = nn.eval(&tests::PC, &m_in);
+
+        println!("  nn_eval = {:?}\n  (exp. {:?})", m_he, m_pl);
+
+        // compare results
+        assert_eq!(m_he, m_pl);
+    }
+}
+
+
+// -----------------------------------------------------------------------------
+//  Generate Random NN
+
+fn t_gen_nn() -> NeuralNetwork {
+    let mut rng = rand::thread_rng();
+
+    // fixed depth = 3
+    let depth = 3;
+    // prepare layers
+    let mut layers = vec![];
+    // generate input length
+    let mut in_len = rng.gen_range(1..5);
+
+    for _ in 0..depth {
+        // generate number of perceptrons
+        let layer_len = rng.gen_range(1..5);
+        let mut layer = vec![];
+
+        for _ in 0..layer_len {
+            // generate perceptron
+            //~ let t: PercType = rng.gen();
+
+            // push to layer
+            layer.push(Perceptron {
+                t: rng.gen(),
+                w: gen_w(in_len),
+                b: rng.gen_range(-15..=15),
+            });
+        }
+
+        layers.push(layer);
+
+        // number of perceptrons is the number of inputs to the next layer
+        in_len = layer_len;
+    }
+
+    NeuralNetwork {layers}
+}
+
+/// Generate random `PercType`
+// cf. https://stackoverflow.com/questions/48490049/how-do-i-choose-a-random-value-from-an-enum
+impl Rand for PercType {
+    fn rand<R: Rng>(rng: &mut R) -> Self {
+        match rng.gen_range(0, 3) {
+            0 => PercType::MAX,
+            1 => PercType::LIN,
+            _ => PercType::ACT,
+        }
+    }
+}
+
+fn gen_w(wlen: usize) -> Vec<i32> {
+    let mut rng = rand::thread_rng();
+
+    let mut w = vec![];
+    for _ in 0..wlen {
+        w.push(rng.gen_range(-7..=7))
+    }
+    w
+}
+
+
+// #############################################################################
 
 //~ fn gen_perctype() -> PercType {
     //~ let mut rng = rand::thread_rng();
@@ -55,171 +156,4 @@
     //~ }
     //~ println!("t: ACT, ");
     //~ return PercType::ACT;
-//~ }
-
-//~ fn gen_w(wlen: i32) -> Vec<i32> {
-    //~ let mut rng = rand::thread_rng();
-    //~ let mut w = vec![];
-    //~ for _i in 0..wlen {
-        //~ w.push(rng.gen_range(-3..3))
-    //~ }
-    //~ println!("w : {:?}, ", w);
-    //~ return w;
-//~ }
-
-//~ fn gen_b() -> i64 {
-    //~ let mut rng = rand::thread_rng();
-    //~ let b = rng.gen_range(-3..3);
-    //~ println!("b : {} \n", b);
-    //~ return b;
-//~ }
-
-//~ fn gen_nn() -> NeuralNetwork {
-    //~ let mut rng = rand::thread_rng();
-    //~ let nb_layers = 3;
-    //~ let wlen = rng.gen_range(1..5);
-    //~ let mut vec_layers = vec![];
-    //~ for i in 0..nb_layers {
-        //~ println!("nn layer {} : ", i);
-        //~ let perctype_i = gen_perctype();
-        //~ let w_i = gen_w(wlen);
-        //~ let b_i = gen_b();
-        //~ vec_layers.push(Perceptron {
-            //~ t: perctype_i,
-            //~ w: w_i,
-            //~ b: b_i,
-        //~ });
-    //~ }
-    //~ NeuralNetwork {
-        //~ layers: vec![vec_layers],
-    //~ }
-//~ }
-
-//~ fn gen_m_in() -> Vec<i64> {
-    //~ let mut rng = rand::thread_rng();
-    //~ let m_in_len = 3;
-    //~ let mut m_in = vec![];
-    //~ let base: i64 = 2;
-    //~ let max_range = base.pow(30);
-    //~ let mut m_in_i: i64;
-    //~ for _i in 0..m_in_len {
-        //~ m_in_i = rng.gen_range(-max_range..max_range);
-        //~ m_in.push(m_in_i);
-    //~ }
-    //~ return m_in;
-//~ }
-
-//~ #[test]
-//~ fn nn_eval() -> Result<(), Box<dyn Error>> {
-    //~ // =================================
-    //~ //  Initialization
-
-    //~ // ---------------------------------
-    //~ //  Global Scope
-    //~ let par = &params::PARM90__PI_5__D_20__F; //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
-
-    //~ // ---------------------------------
-    //~ //  Userovo Scope
-    //~ let pu = ParmesanUserovo::new(par)?;
-    //~ let pub_k = pu.export_pub_keys();
-
-    //~ // ---------------------------------
-    //~ //  Cloudovo Scope
-    //~ let pc = ParmesanCloudovo::new(par, &pub_k);
-
-    //~ // =================================
-    //~ // NN input layer
-    //~ let m_in = gen_m_in();
-    //~ // encrypt all values
-    //~ let mut c_in: Vec<ParmCiphertext> = vec![];
-    //~ for _i in 0..m_in.len() {
-        //~ c_in.push(ParmCiphertext::empty());
-    //~ }
-    //~ for (ci, mi) in c_in.iter_mut().zip(m_in.iter()) {
-        //~ *ci = pu.encrypt(*mi, message_size(*mi))?;
-    //~ }
-
-    //~ // =================================
-    //~ //  C: Evaluation
-
-    //~ let gen_nn: NeuralNetwork = gen_nn();
-    //~ let c_out = gen_nn.eval(&pc, &c_in);
-    //~ let m_out_plain = gen_nn.eval(&pc, &m_in);
-
-    //~ // =================================
-    //~ //  U: Decryption
-
-    //~ let mut m_out_homo = Vec::new();
-    //~ for ci in c_out {
-        //~ m_out_homo.push(pu.decrypt(&ci)?);
-    //~ }
-    //~ println!(" m_out_homo {:?} \n ", m_out_homo);
-    //~ println!(" m_out_plain {:?} \n", m_out_plain);
-    //~ assert_eq!(m_out_homo, m_out_plain);
-    //~ Ok(())
-//~ }
-
-//~ #[test]
-//~ fn nn_demo() -> Result<(), Box<dyn Error>> {
-    //~ // =================================
-    //~ //  Initialization
-
-    //~ // ---------------------------------
-    //~ //  Global Scope
-    //~ let par = &params::PARM90__PI_5__D_20__F; //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
-
-    //~ // ---------------------------------
-    //~ //  Userovo Scope
-    //~ let pu = ParmesanUserovo::new(par)?;
-    //~ let pub_k = pu.export_pub_keys();
-
-    //~ const INPUT_BITLEN: usize = 8;
-
-    //~ // ---------------------------------
-    //~ //  Cloudovo Scope
-    //~ let pc = ParmesanCloudovo::new(par, &pub_k);
-
-    //~ // =================================
-    //~ //  U: Encryption
-
-    //~ // NN input layer
-    //~ let m_in: Vec<i64> = vec![
-        //~ 0b11011000,
-        //~ -0b01000110,
-        //~ -0b10000100,
-        //~ 0b01110011,
-        //~ -0b11011110,
-        //~ 0b11110001,
-    //~ ];
-
-    //~ // encrypt all values
-    //~ let mut c_in: Vec<ParmCiphertext> = vec![
-        //~ ParmCiphertext::empty(),
-        //~ ParmCiphertext::empty(),
-        //~ ParmCiphertext::empty(),
-        //~ ParmCiphertext::empty(),
-        //~ ParmCiphertext::empty(),
-        //~ ParmCiphertext::empty(),
-    //~ ];
-    //~ for (ci, mi) in c_in.iter_mut().zip(m_in.iter()) {
-        //~ *ci = pu.encrypt(*mi, INPUT_BITLEN)?;
-    //~ }
-
-    //~ // =================================
-    //~ //  C: Evaluation
-
-    //~ let c_out = demo_nn().eval(&pc, &c_in);
-    //~ let m_out_plain = demo_nn().eval(&pc, &m_in);
-
-    //~ // =================================
-    //~ //  U: Decryption
-
-    //~ let mut m_out_homo = Vec::new();
-    //~ for ci in c_out {
-        //~ m_out_homo.push(pu.decrypt(&ci)?);
-    //~ }
-    //~ println!(" m_out_homo {:?} \n ", m_out_homo);
-    //~ println!(" m_out_plain {:?} \n", m_out_plain);
-    //~ assert_eq!(m_out_homo, m_out_plain);
-    //~ Ok(())
 //~ }

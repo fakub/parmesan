@@ -62,6 +62,7 @@ static TESTS_EXTRA_BITLEN_ADD: [usize; 2] = [15,TESTS_BITLEN_FULL-1];
 static TESTS_BITLEN_ADD_CONST:  usize     =  8;
 static TESTS_BITLEN_SCM:        usize     =  9;
 static TESTS_BITLEN_SCALAR:     usize     =  5;
+static TESTS_BITLEN_NNE:        usize     =  5;
 
 static TESTS_REPEAT_ENCR:       usize = 100;
 static TESTS_REPEAT_MAX:        usize = 3;
@@ -71,6 +72,7 @@ static TESTS_REPEAT_SGN:        usize = 3;
 static TESTS_REPEAT_ADD_CONST:  usize = 3;
 static TESTS_REPEAT_ADD_TRIV_0: usize = 3;
 static TESTS_REPEAT_SCM:        usize = 3;
+static TESTS_REPEAT_NNE:        usize = 3;
 
 #[derive(Clone,Copy)]
 pub enum EncrVsTriv {
