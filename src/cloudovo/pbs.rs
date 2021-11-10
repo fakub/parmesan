@@ -39,15 +39,11 @@ pub fn id__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    //TODO resolve trivial case
-    if c.dimension == 0 {
-        return Ok(c.clone());
-    }
-
-    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,2.,3.,4.,5.,6.,7.,8.,7.,6.,5.,4.,3.,2.,1.][x as usize], pub_keys.encoder)?
-               .keyswitch(pub_keys.ksk)?;
-
-    Ok(res)
+    eval_LUT_5(
+        pub_keys,
+        c,
+        [0.,1.,2.,3.,4.,5.,6.,7.,8.,7.,6.,5.,4.,3.,2.,1.]
+    )
 }
 
 //
@@ -58,15 +54,11 @@ pub fn f_3__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    //TODO resolve trivial case
-    if c.dimension == 0 {
-        return Ok(c.clone());
-    }
-
-    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.][x as usize], pub_keys.encoder)?
-               .keyswitch(pub_keys.ksk)?;
-
-    Ok(res)
+    eval_LUT_5(
+        pub_keys,
+        c,
+        [0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.]
+    )
 }
 
 //
@@ -77,15 +69,11 @@ pub fn f_4__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    //TODO resolve trivial case
-    if c.dimension == 0 {
-        return Ok(c.clone());
-    }
-
-    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.,0.][x as usize], pub_keys.encoder)?
-               .keyswitch(pub_keys.ksk)?;
-
-    Ok(res)
+    eval_LUT_5(
+        pub_keys,
+        c,
+        [0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.,0.]
+    )
 }
 
 //
@@ -96,15 +84,11 @@ pub fn f_5__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    //TODO resolve trivial case
-    if c.dimension == 0 {
-        return Ok(c.clone());
-    }
-
-    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,0.,0.,0.,0.][x as usize], pub_keys.encoder)?
-               .keyswitch(pub_keys.ksk)?;
-
-    Ok(res)
+    eval_LUT_5(
+        pub_keys,
+        c,
+        [0.,0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,0.,0.,0.,0.]
+    )
 }
 
 //
@@ -116,17 +100,12 @@ pub fn g_2__pi_5__with_val(
     c: &LWE,
     val: u32,
 ) -> Result<LWE, Box<dyn Error>> {
-    //TODO resolve trivial case
-    if c.dimension == 0 {
-        return Ok(c.clone());
-    }
-
-    let val_f = val as f64;
-
-    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,val_f,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,val_f,0.,][x as usize], pub_keys.encoder)?
-               .keyswitch(pub_keys.ksk)?;
-
-    Ok(res)
+    let vf = val as f64;
+    eval_LUT_5(
+        pub_keys,
+        c,
+        [0.,0.,vf,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,vf,0.,]
+    )
 }
 
 //
@@ -138,17 +117,12 @@ pub fn f_1__pi_5__with_val(
     c: &LWE,
     val: u32,
 ) -> Result<LWE, Box<dyn Error>> {
-    //TODO resolve trivial case
-    if c.dimension == 0 {
-        return Ok(c.clone());
-    }
-
-    let val_f = val as f64;
-
-    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f][x as usize], pub_keys.encoder)?
-               .keyswitch(pub_keys.ksk)?;
-
-    Ok(res)
+    let vf = val as f64;
+    eval_LUT_5(
+        pub_keys,
+        c,
+        [0.,vf,vf,vf,vf,vf,vf,vf,vf,vf,vf,vf,vf,vf,vf,vf]
+    )
 }
 
 //
@@ -160,17 +134,12 @@ pub fn f_0__pi_5__with_val(
     c: &LWE,
     val: u32,
 ) -> Result<LWE, Box<dyn Error>> {
-    //TODO resolve trivial case
-    //~ if c.dimension == 0 {
-        //~ return Ok(LWE that trivially encrypts val_f);
-    //~ }
-
-    let val_f = val as f64;
-
-    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f,val_f][x as usize], pub_keys.encoder)?
-               .keyswitch(pub_keys.ksk)?;
-
-    Ok(res)
+    let vf = val as f64;
+    eval_LUT_5(
+        pub_keys,
+        c,
+        [vf,vf,vf,vf,vf,vf,vf,vf,vf,vf,vf,vf,vf,vf,vf,vf]
+    )
 }
 
 //
@@ -181,38 +150,26 @@ pub fn a_2__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
-    if c.dimension == 0 {
-        let  m = c.decrypt_uint_triv()?;
-        let fm = if m >= 2 && m <= (1 << 5) - 2  { 1 } else { 0 };
-        return Ok(LWE::encrypt_uint_triv(fm, &pub_keys.encoder)?);
-    }
-
-    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,0.,1.,1.,1.,1.,1.,1.,31.,31.,31.,31.,31.,31.,31.,0.][x as usize], pub_keys.encoder)?
-               .keyswitch(pub_keys.ksk)?;
-
-    Ok(res)
+    eval_LUT_5(
+        pub_keys,
+        c,
+        [0.,0.,1.,1.,1.,1.,1.,1.,31.,31.,31.,31.,31.,31.,31.,0.]
+    )
 }
 
 //
-//  |X| ≥ 1   (i.e., squaring)
+//  |X| ≥ 1   (i.e., squaring in {-1,0,1})
 //
 #[allow(non_snake_case)]
 pub fn a_1__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    // resolve trivial case
-    if c.dimension == 0 {
-        let  m = c.decrypt_uint_triv()?;
-        let fm = if m >= 1 && m <= (1 << 5) - 1  { 1 } else { 0 };
-        return Ok(LWE::encrypt_uint_triv(fm, &pub_keys.encoder)?);
-    }
-
-    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,1.,1.,1.,1.,1.,1.,1.,31.,31.,31.,31.,31.,31.,31.,31.][x as usize], pub_keys.encoder)?
-               .keyswitch(pub_keys.ksk)?;
-
-    Ok(res)
+    eval_LUT_5(
+        pub_keys,
+        c,
+        [0.,1.,1.,1.,1.,1.,1.,1.,31.,31.,31.,31.,31.,31.,31.,31.]
+    )
 }
 
 //
@@ -226,10 +183,11 @@ pub fn relu_plus__pi_5(
     pub_keys: &PubKeySet,
     c: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,31.,0.,1.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.][x as usize], pub_keys.encoder)?
-               .keyswitch(pub_keys.ksk)?;
-
-    Ok(res)
+    eval_LUT_5(
+        pub_keys,
+        c,
+        [0.,31.,0.,1.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.]
+    )
 }
 
 
@@ -535,9 +493,9 @@ pub fn g_1__pi_4__with_val(
         return Ok(c.clone());
     }
 
-    let val_f = val as f64;
+    let vf = val as f64;
 
-    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,val_f,0.,0.,0.,0.,0.,val_f][x as usize], pub_keys.encoder)?
+    let res = c.bootstrap_with_function(pub_keys.bsk, |x| [0.,vf,0.,0.,0.,0.,0.,vf][x as usize], pub_keys.encoder)?
                .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
@@ -585,6 +543,32 @@ pub fn f_14__pi_7(
                .keyswitch(pub_keys.ksk)?;
 
     Ok(res)
+}
+
+
+// =============================================================================
+//
+//  Eval LUT
+//
+
+#[allow(non_snake_case)]
+fn eval_LUT_5(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+    lut: [f64; 1 << (5-1)],
+) -> Result<LWE, Box<dyn Error>> {
+    // resolve trivial case
+    if c.dimension == 0 {
+        let  m = c.decrypt_uint_triv()?;
+        let fm = if m < 1 << (5-1) { lut[m as usize] }
+            else if m < 1 << 5 { lut[(m as i32 - (1 << (5-1))) as usize] }
+            else {panic!("Word m = {} does not fit 5-bit LUT.", m)};
+        let fm_u = ((fm as i32) & ((1 << 5) - 1)) as u32;
+        Ok(LWE::encrypt_uint_triv(fm_u, &pub_keys.encoder)?)
+    } else {
+        Ok(c.bootstrap_with_function(pub_keys.bsk, |x| lut[x as usize], pub_keys.encoder)?
+            .keyswitch(pub_keys.ksk)?)
+    }
 }
 
 
