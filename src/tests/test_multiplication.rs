@@ -5,9 +5,7 @@ use crate::arithmetics::ParmArithmetics;
 #[test]
 /// Multiplication of encrypted sub-samples only, aligned lengths.
 fn t_mul_non_triv_aligned() {
-    //DBG
     println!("Non-Triv Aligned ...");
-
     t_impl_mul_with_mode(EncrVsTriv::ENCR, true);
 }
 
@@ -15,9 +13,7 @@ fn t_mul_non_triv_aligned() {
 //~ #[test]
 //~ /// Multiplication of encrypted sub-samples only, different lengths.
 //~ fn t_mul_non_triv_difflen() {
-    //~ //DBG
     //~ println!("Non-Triv Misaligned ...");
-
     //~ t_impl_mul_with_mode(EncrVsTriv::ENCR, false);
 //~ }
 
@@ -25,18 +21,14 @@ fn t_mul_non_triv_aligned() {
 //~ #[test]
 //~ /// Multiplication of trivial sub-samples only.
 //~ fn t_mul_all_triv() {
-    //~ //DBG
     //~ println!("All-Triv ...");
-
     //~ t_impl_mul_with_mode(EncrVsTriv::TRIV);
 //~ }
 
 //~ #[test]
 //~ /// Multiplication of mixed sub-samples.
 //~ fn t_mul_some_triv() {
-    //~ //DBG
     //~ println!("Mixed ...");
-
     //~ t_impl_mul_with_mode(EncrVsTriv::ENCRTRIV);
 //~ }
 
@@ -66,7 +58,6 @@ fn t_impl_mul_with_mode(
         let m1 = encryption::convert(&m1_vec).expect("convert failed.");
         let m2 = encryption::convert(&m2_vec).expect("convert failed.");
 
-        //DBG
         println!("  m1 = {} ({}-bit: {:?}), m2 = {} ({}-bit: {:?})", m1, bl1, m1_vec, m2, bl2, m2_vec);
 
         // encrypt -> homomorphic eval -> decrypt
@@ -80,7 +71,6 @@ fn t_impl_mul_with_mode(
         // plain eval
         let m_pl = ParmArithmetics::mul(&tests::PC, &m1, &m2);
 
-        //DBG
         println!("  mul = {} (exp. {})", m_he, m_pl);
 
         // compare results

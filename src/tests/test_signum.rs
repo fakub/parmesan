@@ -5,9 +5,7 @@ use crate::arithmetics::ParmArithmetics;
 #[test]
 /// Signum of encrypted sub-samples only.
 fn t_sgn_non_triv() {
-    //DBG
     println!("Non-Triv ...");
-
     t_impl_sgn_with_mode(EncrVsTriv::ENCR);
 }
 
@@ -15,18 +13,14 @@ fn t_sgn_non_triv() {
 //~ #[test]
 //~ /// Signum of trivial sub-samples only.
 //~ fn t_sgn_all_triv() {
-    //~ //DBG
     //~ println!("All-Triv ...");
-
     //~ t_impl_sgn_with_mode(EncrVsTriv::TRIV);
 //~ }
 
 //~ #[test]
 //~ /// Signum of mixed sub-samples.
 //~ fn t_sgn_some_triv() {
-    //~ //DBG
     //~ println!("Mixed ...");
-
     //~ t_impl_sgn_with_mode(EncrVsTriv::ENCRTRIV);
 //~ }
 
@@ -42,6 +36,8 @@ fn t_impl_sgn_with_mode(mode: EncrVsTriv) {
         // convert to integer(s)
         let m1 = encryption::convert(&m1_vec).expect("convert failed.");
 
+        println!("  m = {}", m1);
+
         // encrypt -> homomorphic eval -> decrypt
         let c1 = encrypt_with_mode(&m1_vec, mode);
         let c_he = ParmArithmetics::sgn(&tests::PC, &c1);
@@ -49,6 +45,8 @@ fn t_impl_sgn_with_mode(mode: EncrVsTriv) {
 
         // plain eval
         let m_pl = ParmArithmetics::sgn(&tests::PC, &m1);
+
+        println!("  sgn = {} (exp. {})", m_he, m_pl);
 
         // compare results
         assert_eq!(m_he, m_pl);

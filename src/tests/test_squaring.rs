@@ -5,9 +5,7 @@ use crate::arithmetics::ParmArithmetics;
 #[test]
 /// Squaring of encrypted sub-samples only.
 fn t_squ_non_triv_aligned() {
-    //DBG
     println!("Non-Triv ...");
-
     t_impl_squ_with_mode(EncrVsTriv::ENCR);
 }
 
@@ -15,18 +13,14 @@ fn t_squ_non_triv_aligned() {
 //~ #[test]
 //~ /// Squaring of trivial sub-samples only.
 //~ fn t_squ_all_triv() {
-    //~ //DBG
     //~ println!("All-Triv ...");
-
     //~ t_impl_squ_with_mode(EncrVsTriv::TRIV);
 //~ }
 
 //~ #[test]
 //~ /// Squaring of mixed sub-samples.
 //~ fn t_squ_some_triv() {
-    //~ //DBG
     //~ println!("Mixed ...");
-
     //~ t_impl_squ_with_mode(EncrVsTriv::ENCRTRIV);
 //~ }
 
@@ -46,7 +40,6 @@ fn t_impl_squ_with_mode(mode: EncrVsTriv) {
         // convert to integer(s)
         let m1 = encryption::convert(&m1_vec).expect("convert failed.");
 
-        //DBG
         println!("  m1 = {} ({}-bit)", m1, bl);
 
         // encrypt -> homomorphic eval -> decrypt
@@ -57,7 +50,6 @@ fn t_impl_squ_with_mode(mode: EncrVsTriv) {
         // plain eval
         let m_pl = ParmArithmetics::squ(&tests::PC, &m1);
 
-        //DBG
         println!("  squ = {} (exp. {})", m_he, m_pl);
 
         // compare results

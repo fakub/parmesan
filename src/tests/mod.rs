@@ -41,7 +41,7 @@ pub mod test_multiplication;
 pub mod test_squaring;
 //TODO
 pub mod test_addition;
-pub mod test_addition_cc;
+pub mod test_addition_misc;
 pub mod test_nn;
 pub mod test_scalar_multiplication;
 
@@ -59,12 +59,15 @@ static TESTS_BITLEN_SQU:        usize     = 7;
 static TESTS_EXTRA_BITLEN_SQU: [usize; 2] = [8,9];
 static TESTS_BITLEN_ADD:        usize     =  2;
 static TESTS_EXTRA_BITLEN_ADD: [usize; 2] = [15,TESTS_BITLEN_FULL-1];
+static TESTS_BITLEN_ADD_CONST:  usize     =  8;
 
-static TESTS_REPEAT_ENCR: usize = 100;
-static TESTS_REPEAT_MAX:  usize = 3;
-static TESTS_REPEAT_SGN:  usize = 3;
-//~ static TESTS_REPEAT_MUL:  usize = 1;
-//~ static TESTS_REPEAT_SQU:  usize = 1;
+static TESTS_REPEAT_ENCR:       usize = 100;
+static TESTS_REPEAT_MAX:        usize = 3;
+static TESTS_REPEAT_SGN:        usize = 3;
+//~ static TESTS_REPEAT_MUL:        usize = 1;
+//~ static TESTS_REPEAT_SQU:        usize = 1;
+static TESTS_REPEAT_ADD_CONST:  usize = 3;
+static TESTS_REPEAT_ADD_TRIV_0: usize = 3;
 
 #[derive(Clone,Copy)]
 pub enum EncrVsTriv {
