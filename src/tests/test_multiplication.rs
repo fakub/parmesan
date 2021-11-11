@@ -58,7 +58,7 @@ fn t_impl_mul_with_mode(
         let m1 = encryption::convert(&m1_vec).expect("convert failed.");
         let m2 = encryption::convert(&m2_vec).expect("convert failed.");
 
-        println!("  m1 = {} ({}-bit: {:?}), m2 = {} ({}-bit: {:?})", m1, bl1, m1_vec, m2, bl2, m2_vec);
+        println!("  m1 = {} ({}-bit: {:?})\n  m2 = {} ({}-bit: {:?})", m1, bl1, m1_vec, m2, bl2, m2_vec);
 
         // encrypt -> homomorphic eval -> decrypt
         let c1 = encrypt_with_mode(&m1_vec, mode);

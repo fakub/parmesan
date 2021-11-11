@@ -130,7 +130,7 @@ pub fn encrypt_with_flags(
     m_vec: &Vec<i32>,
     m_flags: &Vec<bool>,
 ) -> ParmCiphertext {
-    let mut res = ParmCiphertext::triv(m_vec.len()).expect("ParmCiphertext::triv failed.");
+    let mut res = ParmCiphertext::triv(m_vec.len(), &priv_keys.encoder).expect("ParmCiphertext::triv failed.");
 
     res.iter_mut().zip(m_vec.iter().zip(m_flags.iter())).for_each(| (ri, (mi, fi)) | {
         let mi_pos = (mi & par.plaintext_mask()) as u32;

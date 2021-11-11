@@ -146,10 +146,10 @@ fn t_gen_ct_with_triv_zeros(
     let mut l_vec = vec![0; ltriv];
 
     // stick ciphertext together
-    let mut c = ParmCiphertext::triv(rtriv).expect("ParmCiphertext::triv failed.");
+    let mut c = ParmCiphertext::triv(rtriv, &PUB_K.encoder).expect("ParmCiphertext::triv failed.");
     let mut ci = encrypt_with_mode(&i_vec, mode);
     c.append(&mut ci);
-    let mut cl = ParmCiphertext::triv(ltriv).expect("ParmCiphertext::triv failed.");
+    let mut cl = ParmCiphertext::triv(ltriv, &PUB_K.encoder).expect("ParmCiphertext::triv failed.");
     c.append(&mut cl);
 
     // stick plaintext together

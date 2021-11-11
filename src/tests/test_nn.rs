@@ -1,9 +1,8 @@
-extern crate rand;
-use rand::{Rand,Rng};
+//~ extern crate rand;
+use rand::{distributions::{Distribution,Standard},Rng};
 
 use crate::tests::{self,*};
 use crate::userovo::encryption;
-use crate::arithmetics::ParmArithmetics;
 use crate::*;
 
 #[test]
@@ -41,7 +40,8 @@ fn t_impl_nn_eval_with_mode(mode: EncrVsTriv) {
         let mut m_in = vec![];
         let mut c_in = vec![];
 
-        for i in 0..nn.n_inputs() {
+        //TODO nn.n_inputs()
+        for i in 0..3 {
             // generate random input
             let m_vec = gen_rand_vec(TESTS_BITLEN_NNE);
             // convert to integer
@@ -103,7 +103,7 @@ fn t_gen_nn() -> NeuralNetwork {
 
             // push to layer
             layer.push(Perceptron {
-                t: rng.gen(),
+                t: rand::random(),
                 w: gen_w(in_len),
                 b: rng.gen_range(-15..=15),
             });
@@ -120,9 +120,9 @@ fn t_gen_nn() -> NeuralNetwork {
 
 /// Generate random `PercType`
 // cf. https://stackoverflow.com/questions/48490049/how-do-i-choose-a-random-value-from-an-enum
-impl Rand for PercType {
-    fn rand<R: Rng>(rng: &mut R) -> Self {
-        match rng.gen_range(0, 3) {
+impl Distribution<PercType> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> PercType {
+        match rng.gen_range(0..=2) {
             0 => PercType::MAX,
             1 => PercType::LIN,
             _ => PercType::ACT,

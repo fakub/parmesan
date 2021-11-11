@@ -41,7 +41,7 @@ fn t_impl_scm_with_mode(mode: EncrVsTriv) {
         // generate random scalar
         let k: i32 = rng.gen_range(-(1 << TESTS_BITLEN_SCALAR)..=(1 << TESTS_BITLEN_SCALAR));
 
-        println!("  m = {} ({}-bit: {:?}), k = {}", m1, TESTS_BITLEN_SCM, m1_vec, k);
+        println!("  m = {} ({}-bit: {:?})\n  k = {}", m1, TESTS_BITLEN_SCM, m1_vec, k);
 
         // encrypt -> homomorphic eval -> decrypt
         let c1 = encrypt_with_mode(&m1_vec, mode);

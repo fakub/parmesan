@@ -12,7 +12,7 @@ use crate::userovo::encryption;
 /// Decryption of trivial sample (no encryption of zero).
 fn t_decrypt_triv() {
     // trivial ciphertext of length TESTS_BITLEN_FULL
-    let c = ParmCiphertext::triv(TESTS_BITLEN_FULL).expect("ParmCiphertext::triv failed.");
+    let c = ParmCiphertext::triv(TESTS_BITLEN_FULL, &PUB_K.encoder).expect("ParmCiphertext::triv failed.");
     // decryption
     let m = encryption::parm_decrypt(
         tests::PARAMS,
