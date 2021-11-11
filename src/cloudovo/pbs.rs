@@ -560,8 +560,8 @@ fn eval_LUT_5(
     // resolve trivial case
     if c.dimension == 0 {
         let  m = c.decrypt_uint_triv()?;
-        let fm = if m < 1 << (5-1) { lut[m as usize] }
-            else if m < 1 << 5 { lut[(m as i32 - (1 << (5-1))) as usize] }
+        let fm = if m < (1 << (5-1)) { lut[m as usize] }
+            else if m < (1 << 5) { -lut[(m as i32 - (1 << (5-1))) as usize] }
             else {panic!("Word m = {} does not fit 5-bit LUT.", m)};
         let fm_u = ((fm as i32) & ((1 << 5) - 1)) as u32;
         Ok(LWE::encrypt_uint_triv(fm_u, &pub_keys.encoder)?)
