@@ -55,13 +55,13 @@ pub fn max_impl(
             let mut xa = x.clone();
             let mut ya = y.clone();
             for _ in 0..((y.len() as i64) - (x.len() as i64)) {
-                xa.push(LWE::zero(0)?);
+                xa.push(LWE::encrypt_uint_triv(0, &pub_keys.encoder)?);
             }
             for _ in 0..((x.len() as i64) - (y.len() as i64)) {
-                ya.push(LWE::zero(0)?);
+                ya.push(LWE::encrypt_uint_triv(0, &pub_keys.encoder)?);
             }
 
-            m = ParmCiphertext::triv(xa.len())?;
+            m = ParmCiphertext::triv(xa.len(), &pub_keys.encoder)?;
 
             // calc x and y selectors
             m.par_iter_mut().zip(xa.par_iter().zip(ya.par_iter())).for_each(| (mi, (xi, yi)) | {
@@ -72,7 +72,7 @@ pub fn max_impl(
 
                 // t, u (in parallel)
                 // init tmp variables in this scope, only references can be passed to threads
-                let mut ui = LWE::zero(0).expect("LWE::zero failed.");
+                let mut ui = LWE::encrypt_uint_triv(0, &pub_keys.encoder).expect("LWE::encrypt_uint_triv failed.");
                 let uir = &mut ui;
 
                 // parallel pool: mi, ui

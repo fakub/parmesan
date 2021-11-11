@@ -52,15 +52,15 @@ pub fn mul_impl(
 
         for _i in 0..len_diff {
             if x_in.len() < y_in.len() {
-                x_in.push(LWE::zero(0)?);
+                x_in.push(LWE::encrypt_uint_triv(0, &pub_keys.encoder)?);
             } else {
-                y_in.push(LWE::zero(0)?);
+                y_in.push(LWE::encrypt_uint_triv(0, &pub_keys.encoder)?);
             }
         }
     }
 
     let p = match x_in.len() {
-        l if l == 0 => ParmCiphertext::triv(1)?,
+        l if l == 0 => ParmCiphertext::triv(1, &pub_keys.encoder)?,
         l if l == 1 => mul_1word(
             pub_keys,
             &x_in,
@@ -145,7 +145,7 @@ fn mul_karatsuba(
                 &y0,
                 &y1,
             )?;
-            let mut c = ParmCiphertext::triv(len0)?;
+            let mut c = ParmCiphertext::triv(len0, &pub_keys.encoder)?;
             let mut c_plain = mul_impl(
                 pub_keys,
                 &x01,
@@ -160,7 +160,7 @@ fn mul_karatsuba(
                 &a,
                 &b,
             )?;
-            let mut na_nb = ParmCiphertext::triv(len0)?;
+            let mut na_nb = ParmCiphertext::triv(len0, &pub_keys.encoder)?;
             for abi in pa_pb {
                 na_nb.push(abi.opposite_uint()?);
             }
@@ -197,7 +197,7 @@ fn mul_karatsuba(
                 )?;
                 //  second, add |c-a-b|0|+|b| to a|0|0|
                 //  n.b., this way, the resulting ciphertext grows the least (1 bit only) and it also uses least BS inside additions
-                let mut a_sh  = ParmCiphertext::triv(2*len0)?;
+                let mut a_sh  = ParmCiphertext::triv(2*len0, &pub_keys.encoder)?;
                 a_sh.append(&mut a);
                 super::addition::add_sub_noise_refresh(
                     true,
@@ -291,7 +291,7 @@ fn fill_mulary(
     // fill multiplication array
     //TODO check the size, it might grow outsite due to redundant representation
     //TODO try different approaches and compare
-    let mut mulary = vec![ParmCiphertext::triv(2*len)?; len];
+    let mut mulary = vec![ParmCiphertext::triv(2*len, &pub_keys.encoder)?; len];
 
     // nested parallel iterators work as expected: they indeed create nested pools
     mulary.par_iter_mut().zip(y.par_iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
@@ -341,8 +341,8 @@ fn mul_lwe(
 
             // pos, neg (in parallel)
             // init tmp variables in this scope, only references can be passed to threads
-            let mut pos = LWE::zero(0).expect("LWE::zero failed.");
-            let mut neg = LWE::zero(0).expect("LWE::zero failed.");
+            let mut pos = LWE::encrypt_uint_triv(0, &pub_keys.encoder).expect("LWE::encrypt_uint_triv failed.");
+            let mut neg = LWE::encrypt_uint_triv(0, &pub_keys.encoder).expect("LWE::encrypt_uint_triv failed.");
             let posr = &mut pos;
             let negr = &mut neg;
 
@@ -385,7 +385,7 @@ pub fn squ_impl(
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     let s = match x.len() {
-        l if l == 0 => ParmCiphertext::triv(1)?,
+        l if l == 0 => ParmCiphertext::triv(1, &pub_keys.encoder)?,
         l if l == 1 => squ_1word(
             pub_keys,
             x,
@@ -441,7 +441,7 @@ fn squ_dnq(
             )?;
 
             //  C = x_0 * x_1                   .. len0- x len1-bit multiplication (to be shifted len0 + 1 bits where 1 bit is for 2x AB)
-            let mut c = ParmCiphertext::triv(len0 + 1)?;
+            let mut c = ParmCiphertext::triv(len0 + 1, &pub_keys.encoder)?;
             let mut c_plain = mul_impl(
                 pub_keys,
                 &x0,
@@ -470,7 +470,7 @@ fn squ_dnq(
                     &c,
                 )?;
                 //  second, add | C |0|+| B | to | A |0|0|
-                let mut a_sh  = ParmCiphertext::triv(2*len0)?;
+                let mut a_sh  = ParmCiphertext::triv(2*len0, &pub_keys.encoder)?;
                 a_sh.append(&mut a);
                 super::addition::add_sub_impl(
                     true,
@@ -553,8 +553,8 @@ fn fill_squary(
     let x2 = x.clone();   //TODO needed? intended for parallel addition to avoid concurrent memory access
 
     // fill temp squaring array
-    let mut squary_tmp  = vec![ParmCiphertext::triv(2*len)?; len];
-    let mut squary      = vec![ParmCiphertext::triv(2*len)?; len];
+    let mut squary_tmp  = vec![ParmCiphertext::triv(2*len, &pub_keys.encoder)?; len];
+    let mut squary      = vec![ParmCiphertext::triv(2*len, &pub_keys.encoder)?; len];
 
     squary_tmp.par_iter_mut().zip(x.par_iter().enumerate()).for_each(| (sqi, (i, xi)) | {
         sqi[i..].par_iter_mut().zip(x2.par_iter().enumerate()).for_each(| (sqij, (j, x2j)) | {

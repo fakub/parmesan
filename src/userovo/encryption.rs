@@ -48,7 +48,7 @@ pub fn parm_encrypt_vec(
     priv_keys: &PrivKeySet,
     mv: &Vec<i32>,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
-    let mut res = ParmCiphertext::triv(mv.len())?;
+    let mut res = ParmCiphertext::triv(mv.len(), &priv_keys.encoder)?;
 
     res.iter_mut().zip(mv.iter()).for_each(| (ri, mi) | {
         *ri = parm_encr_word(params, priv_keys, *mi).expect("parm_encr_word failed.");

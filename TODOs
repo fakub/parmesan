@@ -28,6 +28,9 @@
                 0 1 1 0 1 0 0 1 1   / round and cond. shift
             ->  1 1 0 1 0 1
 
+* place tests into /tests folder (outside src)
+* make lib & bin in single project: https://stackoverflow.com/questions/26946646/rust-package-with-both-a-library-and-a-binary
+
 * cfg for max{} behavior
 * resolve bootstraps before / after / in between operations
 
