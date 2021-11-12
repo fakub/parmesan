@@ -85,16 +85,17 @@ fn t_impl_nn_eval_with_mode(mode: EncrVsTriv) {
 fn t_gen_nn() -> NeuralNetwork {
     let mut rng = rand::thread_rng();
 
-    // fixed depth = 3
-    let depth = 3;
+    // generate NN depth
+    let depth = rng.gen_range(1..=TESTS_NNE_DEPTH);
     // prepare layers
     let mut layers = vec![];
-    // generate input length
-    let mut in_len = rng.gen_range(1..5);
+    // generate & save input length
+    let mut in_len: usize = rng.gen_range(1..=TESTS_NNE_LAYER_SIZE);
+    let n_inputs = in_len;
 
     for _ in 0..depth {
         // generate number of perceptrons
-        let layer_len = rng.gen_range(1..5);
+        let layer_len = rng.gen_range(1..TESTS_NNE_LAYER_SIZE);
         let mut layer = vec![];
 
         for _ in 0..layer_len {
@@ -105,7 +106,7 @@ fn t_gen_nn() -> NeuralNetwork {
             layer.push(Perceptron {
                 t: rand::random(),
                 w: gen_w(in_len),
-                b: rng.gen_range(-15..=15),
+                b: rng.gen_range(-TESTS_NNE_B_ABS_MAX..=TESTS_NNE_B_ABS_MAX),
             });
         }
 
@@ -115,7 +116,7 @@ fn t_gen_nn() -> NeuralNetwork {
         in_len = layer_len;
     }
 
-    NeuralNetwork {layers}
+    NeuralNetwork {layers, n_inputs}
 }
 
 /// Generate random `PercType`
