@@ -166,6 +166,8 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
     // ---------------------------------
     //  Global Scope
+
+    // 90-bit
     #[cfg(feature = "sc_A")]
     let par = &params::PARM90__PI_2__D_02__A;
     #[cfg(feature = "sc_B")]
@@ -184,6 +186,26 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     let par = &params::PARM90__PI_5__D_36__H;
     #[cfg(feature = "sc_I")]
     let par = &params::PARM90__PI_7__D_74__I;
+
+    //~ // 112-bit
+    //~ #[cfg(feature = "sc_A")]
+    //~ let par = &params::PARM112__PI_2__D_02__A;
+    //~ #[cfg(feature = "sc_B")]
+    //~ let par = &params::PARM112__PI_2__D_03__B;
+    //~ #[cfg(feature = "sc_C")]
+    //~ let par = &params::PARM112__PI_3__D_19__C;
+    //~ #[cfg(feature = "sc_D")]
+    //~ let par = &params::PARM112__PI_3__D_12__D;
+    //~ #[cfg(feature = "sc_E")]
+    //~ let par = &params::PARM112__PI_4__D_12__E;
+    //~ #[cfg(feature = "sc_F")]
+    //~ let par = &params::PARM112__PI_5__D_20__F;
+    //~ #[cfg(feature = "sc_G")]
+    //~ let par = &params::PARM112__PI_4__D_36__G;
+    //~ #[cfg(feature = "sc_H")]
+    //~ let par = &params::PARM112__PI_5__D_36__H;
+    //~ #[cfg(feature = "sc_I")]
+    //~ let par = &params::PARM112__PI_7__D_74__I;
 
     // ---------------------------------
     //  Userovo Scope
@@ -250,7 +272,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     //~ let cy4 = pu.encrypt(m_y4,   4)?;
     //~ let cx8 = pu.encrypt(m_x8,   8)?;
     //~ let cy8 = pu.encrypt(m_y8,   8)?;
-    let cx16= pu.encrypt(m_x16, 16)?;
+    //~ let cx16= pu.encrypt(m_x16, 16)?;
     //~ let cy16= pu.encrypt(m_y16, 16)?;
     //~ let cx17= pu.encrypt(m_x17, 17)?;
     //~ let cy17= pu.encrypt(m_y17, 17)?;
@@ -334,24 +356,24 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     //~ let c_xx16 = ParmArithmetics::squ(&pc, &cx16);
     //~ let c_xx32 = ParmArithmetics::squ(&pc, &cx32);
 
-        simple_duration!(
-            ["sc mul -121"],
-            [
-    let c_n161x16 = ParmArithmetics::scalar_mul(&pc, -121, &cx16);
-            ]
-        );
-        simple_duration!(
-            ["sc mul -128"],
-            [
-    let c_n128x16 = ParmArithmetics::scalar_mul(&pc, -128, &cx16);
-            ]
-        );
-        simple_duration!(
-            ["sc mul 3"],
-            [
-    let c_p3x16   = ParmArithmetics::scalar_mul(&pc,    3, &cx16);
-            ]
-        );
+        //~ simple_duration!(
+            //~ ["sc mul -121"],
+            //~ [
+    //~ let c_n161x16 = ParmArithmetics::scalar_mul(&pc, -121, &cx16);
+            //~ ]
+        //~ );
+        //~ simple_duration!(
+            //~ ["sc mul -128"],
+            //~ [
+    //~ let c_n128x16 = ParmArithmetics::scalar_mul(&pc, -128, &cx16);
+            //~ ]
+        //~ );
+        //~ simple_duration!(
+            //~ ["sc mul 3"],
+            //~ [
+    //~ let c_p3x16   = ParmArithmetics::scalar_mul(&pc,    3, &cx16);
+            //~ ]
+        //~ );
 
 
     // =================================
@@ -379,9 +401,9 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     //~ let m_xx16 = pu.decrypt(&c_xx16)?;
     //~ let m_xx32 = pu.decrypt(&c_xx32)?;
 
-    let m_n161x16 = pu.decrypt(&c_n161x16)?;
-    let m_n128x16 = pu.decrypt(&c_n128x16)?;
-    let m_p3x16   = pu.decrypt(&c_p3x16  )?;
+    //~ let m_n161x16 = pu.decrypt(&c_n161x16)?;
+    //~ let m_n128x16 = pu.decrypt(&c_n128x16)?;
+    //~ let m_p3x16   = pu.decrypt(&c_p3x16  )?;
 
     let mut summary_text = format!("{} results", String::from("User:").bold().yellow());
 
@@ -474,21 +496,21 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
                             //~ m_x32 * m_x32
     //~ );
 
-    summary_text = format!("{}\n-121 × x_16   = {:12} :: {} (exp. {})", summary_text,
-                            m_n161x16,
-                            if -121 * m_x16 == m_n161x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            -121 * m_x16
-    );
-    summary_text = format!("{}\n-128 × x_16   = {:12} :: {} (exp. {})", summary_text,
-                            m_n128x16,
-                            if -128 * m_x16 == m_n128x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            -128 * m_x16
-    );
-    summary_text = format!("{}\n 3 × x_16     = {:12} :: {} (exp. {})", summary_text,
-                            m_p3x16,
-                            if 3 * m_x16 == m_p3x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
-                            3 * m_x16
-    );
+    //~ summary_text = format!("{}\n-121 × x_16   = {:12} :: {} (exp. {})", summary_text,
+                            //~ m_n161x16,
+                            //~ if -121 * m_x16 == m_n161x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            //~ -121 * m_x16
+    //~ );
+    //~ summary_text = format!("{}\n-128 × x_16   = {:12} :: {} (exp. {})", summary_text,
+                            //~ m_n128x16,
+                            //~ if -128 * m_x16 == m_n128x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            //~ -128 * m_x16
+    //~ );
+    //~ summary_text = format!("{}\n 3 × x_16     = {:12} :: {} (exp. {})", summary_text,
+                            //~ m_p3x16,
+                            //~ if 3 * m_x16 == m_p3x16 {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
+                            //~ 3 * m_x16
+    //~ );
 
     infoln!("{}", summary_text);
 
