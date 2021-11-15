@@ -87,7 +87,7 @@ pub fn scalar_mul_impl(
     for (i, ki) in k_vec.iter().enumerate() {
         if *ki != 0 {
             // shift x_sgn
-            let mut x_shifted = ParmCiphertext::triv(i)?;
+            let mut x_shifted = ParmCiphertext::triv(i, &pub_keys.encoder)?;
             let mut x_cl = if *ki == 1 {x_pos.clone()} else {x_neg.clone()};   // there shall be no option other than -1, 0, +1
             x_shifted.append(&mut x_cl);
 

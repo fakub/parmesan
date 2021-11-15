@@ -74,16 +74,11 @@ pub type Layer = Vec<Perceptron>;
 pub struct NeuralNetwork {
     //  NN consists of layers, evaluated one after each other
     pub layers: Vec<Layer>,
+    //  it is convenient to hold the input size
+    pub n_inputs: usize,
 }
 
 impl NeuralNetwork {
-
-    /// Number of inputs
-    //~ pub fn n_inputs(&self) -> usize {
-        //FIXME this is not #inputs
-        //  #inputs is rather length of w's in the first layer (which may differ)
-        //~ if self.layers.len() == 0 { 0 } else { self.layers[0].len() }
-    //~ }
 
     /// Evaluate Neural Network
     pub fn eval<T: Clone + ParmArithmetics>( // T is either i32, or ParmCiphertext

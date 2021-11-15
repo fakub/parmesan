@@ -271,6 +271,24 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     //~ }
     //~ return Ok(());
 
+    //~ //DBG BEGIN
+    //~ // let c1 = pu.encrypt_vec(&vec![-1])?;
+    //~ // let c2 = pu.encrypt_vec(&vec![ 1])?;
+    //~ let c1: ParmCiphertext = vec![
+        //~ LWE::encrypt_uint_triv((-1 & par.plaintext_mask()) as u32, &pub_k.encoder)?
+    //~ ];
+    //~ let c2: ParmCiphertext = vec![
+        //~ LWE::encrypt_uint_triv(( 1 & par.plaintext_mask()) as u32, &pub_k.encoder)?
+    //~ ];
+    //~ let ca = ParmArithmetics::add(&pc, &c1, &c2);
+    //~ let cs = ParmArithmetics::sub(&pc, &c1, &c2);
+    //~ let ma = pu.decrypt(&ca)?;
+    //~ println!("[-1] + [+1] = {}", ma);
+    //~ let ms = pu.decrypt(&cs)?;
+    //~ println!("[-1] - [+1] = {}", ms);
+    //~ return Ok(());
+    //~ //DBG END
+
     let c_add  = ParmArithmetics::add(&pc, &c[0], &c[1]);
     let c_sub  = ParmArithmetics::sub(&pc, &c[1], &c[0]);
     let c_adc  = ParmArithmetics::add_const(&pc,  &c[0], DEMO_ADC);
@@ -595,6 +613,7 @@ pub fn demo_nn() -> NeuralNetwork {
                 },
             ],
         ],
+        n_inputs: 3,
     }
 }
 
@@ -661,5 +680,6 @@ pub fn arrhythmia_nn() -> NeuralNetwork {
                 Perceptron {t: PercType::LIN, w: vec![189, -772, 434, 314, -39, -487, -175, -225, 264, -1336, -861, -157, -119, 361, 403, -112, 134, -58, 66, -113, 136, -776, 300, -1854, 193, 387, 400, 190, -111, 63, -937, 193, -1, -839, -34, -173, -221, -1085], b: -2097152000},
             ],
         ],
+        n_inputs: 16,
     }
 }

@@ -27,7 +27,7 @@ pub fn add_sub_noise_refresh(
         y,
     )?;
 
-    let mut z = ParmCiphertext::triv(z_noisy.len())?;
+    let mut z = ParmCiphertext::triv(z_noisy.len(), &pub_keys.encoder)?;
 
     z_noisy.par_iter().zip(z.par_iter_mut()).for_each(| (zni, zi) | {
         *zi = pbs::id__pi_5(pub_keys, zni).expect("pbs::id__pi_5 failed.");
@@ -57,6 +57,10 @@ pub fn add_sub_impl(
     for yi in y {
         if yi.dimension == 0 && yi.ciphertext.get_body().0 == 0 {y_rzero += 1;} else {break;}
     }
+    // resolve all-triv-zeros cases
+    if x_rzero == x.len() { return if is_add {Ok(y.clone())} else {opposite_impl(y)};}
+    if y_rzero == y.len() { return Ok(x.clone());}
+    // continue with non-trivial cases
     let r_triv = std::cmp::max(x_rzero, y_rzero);
 
     // calculate length of w that is to be calculated (incl. right zeros)
@@ -73,8 +77,6 @@ pub fn add_sub_impl(
         if yi.dimension == 0 && yi.ciphertext.get_body().0 == 0 {y_lzero += 1;} else {break;}
     }
     let wlen = std::cmp::max(x.len() - x_lzero, y.len() - y_lzero);
-    // resolve a very peculiar case, when wlen == 0 (there's nothing but trivial zeros, if any..)
-    if wlen == 0 {return Ok(ParmCiphertext::triv(1)?);}
 
     let mut z: ParmCiphertext;
 
@@ -90,7 +92,7 @@ pub fn add_sub_impl(
             }
             // if x is shorter than wlen, fill the rest with zeros
             for _ in 0..((wlen as i64) - (x.len() as i64)) {
-                w.push(LWE::zero(0)?);
+                w.push(LWE::encrypt_uint_triv(0, &pub_keys.encoder)?);
             }
             // now w has the correct length!
 
@@ -122,14 +124,22 @@ pub fn add_sub_impl(
             //~ ]);
             // -----------------------------------------------------------------
 
-            let mut q = ParmCiphertext::triv(w.len())?;
+            let mut q = ParmCiphertext::triv(w.len(), &pub_keys.encoder)?;
             z = w.clone();
             // one more word for "carry"
-            z.push(LWE::zero(0)?);
+            z.push(LWE::encrypt_uint_triv(0, &pub_keys.encoder)?);
 
-            //FIXME
-            //  it may happen that r_triv is more than q.len() == wlen (at least this happens for m1 = [] and m2 = [0] -- trivial -- then r_triv = 1 and wlen = 0)
-            //  well, it hapens iff one of numbers only consists of trivial samples
+            // this shall not happen
+            if r_triv >= q.len() {
+                println!(">>> add fail:");
+                println!("\tx.len = {}", x.len());
+                println!("\tx_rzero = {}", x_rzero);
+                println!("\tx_lzero = {}", x_lzero);
+                println!("\ty.len = {}", y.len());
+                println!("\ty_rzero = {}", y_rzero);
+                println!("\ty_lzero = {}", y_lzero);
+                panic!("Unexpected fatal error!");
+            }
 
             q[r_triv..].par_iter_mut().zip(w[r_triv..].par_iter().enumerate()).for_each(| (qi, (i0, wi)) | {
                 let i = i0 + r_triv;
@@ -139,7 +149,7 @@ pub fn add_sub_impl(
                 *qi = pbs::f_4__pi_5(pub_keys, &wi_3).expect("f_4__pi_5 failed.");
             });
             // q must have the same length as z
-            q.push(LWE::zero(0)?);
+            q.push(LWE::encrypt_uint_triv(0, &pub_keys.encoder)?);
 
             z.par_iter_mut().zip(q.par_iter().enumerate()).for_each(| (zi, (i, qi)) | {
                 // calc   2 q_i

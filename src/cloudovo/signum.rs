@@ -56,12 +56,12 @@ pub fn sgn_recursion_raw(
     measure_duration!(
         ["Signum recursion in parallel ({}-bit, groups by {})", x.len(), gamma],
         [
-            let mut b = ParmCiphertext::triv((x.len() - 1) / gamma + 1)?;
+            let mut b = ParmCiphertext::triv((x.len() - 1) / gamma + 1, &pub_keys.encoder)?;
 
             // the thread needs to know the index j so that it can check against x.len()
             b.par_iter_mut().enumerate().for_each(| (j, bj) | {
 
-                let mut sj = ParmCiphertext::triv(gamma).expect("LWE::zero failed.");
+                let mut sj = ParmCiphertext::triv(gamma, &pub_keys.encoder).expect("ParmCiphertext::triv failed.");
 
                 sj.par_iter_mut().enumerate().for_each(| (i, sji) | {
                     if gamma * j + i < x.len() {
