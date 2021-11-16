@@ -19,14 +19,14 @@ fn t_squ_non_triv_aligned() {
     t_impl_squ_with_mode(EncrVsTriv::ENCR);
 }
 
-//WISH
-//~ #[test]
-//~ /// Squaring of trivial sub-samples only.
-//~ fn t_squ_all_triv() {
-    //~ println!("All-Triv ...");
-    //~ t_impl_squ_with_mode(EncrVsTriv::TRIV);
-//~ }
+#[test]
+/// Squaring of trivial sub-samples only.
+fn t_squ_all_triv() {
+    println!("All-Triv ...");
+    t_impl_squ_with_mode(EncrVsTriv::TRIV);
+}
 
+//FIXME same as for multiplication
 //~ #[test]
 //~ /// Squaring of mixed sub-samples.
 //~ fn t_squ_some_triv() {

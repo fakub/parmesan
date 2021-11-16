@@ -21,7 +21,7 @@ fn t_mul_non_triv_aligned() {
     t_impl_mul_with_mode(EncrVsTriv::ENCR, true);
 }
 
-//WISH
+//FIXME make this work
 //~ #[test]
 //~ /// Multiplication of encrypted sub-samples only, different lengths.
 //~ fn t_mul_non_triv_difflen() {
@@ -36,7 +36,9 @@ fn t_mul_all_triv_aligned() {
     t_impl_mul_with_mode(EncrVsTriv::TRIV, true);
 }
 
-//WISH
+//FIXME this fails for some weird reason:
+// thread 't_mul_some_triv_aligned' panicked at 'mul_uint_constant failed.:
+// The integer representation has not enough precision to represent error samples from the normal law of variance 0 so the ciphertext does not contain any noise!
 //~ #[test]
 //~ /// Multiplication of mixed sub-samples, aligned lengths.
 //~ fn t_mul_some_triv_aligned() {
