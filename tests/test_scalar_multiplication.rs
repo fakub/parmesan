@@ -1,6 +1,18 @@
-use crate::tests::{self,*};
-use crate::userovo::encryption;
-use crate::arithmetics::ParmArithmetics;
+#[macro_use]
+extern crate lazy_static;
+
+use rand::Rng;
+
+use parmesan::userovo::encryption;
+use parmesan::arithmetics::ParmArithmetics;
+
+#[allow(dead_code)]
+mod common;
+use common::*;
+
+
+// -----------------------------------------------------------------------------
+//  Test Cases
 
 #[test]
 /// Scalar multiplication of encrypted sub-samples only.
@@ -33,23 +45,23 @@ fn t_impl_scm_with_mode(mode: EncrVsTriv) {
     // for random scalar generation
     let mut rng = rand::thread_rng();
 
-    for _ in 0..TESTS_REPEAT_SCM {
+    for _ in 0..common::TESTS_REPEAT_SCM {
         // generate random vector(s)
-        let m1_vec = gen_rand_vec(TESTS_BITLEN_SCM);
+        let m1_vec = gen_rand_vec(common::TESTS_BITLEN_SCM);
         // convert to integer(s)
         let m1 = encryption::convert(&m1_vec).expect("convert failed.");
         // generate random scalar
-        let k: i32 = rng.gen_range(-(1 << TESTS_BITLEN_SCALAR)..=(1 << TESTS_BITLEN_SCALAR));
+        let k: i32 = rng.gen_range(-(1 << common::TESTS_BITLEN_SCALAR)..=(1 << common::TESTS_BITLEN_SCALAR));
 
-        println!("  m = {} ({}-bit: {:?})\n  k = {}", m1, TESTS_BITLEN_SCM, m1_vec, k);
+        println!("  m = {} ({}-bit: {:?})\n  k = {}", m1, common::TESTS_BITLEN_SCM, m1_vec, k);
 
         // encrypt -> homomorphic eval -> decrypt
         let c1 = encrypt_with_mode(&m1_vec, mode);
-        let c_he = ParmArithmetics::scalar_mul(&tests::PC, k, &c1);
-        let m_he = PU.decrypt(&c_he).expect("ParmesanUserovo::decrypt failed.");
+        let c_he = ParmArithmetics::scalar_mul(&common::TEST_PC, k, &c1);
+        let m_he = common::TEST_PU.decrypt(&c_he).expect("ParmesanUserovo::decrypt failed.");
 
         // plain eval
-        let m_pl = ParmArithmetics::scalar_mul(&tests::PC, k, &m1);
+        let m_pl = ParmArithmetics::scalar_mul(&common::TEST_PC, k, &m1);
 
         println!("  scm = {} (exp. {})", m_he, m_pl);
 

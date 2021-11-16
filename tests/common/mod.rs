@@ -2,11 +2,11 @@ use rand::Rng;
 
 use concrete::LWE;
 
-use crate::params::{self,Params};
-use crate::ciphertexts::{ParmCiphertext,ParmCiphertextExt};
-use crate::userovo::keys::{PrivKeySet,PubKeySet};
-use crate::ParmesanUserovo;
-use crate::ParmesanCloudovo;
+use parmesan::params::{self,Params};
+use parmesan::ciphertexts::{ParmCiphertext,ParmCiphertextExt};
+use parmesan::userovo::keys::{PrivKeySet,PubKeySet};
+use parmesan::ParmesanUserovo;
+use parmesan::ParmesanCloudovo;
 
 
 // =============================================================================
@@ -15,69 +15,53 @@ use crate::ParmesanCloudovo;
 //
 // to evaluate code in static declaration, lazy_static must be used
 // cf. https://stackoverflow.com/questions/46378637/how-to-make-a-variable-with-a-scope-lifecycle-for-all-test-functions-in-a-rust-t
-static PARAMS: &Params = &params::PARM90__PI_5__D_20__F;   //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
+pub static TEST_PARAMS: &Params = &params::PARM90__PI_5__D_20__F;   //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
 lazy_static! {
-    static ref PRIV_KEYS: PrivKeySet = PrivKeySet::new(PARAMS).expect("PrivKeySet::new failed.");
+    pub static ref TEST_PRIV_KEYS: PrivKeySet = PrivKeySet::new(TEST_PARAMS).expect("PrivKeySet::new failed.");
 }
 lazy_static! {
-    static ref PU: ParmesanUserovo<'static> = ParmesanUserovo::new(PARAMS).expect("ParmesanUserovo::new failed.");
+    pub static ref TEST_PU: ParmesanUserovo<'static> = ParmesanUserovo::new(TEST_PARAMS).expect("ParmesanUserovo::new failed.");
 }
 lazy_static! {
-    static ref PUB_K: PubKeySet<'static> = PU.export_pub_keys();
+    pub static ref TEST_PUB_K: PubKeySet<'static> = TEST_PU.export_pub_keys();
 }
 lazy_static! {
-    static ref PC: ParmesanCloudovo<'static> = ParmesanCloudovo::new(PARAMS, &PUB_K);
+    pub static ref TEST_PC: ParmesanCloudovo<'static> = ParmesanCloudovo::new(TEST_PARAMS, &TEST_PUB_K);
 }
-
-
-// =============================================================================
-//
-//  Modules
-//
-pub mod test_encryption;
-pub mod test_signum;
-pub mod test_maximum;
-pub mod test_multiplication;
-pub mod test_squaring;
-//TODO
-pub mod test_addition;
-pub mod test_addition_misc;
-pub mod test_nn;
-pub mod test_scalar_multiplication;
 
 
 // =============================================================================
 //
 //  Constants, Enums, ...
 //
-static TESTS_BITLEN_FULL:       usize     = 62;
-static TESTS_BITLEN_MAX:        usize     =  7;
-static TESTS_BITLEN_SGN:        usize     =  7;
-static TESTS_BITLEN_MUL:        usize     =  5;
-static TESTS_EXTRA_BITLEN_MUL: [usize; 2] = [8,9];
-static TESTS_BITLEN_SQU:        usize     = 7;
-static TESTS_EXTRA_BITLEN_SQU: [usize; 2] = [8,9];
-static TESTS_BITLEN_ADD:        usize     =  2;
-static TESTS_EXTRA_BITLEN_ADD: [usize; 2] = [15,TESTS_BITLEN_FULL-1];
-static TESTS_BITLEN_ADD_CONST:  usize     =  8;
-static TESTS_BITLEN_SCM:        usize     =  9;
-static TESTS_BITLEN_SCALAR:     usize     =  5;
-static TESTS_BITLEN_NNE:        usize     =  5;
+pub static TESTS_BITLEN_FULL:       usize     =  62;
+pub static TESTS_BITLEN_MAX:        usize     =   7;
+pub static TESTS_BITLEN_SGN:        usize     =   7;
+pub static TESTS_BITLEN_MUL:        usize     =   5;
+pub static TESTS_EXTRA_BITLEN_MUL: [usize; 2] =  [8,9];
+pub static TESTS_BITLEN_SQU:        usize     =   7;
+pub static TESTS_EXTRA_BITLEN_SQU: [usize; 2] =  [8,9];
+pub static TESTS_BITLEN_ADD:        usize     =   2;
+pub static TESTS_EXTRA_BITLEN_ADD: [usize; 2] = [15,TESTS_BITLEN_FULL-1];
+pub static TESTS_BITLEN_ADD_CONST:  usize     =   8;
+pub static TESTS_BITLEN_SCM:        usize     =   9;
+pub static TESTS_BITLEN_SCALAR:     usize     =   5;
+pub static TESTS_BITLEN_NNE:        usize     =   5;
 
 // NN-specific
-static TESTS_NNE_DEPTH:         usize     =  3;
-static TESTS_NNE_LAYER_SIZE:    usize     =  5;
-static TESTS_NNE_B_ABS_MAX:     i64       = 15;
+pub static TESTS_NNE_DEPTH:         usize     =   3;
+pub static TESTS_NNE_LAYER_SIZE:    usize     =   5;
+pub static TESTS_NNE_B_ABS_MAX:     i64       =  15;
 
-static TESTS_REPEAT_ENCR:       usize     = 100;
-static TESTS_REPEAT_MAX:        usize     = 3;
-static TESTS_REPEAT_SGN:        usize     = 3;
-//~ static TESTS_REPEAT_MUL:        usize     = 1;
-//~ static TESTS_REPEAT_SQU:        usize     = 1;
-static TESTS_REPEAT_ADD_CONST:  usize     = 3;
-static TESTS_REPEAT_ADD_TRIV_0: usize     = 3;
-static TESTS_REPEAT_SCM:        usize     = 3;
-static TESTS_REPEAT_NNE:        usize     = 3;
+pub static TESTS_REPEAT_ENCR:       usize     = 100;
+pub static TESTS_REPEAT_MAX:        usize     =   3;
+pub static TESTS_REPEAT_SGN:        usize     =   3;
+//~ pub static TESTS_REPEAT_MUL:        usize     = 1;
+//~ pub static TESTS_REPEAT_SQU:        usize     = 1;
+pub static TESTS_REPEAT_ADD_CONST:  usize     =   3;
+pub static TESTS_REPEAT_ADD_TRIV_0: usize     =   3;
+pub static TESTS_REPEAT_SCM:        usize     =   3;
+pub static TESTS_REPEAT_NNE:        usize     =   3;
 
 #[derive(Clone,Copy)]
 pub enum EncrVsTriv {
@@ -121,8 +105,8 @@ pub fn encrypt_with_mode(
 
     // return encrypted
     encrypt_with_flags(
-        PARAMS,
-        &PRIV_KEYS,
+        TEST_PARAMS,
+        &TEST_PRIV_KEYS,
         &m_vec,
         &m_flg,
     )

@@ -1,6 +1,18 @@
-use crate::tests::{self,*};
-use crate::userovo::encryption;
-use crate::arithmetics::ParmArithmetics;
+#[macro_use]
+extern crate lazy_static;
+
+use rand::Rng;
+
+use parmesan::userovo::encryption;
+use parmesan::arithmetics::ParmArithmetics;
+
+#[allow(dead_code)]
+mod common;
+use common::*;
+
+
+// -----------------------------------------------------------------------------
+//  Test Cases
 
 #[test]
 /// Multiplication of encrypted sub-samples only, aligned lengths.
@@ -17,19 +29,19 @@ fn t_mul_non_triv_aligned() {
     //~ t_impl_mul_with_mode(EncrVsTriv::ENCR, false);
 //~ }
 
+#[test]
+/// Multiplication of trivial sub-samples only, aligned lengths.
+fn t_mul_all_triv_aligned() {
+    println!("All-Triv Aligned ...");
+    t_impl_mul_with_mode(EncrVsTriv::TRIV, true);
+}
+
 //WISH
 //~ #[test]
-//~ /// Multiplication of trivial sub-samples only.
-//~ fn t_mul_all_triv() {
-    //~ println!("All-Triv ...");
-    //~ t_impl_mul_with_mode(EncrVsTriv::TRIV);
-//~ }
-
-//~ #[test]
-//~ /// Multiplication of mixed sub-samples.
-//~ fn t_mul_some_triv() {
-    //~ println!("Mixed ...");
-    //~ t_impl_mul_with_mode(EncrVsTriv::ENCRTRIV);
+//~ /// Multiplication of mixed sub-samples, aligned lengths.
+//~ fn t_mul_some_triv_aligned() {
+    //~ println!("Mixed Aligned ...");
+    //~ t_impl_mul_with_mode(EncrVsTriv::ENCRTRIV, true);
 //~ }
 
 
@@ -45,8 +57,8 @@ fn t_impl_mul_with_mode(
     let mut rng = rand::thread_rng();
 
     // set up bit-lengths
-    let mut range: Vec<_> = (0..=TESTS_BITLEN_MUL).collect();
-    range.extend(TESTS_EXTRA_BITLEN_MUL);
+    let mut range: Vec<_> = (0..=common::TESTS_BITLEN_MUL).collect();
+    range.extend(common::TESTS_EXTRA_BITLEN_MUL);
 
     for bl in range {
         // generate random vector(s)
@@ -64,12 +76,12 @@ fn t_impl_mul_with_mode(
         let c1 = encrypt_with_mode(&m1_vec, mode);
         let c2 = encrypt_with_mode(&m2_vec, mode);
 
-        let c_he = ParmArithmetics::mul(&tests::PC, &c1, &c2);
+        let c_he = ParmArithmetics::mul(&common::TEST_PC, &c1, &c2);
 
-        let m_he = PU.decrypt(&c_he).expect("ParmesanUserovo::decrypt failed.");
+        let m_he = common::TEST_PU.decrypt(&c_he).expect("ParmesanUserovo::decrypt failed.");
 
         // plain eval
-        let m_pl = ParmArithmetics::mul(&tests::PC, &m1, &m2);
+        let m_pl = ParmArithmetics::mul(&common::TEST_PC, &m1, &m2);
 
         println!("  mul = {} (exp. {})", m_he, m_pl);
 

@@ -1,6 +1,19 @@
-use crate::tests::{self,*};
-use crate::userovo::encryption;
-use crate::arithmetics::ParmArithmetics;
+#[macro_use]
+extern crate lazy_static;
+
+use rand::Rng;
+
+use parmesan::userovo::encryption;
+use parmesan::arithmetics::ParmArithmetics;
+use parmesan::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+
+#[allow(dead_code)]
+mod common;
+use common::*;
+
+
+// -----------------------------------------------------------------------------
+//  Test Cases
 
 // Add Const
 
@@ -32,6 +45,8 @@ fn t_add_const_some_triv() {
 /// Corner cases with trivial zeros, encrypted sub-samples only.
 fn t_add_triv_0() {
     println!("Non-Triv ...");
+    //        00███00
+    //  000██00000000
     t_impl_add_triv_zeros_with_mode(
         2, 3, 2,
         EncrVsTriv::ENCR,
@@ -50,10 +65,10 @@ fn t_impl_add_const_with_mode(
     // for mis-aligned length generation
     let mut rng = rand::thread_rng();
 
-    for _ in 0..TESTS_REPEAT_ADD_CONST {
+    for _ in 0..common::TESTS_REPEAT_ADD_CONST {
         // generate random vector(s)
-        let bl_e = rng.gen_range(0..=TESTS_BITLEN_ADD_CONST);
-        let bl_c = rng.gen_range(0..=TESTS_BITLEN_ADD_CONST);
+        let bl_e = rng.gen_range(0..=common::TESTS_BITLEN_ADD_CONST);
+        let bl_c = rng.gen_range(0..=common::TESTS_BITLEN_ADD_CONST);
         let me_vec = gen_rand_vec(bl_e);
         let mc_vec = gen_rand_vec(bl_c);
         // convert to integer(s)
@@ -64,11 +79,11 @@ fn t_impl_add_const_with_mode(
 
         // encrypt -> homomorphic eval -> decrypt
         let c = encrypt_with_mode(&me_vec, mode);
-        let c_he = ParmArithmetics::add_const(&tests::PC, &c, mc);
-        let m_he = PU.decrypt(&c_he).expect("ParmesanUserovo::decrypt failed.");
+        let c_he = ParmArithmetics::add_const(&common::TEST_PC, &c, mc);
+        let m_he = common::TEST_PU.decrypt(&c_he).expect("ParmesanUserovo::decrypt failed.");
 
         // plain eval
-        let m_pl = ParmArithmetics::add_const(&tests::PC, &me, mc);
+        let m_pl = ParmArithmetics::add_const(&common::TEST_PC, &me, mc);
 
         println!("  add const = {} (exp. {})", m_he, m_pl);
 
@@ -87,7 +102,7 @@ fn t_impl_add_triv_zeros_with_mode(
     ct_len_y: usize,
     rtriv_y: usize,
 ) {
-    for _ in 0..TESTS_REPEAT_ADD_TRIV_0 {
+    for _ in 0..common::TESTS_REPEAT_ADD_TRIV_0 {
         // generate random vectors & respective ciphertexts with given number of trivial zeros
         let (m1_vec, c1) = t_gen_ct_with_triv_zeros(
             ltriv_x,
@@ -108,15 +123,15 @@ fn t_impl_add_triv_zeros_with_mode(
         println!("  m1 = {} ({:?} |{}█{}|), m2 = {} ({:?} |{}█{}|)", m1, m1_vec, ltriv_x, rtriv_x, m2, m2_vec, ltriv_y, rtriv_y);
 
         // homomorphic eval -> decrypt
-        let c_he_a = ParmArithmetics::add(&tests::PC, &c1, &c2);
-        let c_he_s = ParmArithmetics::sub(&tests::PC, &c1, &c2);
+        let c_he_a = ParmArithmetics::add(&common::TEST_PC, &c1, &c2);
+        let c_he_s = ParmArithmetics::sub(&common::TEST_PC, &c1, &c2);
 
-        let m_he_a = PU.decrypt(&c_he_a).expect("ParmesanUserovo::decrypt failed.");
-        let m_he_s = PU.decrypt(&c_he_s).expect("ParmesanUserovo::decrypt failed.");
+        let m_he_a = common::TEST_PU.decrypt(&c_he_a).expect("ParmesanUserovo::decrypt failed.");
+        let m_he_s = common::TEST_PU.decrypt(&c_he_s).expect("ParmesanUserovo::decrypt failed.");
 
         // plain eval
-        let m_pl_a = ParmArithmetics::add(&tests::PC, &m1, &m2);
-        let m_pl_s = ParmArithmetics::sub(&tests::PC, &m1, &m2);
+        let m_pl_a = ParmArithmetics::add(&common::TEST_PC, &m1, &m2);
+        let m_pl_s = ParmArithmetics::sub(&common::TEST_PC, &m1, &m2);
 
         println!("  add = {} (exp. {})", m_he_a, m_pl_a);
         println!("  sub = {} (exp. {})", m_he_s, m_pl_s);
@@ -146,10 +161,10 @@ fn t_gen_ct_with_triv_zeros(
     let mut l_vec = vec![0; ltriv];
 
     // stick ciphertext together
-    let mut c = ParmCiphertext::triv(rtriv, &PUB_K.encoder).expect("ParmCiphertext::triv failed.");
+    let mut c = ParmCiphertext::triv(rtriv, &common::TEST_PUB_K.encoder).expect("ParmCiphertext::triv failed.");
     let mut ci = encrypt_with_mode(&i_vec, mode);
     c.append(&mut ci);
-    let mut cl = ParmCiphertext::triv(ltriv, &PUB_K.encoder).expect("ParmCiphertext::triv failed.");
+    let mut cl = ParmCiphertext::triv(ltriv, &common::TEST_PUB_K.encoder).expect("ParmCiphertext::triv failed.");
     c.append(&mut cl);
 
     // stick plaintext together

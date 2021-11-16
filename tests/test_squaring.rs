@@ -1,6 +1,16 @@
-use crate::tests::{self,*};
-use crate::userovo::encryption;
-use crate::arithmetics::ParmArithmetics;
+#[macro_use]
+extern crate lazy_static;
+
+use parmesan::userovo::encryption;
+use parmesan::arithmetics::ParmArithmetics;
+
+#[allow(dead_code)]
+mod common;
+use common::*;
+
+
+// -----------------------------------------------------------------------------
+//  Test Cases
 
 #[test]
 /// Squaring of encrypted sub-samples only.
@@ -31,8 +41,8 @@ fn t_squ_non_triv_aligned() {
 /// Implementation for three variants of vector to be evaluated.
 fn t_impl_squ_with_mode(mode: EncrVsTriv) {
     // set up bit-lengths
-    let mut range: Vec<_> = (0..=TESTS_BITLEN_SQU).collect();
-    range.extend(TESTS_EXTRA_BITLEN_SQU);
+    let mut range: Vec<_> = (0..=common::TESTS_BITLEN_SQU).collect();
+    range.extend(common::TESTS_EXTRA_BITLEN_SQU);
 
     for bl in range {
         // generate random vector(s)
@@ -44,11 +54,11 @@ fn t_impl_squ_with_mode(mode: EncrVsTriv) {
 
         // encrypt -> homomorphic eval -> decrypt
         let c1 = encrypt_with_mode(&m1_vec, mode);
-        let c_he = ParmArithmetics::squ(&tests::PC, &c1);
-        let m_he = PU.decrypt(&c_he).expect("ParmesanUserovo::decrypt failed.");
+        let c_he = ParmArithmetics::squ(&common::TEST_PC, &c1);
+        let m_he = common::TEST_PU.decrypt(&c_he).expect("ParmesanUserovo::decrypt failed.");
 
         // plain eval
-        let m_pl = ParmArithmetics::squ(&tests::PC, &m1);
+        let m_pl = ParmArithmetics::squ(&common::TEST_PC, &m1);
 
         println!("  squ = {} (exp. {})", m_he, m_pl);
 

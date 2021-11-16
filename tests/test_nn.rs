@@ -1,9 +1,18 @@
-//~ extern crate rand;
-use rand::{distributions::{Distribution,Standard},Rng};
+#[macro_use]
+extern crate lazy_static;
 
-use crate::tests::{self,*};
-use crate::userovo::encryption;
-use crate::*;
+use rand::Rng;
+
+use parmesan::userovo::encryption;
+use parmesan::*;
+
+#[allow(dead_code)]
+mod common;
+use common::*;
+
+
+// -----------------------------------------------------------------------------
+//  Test Cases
 
 #[test]
 /// NN Evaluation over encrypted sub-samples only.
@@ -35,7 +44,7 @@ fn t_impl_nn_eval_with_mode(mode: EncrVsTriv) {
     // generate random NN
     let nn = t_gen_nn();
 
-    for _ in 0..TESTS_REPEAT_NNE {
+    for _ in 0..common::TESTS_REPEAT_NNE {
         let mut m_in_vec = vec![];
         let mut m_in = vec![];
         let mut c_in = vec![];
@@ -43,11 +52,11 @@ fn t_impl_nn_eval_with_mode(mode: EncrVsTriv) {
         //TODO nn.n_inputs()
         for i in 0..3 {
             // generate random input
-            let m_vec = gen_rand_vec(TESTS_BITLEN_NNE);
+            let m_vec = gen_rand_vec(common::TESTS_BITLEN_NNE);
             // convert to integer
             let m = encryption::convert(&m_vec).expect("convert failed.");
 
-            println!("  m[{}] = {} ({}-bit: {:?})", i, m, TESTS_BITLEN_NNE, m_vec);
+            println!("  m[{}] = {} ({}-bit: {:?})", i, m, common::TESTS_BITLEN_NNE, m_vec);
 
             // encrypt
             let c = encrypt_with_mode(&m_vec, mode);
@@ -59,17 +68,17 @@ fn t_impl_nn_eval_with_mode(mode: EncrVsTriv) {
         }
 
         // homomorphic eval
-        let c_he = nn.eval(&tests::PC, &c_in);
+        let c_he = nn.eval(&common::TEST_PC, &c_in);
 
         // decrypt
         let mut m_he = vec![];
         for co in c_he {
-            m_he.push(PU.decrypt(&co).expect("ParmesanUserovo::decrypt failed."));
+            m_he.push(common::TEST_PU.decrypt(&co).expect("ParmesanUserovo::decrypt failed."));
 
         }
 
         // plain eval
-        let m_pl = nn.eval(&tests::PC, &m_in);
+        let m_pl = nn.eval(&common::TEST_PC, &m_in);
 
         println!("  nn_eval = {:?}\n  (exp. {:?})", m_he, m_pl);
 
@@ -86,16 +95,16 @@ fn t_gen_nn() -> NeuralNetwork {
     let mut rng = rand::thread_rng();
 
     // generate NN depth
-    let depth = rng.gen_range(1..=TESTS_NNE_DEPTH);
+    let depth = rng.gen_range(1..=common::TESTS_NNE_DEPTH);
     // prepare layers
     let mut layers = vec![];
     // generate & save input length
-    let mut in_len: usize = rng.gen_range(1..=TESTS_NNE_LAYER_SIZE);
+    let mut in_len: usize = rng.gen_range(1..=common::TESTS_NNE_LAYER_SIZE);
     let n_inputs = in_len;
 
     for _ in 0..depth {
         // generate number of perceptrons
-        let layer_len = rng.gen_range(1..TESTS_NNE_LAYER_SIZE);
+        let layer_len = rng.gen_range(1..common::TESTS_NNE_LAYER_SIZE);
         let mut layer = vec![];
 
         for _ in 0..layer_len {
@@ -106,7 +115,7 @@ fn t_gen_nn() -> NeuralNetwork {
             layer.push(Perceptron {
                 t: rand::random(),
                 w: gen_w(in_len),
-                b: rng.gen_range(-TESTS_NNE_B_ABS_MAX..=TESTS_NNE_B_ABS_MAX),
+                b: rng.gen_range(-common::TESTS_NNE_B_ABS_MAX..=common::TESTS_NNE_B_ABS_MAX),
             });
         }
 
@@ -117,18 +126,6 @@ fn t_gen_nn() -> NeuralNetwork {
     }
 
     NeuralNetwork {layers, n_inputs}
-}
-
-/// Generate random `PercType`
-// cf. https://stackoverflow.com/questions/48490049/how-do-i-choose-a-random-value-from-an-enum
-impl Distribution<PercType> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> PercType {
-        match rng.gen_range(0..=2) {
-            0 => PercType::MAX,
-            1 => PercType::LIN,
-            _ => PercType::ACT,
-        }
-    }
 }
 
 fn gen_w(wlen: usize) -> Vec<i32> {
