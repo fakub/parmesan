@@ -20,12 +20,6 @@ use chrono::Utc;
 #[allow(unused_imports)]
 use concrete::LWE;
 
-#[cfg(test)]
-mod tests;
-#[cfg(test)]
-#[macro_use]
-extern crate lazy_static;
-
 /// Keeps log level for nested time measurements
 static mut LOG_LVL: u8 = 0;
 
