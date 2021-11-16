@@ -40,6 +40,8 @@
 #[allow(unused_imports)]
 use colored::Colorize;
 
+use rand::{distributions::{Distribution,Standard},Rng};
+
 use crate::ParmesanCloudovo;
 use crate::arithmetics::ParmArithmetics;
 
@@ -230,5 +232,17 @@ impl NeuralNetwork {
         lc: &T,   // lc .. for linear combination
     ) -> T {
         ParmArithmetics::relu(pc, lc)    // sgn   relu
+    }
+}
+
+/// Generate random `PercType`
+// cf. https://stackoverflow.com/questions/48490049/how-do-i-choose-a-random-value-from-an-enum
+impl Distribution<PercType> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> PercType {
+        match rng.gen_range(0..=2) {
+            0 => PercType::MAX,
+            1 => PercType::LIN,
+            _ => PercType::ACT,
+        }
     }
 }
