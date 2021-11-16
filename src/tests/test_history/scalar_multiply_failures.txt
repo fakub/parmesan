@@ -1,4 +1,0 @@
-test: scalar multiplication , status : failure, samples : m1 : 679776577, m2 : 0, decrypted result : 679776577, m1.size : 30, m2.size : 1length of decrypted result : 30
-test: scalar multiplication , status : failure, samples : m1 : -147376624, m2 : 0, decrypted result : -147376624, m1.size : 29, m2.size : 1length of decrypted result : 29
-test: scalar multiplication , status : failure, samples : m1 : -147376624, m2 : 1, decrypted result : -294753248, m1.size : 29, m2.size : 1length of decrypted result : 30
-test: scalar multiplication , status : failure, samples : m1 : -66769151, m2 : -1, decrypted result : 0, m1.size : 27, m2.size : 2length of decrypted result : 1

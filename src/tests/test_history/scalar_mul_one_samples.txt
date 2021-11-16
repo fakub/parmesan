@@ -1,1 +1,0 @@
-test: scalar multiplication , status : valid, samples : m1 : 14482305, k : 1, decrypted result : 14482305, m1.size : 24, m2.size : 1length of decrypted result : 24
