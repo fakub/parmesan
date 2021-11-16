@@ -41,16 +41,15 @@ fn t_nn_eval_some_triv() {
 
 /// Implementation for three variants of vector to be evaluated.
 fn t_impl_nn_eval_with_mode(mode: EncrVsTriv) {
-    // generate random NN
-    let nn = t_gen_nn();
-
     for _ in 0..common::TESTS_REPEAT_NNE {
+        // generate random NN
+        let nn = t_gen_nn();
+
+        // generate random inputs
         let mut m_in_vec = vec![];
         let mut m_in = vec![];
         let mut c_in = vec![];
-
-        //TODO nn.n_inputs()
-        for i in 0..3 {
+        for i in 0..nn.n_inputs {
             // generate random input
             let m_vec = gen_rand_vec(common::TESTS_BITLEN_NNE);
             // convert to integer
