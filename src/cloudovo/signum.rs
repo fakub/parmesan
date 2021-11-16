@@ -46,6 +46,11 @@ pub fn sgn_recursion_raw(
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
+    // special case: empty ciphertext
+    if x.len() == 0 {
+        return Ok(ParmCiphertext::triv(1, &pub_keys.encoder)?);
+    }
+
     // end of recursion
     if x.len() == 1 {
         return Ok(x.clone());
