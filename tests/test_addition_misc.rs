@@ -42,15 +42,28 @@ fn t_add_const_some_triv() {
 //TODO add others
 
 #[test]
-/// Corner cases with trivial zeros, encrypted sub-samples only.
-fn t_add_triv_0() {
-    println!("Non-Triv ...");
+/// Corner case with trivial zeros overlap, encrypted sub-samples only.
+fn t_add_zeros_overlap() {
+    println!("Zeros Overlap ...");
     //        00███00
     //  000██00000000
     t_impl_add_triv_zeros_with_mode(
         2, 3, 2,
         EncrVsTriv::ENCR,
         3, 2, 8,
+    )
+}
+
+#[test]
+/// Corner cases with trivial zeros, encrypted sub-samples only.
+fn t_add_mul_fail() {
+    println!("From Mul Fail ...");
+    //  ██00
+    //  0██0
+    t_impl_add_triv_zeros_with_mode(
+        0, 2, 2,
+        EncrVsTriv::ENCR,
+        1, 2, 1,
     )
 }
 

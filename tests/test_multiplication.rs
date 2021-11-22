@@ -22,12 +22,12 @@ fn t_mul_non_triv_aligned() {
 }
 
 //FIXME make this work
-//~ #[test]
-//~ /// Multiplication of encrypted sub-samples only, different lengths.
-//~ fn t_mul_non_triv_difflen() {
-    //~ println!("Non-Triv Misaligned ...");
-    //~ t_impl_mul_with_mode(EncrVsTriv::ENCR, false);
-//~ }
+#[test]
+/// Multiplication of encrypted sub-samples only, different lengths.
+fn t_mul_non_triv_difflen() {
+    println!("Non-Triv Misaligned ...");
+    t_impl_mul_with_mode(EncrVsTriv::ENCR, false);
+}
 
 #[test]
 /// Multiplication of trivial sub-samples only, aligned lengths.
@@ -45,6 +45,38 @@ fn t_mul_all_triv_aligned() {
     //~ println!("Mixed Aligned ...");
     //~ t_impl_mul_with_mode(EncrVsTriv::ENCRTRIV, true);
 //~ }
+
+// Special
+
+#[test]
+fn t_mul_case() {
+    println!("Case ...");
+
+    // setup specific vectors
+    let m1_vec = vec![0, 0];
+    let m2_vec = vec![0, -1];
+    // convert to integer(s)
+    let m1 = encryption::convert(&m1_vec).expect("convert failed.");
+    let m2 = encryption::convert(&m2_vec).expect("convert failed.");
+
+    println!("  m1 = {} ({}-bit: {:?})\n  m2 = {} ({}-bit: {:?})", m1, m1_vec.len(), m1_vec, m2, m2_vec.len(), m2_vec);
+
+    // encrypt -> homomorphic eval -> decrypt
+    let c1 = encrypt_with_mode(&m1_vec, EncrVsTriv::TRIV);
+    let c2 = encrypt_with_mode(&m2_vec, EncrVsTriv::ENCR);
+
+    let c_he = ParmArithmetics::mul(&common::TEST_PC, &c1, &c2);
+
+    let m_he = common::TEST_PU.decrypt(&c_he).expect("ParmesanUserovo::decrypt failed.");
+
+    // plain eval
+    let m_pl = ParmArithmetics::mul(&common::TEST_PC, &m1, &m2);
+
+    println!("  mul = {} (exp. {})", m_he, m_pl);
+
+    // compare results
+    assert_eq!(m_he, m_pl);
+}
 
 
 // -----------------------------------------------------------------------------
