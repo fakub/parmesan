@@ -52,7 +52,7 @@ macro_rules! simple_duration {
         let __msg = format!($($arg)*);
 
         let mut __utc_now = Utc::now();
-        println!(" {}  [{}.{}] {} ... ", String::from("+").green().bold(), __utc_now.format("%M:%S"), __utc_now.timestamp_subsec_millis(), __msg);
+        println!(" {}  [{}.{:03}] {} ... ", String::from("+").green().bold(), __utc_now.format("%M:%S"), __utc_now.timestamp_subsec_millis(), __msg);
         // start timer
         let __now = std::time::Instant::now();
         // run block
@@ -68,7 +68,7 @@ macro_rules! simple_duration {
         };
         // print result
         __utc_now = Utc::now();
-        println!(" {}  [{}.{}] {} (in {})\n", String::from("—").red().bold(), __utc_now.format("%M:%S"), __utc_now.timestamp_subsec_millis(), __msg, __s_time);
+        println!(" {}  [{}.{:03}] {} (in {})\n", String::from("—").red().bold(), __utc_now.format("%M:%S"), __utc_now.timestamp_subsec_millis(), __msg, __s_time);
     }
 }
 
