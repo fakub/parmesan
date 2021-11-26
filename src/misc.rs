@@ -47,16 +47,16 @@ macro_rules! measure_duration {
 
 #[macro_export]
 macro_rules! simple_duration {
-    ([$($arg:tt)*], [$($block:tt)+]) => {
+    ([$($msg_args:tt)*], [$($code_block:tt)+]) => {
         // print msg
-        let __msg = format!($($arg)*);
+        let __msg = format!($($msg_args)*);
 
-        let mut __utc_now = Utc::now();
-        println!(" {}  [{}.{:03}] {} ... ", String::from("+").green().bold(), __utc_now.format("%M:%S"), __utc_now.timestamp_subsec_millis(), __msg);
+        let __utc_start = Utc::now();
+        println!(" {}  [{}.{:03}] {} ... ", String::from("+").green().bold(), __utc_start.format("%M:%S"), __utc_start.timestamp_subsec_millis(), __msg);
         // start timer
         let __now = std::time::Instant::now();
-        // run block
-        $($block)+
+        // run block of code
+        $($code_block)+
         // get elapsed time
         let __time = __now.elapsed().as_micros() as f64;
         let __s_time = if __time < 1_000. {
@@ -67,8 +67,41 @@ macro_rules! simple_duration {
             String::from(format!("{:.3} s",  __time / 1_000_000.)).cyan().bold()
         };
         // print result
-        __utc_now = Utc::now();
-        println!(" {}  [{}.{:03}] {} (in {})\n", String::from("—").red().bold(), __utc_now.format("%M:%S"), __utc_now.timestamp_subsec_millis(), __msg, __s_time);
+        let __utc_end = Utc::now();
+        println!(" {}  [{}.{:03}] {} (in {})\n", String::from("—").red().bold(), __utc_end.format("%M:%S"), __utc_end.timestamp_subsec_millis(), __msg, __s_time);
+    }
+}
+
+#[macro_export]
+macro_rules! bench_duration {
+    ([$($xtic_args:tt)*], [$($msg_args:tt)*], [$($code_block:tt)+]) => {
+        // xtic
+        let __xtic = format!($($xtic_args)*);
+        // print msg
+        let __msg = format!($($msg_args)*);
+
+        let __utc_start = Utc::now();
+        println!(" {}  [{}.{:03}] {} ... ", String::from("+").green().bold(), __utc_start.format("%M:%S"), __utc_start.timestamp_subsec_millis(), __msg);
+        // start timer
+        let __now = std::time::Instant::now();
+        // run block of code
+        $($code_block)+
+        // get elapsed time
+        let __time = __now.elapsed().as_micros() as f64;
+        let __s_time = if __time < 1_000. {
+            String::from(format!("{} μs", __time             )).purple()
+        } else if __time < 1_000_000. {
+            String::from(format!("{} ms", __time / 1_000.    )).blue()
+        } else {
+            String::from(format!("{:.3} s",  __time / 1_000_000.)).cyan().bold()
+        };
+        // print result
+        let __utc_end = Utc::now();
+        println!(" {}  [{}.{:03}] {} (in {})\n", String::from("—").red().bold(), __utc_end.format("%M:%S"), __utc_end.timestamp_subsec_millis(), __msg, __s_time);
+        // write to logfile let file = OpenOptions::new().read(true).open("foo.txt");
+        let mut logfile = OpenOptions::new().write(true).append(true).open(LOGFILE).unwrap();
+        //TODO somehow, handle the retval
+        writeln!(logfile, "{}.{:03} \"{}\"", __utc_start.format("%S"), __utc_start.timestamp_subsec_millis(), __xtic);
     }
 }
 
