@@ -101,7 +101,7 @@ macro_rules! bench_duration {
         // write to logfile let file = OpenOptions::new().read(true).open("foo.txt");
         let mut logfile = OpenOptions::new().write(true).append(true).open(LOGFILE).unwrap();
         //TODO somehow, handle the retval
-        writeln!(logfile, "{}.{:03} \"{}\"", __utc_start.format("%S"), __utc_start.timestamp_subsec_millis(), __xtic);
+        writeln!(logfile, "{}.{:03} \"{}\"", __utc_start.format("%M %S"), __utc_start.timestamp_subsec_millis(), __xtic);
     }
 }
 
