@@ -1,11 +1,14 @@
 use std::error::Error;
 
+<<<<<<< HEAD
 //TODO add feature condition
 pub use std::fs::{self,File,OpenOptions};
 pub use std::path::Path;
 pub use std::io::Write;
 use crate::*;
 
+=======
+>>>>>>> WIP: parallelization of ABC in multiplication & squaring. Squaring split from multiplication.
 // parallelization tools
 use rayon::prelude::*;
 use crossbeam_utils::thread;
@@ -77,26 +80,65 @@ fn squ_dnq(
         ["Squaring Divide & Conquer ({}-bit)", x.len()],
         [
             //TODO these can be calculated in parallel (check if this helps for short numbers: isn't there too much overhead?)
-            //  A = x_1 ^ 2                     .. len1-bit squaring
-            let mut a = squ_impl(
-                pub_keys,
-                &x1,
-            )?;
 
-            //  B = x_0 ^2                      .. len0-bit squaring
-            let mut b = squ_impl(
-                pub_keys,
-                &x0,
-            )?;
+            // init tmp variables in this scope, only references can be passed to threads
+            let mut a = ParmCiphertext::empty();
+            let mut b = ParmCiphertext::empty();
+            let mut c = ParmCiphertext::empty();
+            let ar = &mut a;
+            let br = &mut b;
+            let cr = &mut c;
 
-            //  C = x_0 * x_1                   .. len0- x len1-bit multiplication (to be shifted len0 + 1 bits where 1 bit is for 2x AB)
-            let mut c = ParmCiphertext::triv(len0 + 1, &pub_keys.encoder)?;
-            let mut c_plain = multiplication::mul_impl(
-                pub_keys,
-                &x0,
-                &x1,
-            )?;
-            c.append(&mut c_plain);
+            // parallel pool: A, B, C
+            thread::scope(|abc_scope| {
+                abc_scope.spawn(|_| {
+                    //  A = x_1 ^ 2                     .. len1-bit squaring
+                    *ar = squ_impl(
+                        pub_keys,
+                        &x1,
+                    ).expect("squ_impl failed.");
+                });
+                abc_scope.spawn(|_| {
+                    //  B = x_0 ^2                      .. len0-bit squaring
+                    *br = squ_impl(
+                        pub_keys,
+                        &x0,
+                    ).expect("squ_impl failed.");
+                });
+                abc_scope.spawn(|_| {
+                    //  C = x_0 * x_1                   .. len0- x len1-bit multiplication (to be shifted len0 + 1 bits where 1 bit is for 2x AB)
+                    *cr = ParmCiphertext::triv(len0 + 1, &pub_keys.encoder).expect("ParmCiphertext::triv failed.");
+                    let mut c_plain = multiplication::mul_impl(
+                        pub_keys,
+                        &x0,
+                        &x1,
+                    ).expect("mul_impl failed.");
+                    cr.append(&mut c_plain);
+                });
+            }).expect("thread::scope abc_scope failed.");
+
+                //~ // -----------------------------------------------------------------
+                //~ //  A = x_1 ^ 2                     .. len1-bit squaring
+                //~ let mut a = squ_impl(
+                    //~ pub_keys,
+                    //~ &x1,
+                //~ )?;
+
+                //~ //  B = x_0 ^2                      .. len0-bit squaring
+                //~ let mut b = squ_impl(
+                    //~ pub_keys,
+                    //~ &x0,
+                //~ )?;
+
+                //~ //  C = x_0 * x_1                   .. len0- x len1-bit multiplication (to be shifted len0 + 1 bits where 1 bit is for 2x AB)
+                //~ let mut c = ParmCiphertext::triv(len0 + 1, &pub_keys.encoder)?;
+                //~ let mut c_plain = multiplication::mul_impl(
+                    //~ pub_keys,
+                    //~ &x0,
+                    //~ &x1,
+                //~ )?;
+                //~ c.append(&mut c_plain);
+                //~ // -----------------------------------------------------------------
 
             //  |   A   |   B   |   TBD based on overlap
             //     |   C   |  0 |   in c
