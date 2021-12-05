@@ -253,7 +253,7 @@ impl ParmArithmetics for ParmCiphertext {
         pc: &ParmesanCloudovo,
         x: &ParmCiphertext,
     ) -> ParmCiphertext {
-        multiplication::squ_impl(
+        squaring::squ_impl(
             pc.pub_keys,
             x,
         ).expect("ParmArithmetics::squ failed.")
