@@ -1,5 +1,11 @@
 use std::error::Error;
 
+//TODO add feature condition
+pub use std::fs::{self,File,OpenOptions};
+pub use std::path::Path;
+pub use std::io::Write;
+use crate::*;
+
 // parallelization tools
 use rayon::prelude::*;
 use crossbeam_utils::thread;

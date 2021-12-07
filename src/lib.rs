@@ -26,7 +26,7 @@ extern crate chrono;
 use concrete::LWE;
 
 /// Keeps log level for nested time measurements
-static mut LOG_LVL: u8 = 0;
+pub static mut LOG_LVL: u8 = 0;
 
 pub const LOGFILE: &str = "./operations.log";
 pub static mut LOG_INITED: bool = false;

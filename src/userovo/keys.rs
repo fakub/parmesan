@@ -1,6 +1,12 @@
 use std::error::Error;
 use std::path::Path;
 
+//TODO add feature condition
+pub use std::fs::{self,File,OpenOptions};
+//~ pub use std::path::Path;
+//~ pub use std::io::Write;
+use crate::*;
+
 #[allow(unused_imports)]
 use std::io::{self,Write};
 

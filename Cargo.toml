@@ -22,7 +22,7 @@ lazy_static = "^1.4.0"
 concrete = { path = "../concrete-lib/concrete", features = ["unsafe"] }
 
 [features]
-default = []        # no feature selected by default
-# sequential = []     # run (selected) algorithms sequentially
-measure = []        # measure duration of selected operations
-log_ops = []        # log operation timing into a logfile (used in gnuplot scripts)
+default = []                # no feature selected by default
+# sequential = []             # run (selected) algorithms sequentially
+measure = []                # measure duration of selected operations
+log_ops = ["measure"]       # log operation timing into a logfile (used in gnuplot scripts)

@@ -4,6 +4,7 @@
 #[macro_export]
 macro_rules! measure_duration {
     ([$($msg_args:tt)*], [$($code_block:tt)+]) => {
+        let __utc_start: chrono::DateTime<chrono::Utc>;
         let __now: std::time::Instant;
         let __msg: String;
         //  Measurement ON
@@ -11,13 +12,13 @@ macro_rules! measure_duration {
         {
             __msg = format!($($msg_args)*);
             // write title
-            crate::infoln!("{} ... ", __msg);
+            infoln!("{} ... ", __msg);
             // increase log level
             unsafe {
-                if crate::LOG_LVL < u8::MAX {crate::LOG_LVL += 1;}
+                if LOG_LVL < u8::MAX {LOG_LVL += 1;}
             }
             // start timer
-            let __utc_start = chrono::Utc::now();
+            __utc_start = chrono::Utc::now();
             __now = std::time::Instant::now();
         }
 
@@ -38,14 +39,14 @@ macro_rules! measure_duration {
             };
             // decrease log level back & print result
             unsafe {
-                if crate::LOG_LVL > 0 {crate::LOG_LVL -= 1;}
-                let indent = format!("{}  └ ", "  │ ".repeat(crate::LOG_LVL as usize));
+                if LOG_LVL > 0 {LOG_LVL -= 1;}
+                let indent = format!("{}  └ ", "  │ ".repeat(LOG_LVL as usize));
                 let status = String::from("OK").green().bold();   // can be other statuses
                 println!("{}{} {}: {} (in {})", indent, String::from("Finished").yellow().bold(), __msg, status, __s_time);
             }
-            //~ // log operation timing into a file
-            //~ #[cfg(feature = "log_ops")]
-            //~ parm_log_ts!(__utc_start, __utc_end, [$($msg_args)*]);
+            // log operation timing into a file
+            #[cfg(feature = "log_ops")]
+            parm_log_ts!(__utc_start, __utc_end, [$($msg_args)*]);
         }
     }
 }
@@ -53,9 +54,9 @@ macro_rules! measure_duration {
 #[macro_export]
 macro_rules! simple_duration {
     ([$($msg_args:tt)*], [$($code_block:tt)+]) => {
-
-        //TODO #[cfg(not(feature = "measure"))]
-
+        // if measure is on, only execute block
+        #[cfg(not(feature = "measure"))]
+        {
         // print msg
         let __msg = format!($($msg_args)*);
 
@@ -63,10 +64,13 @@ macro_rules! simple_duration {
         println!(" {}  [{}.{:03}] {} ... ", String::from("+").green().bold(), __utc_start.format("%M:%S"), __utc_start.timestamp_subsec_millis(), __msg);
         // start timer
         let __now = std::time::Instant::now();
+        }
 
         // run block of code
         $($code_block)+
 
+        #[cfg(not(feature = "measure"))]
+        {
         // get elapsed time
         let __time = __now.elapsed().as_micros() as f64;
         let __s_time = if __time < 1_000. {
@@ -83,6 +87,7 @@ macro_rules! simple_duration {
         // log operation timing into a file
         #[cfg(feature = "log_ops")]
         parm_log_ts!(__utc_start, __utc_end, [$($msg_args)*]);
+        }
     }
 }
 
@@ -131,14 +136,14 @@ macro_rules! parm_log_plain {
 #[macro_export]
 macro_rules! infoln {
     ($($arg:tt)*) => {
-        let msg = crate::parm_format_info!($($arg)*);
+        let msg = parm_format_info!($($arg)*);
         println!("{}", msg);
     }
 }
 #[macro_export]
 macro_rules! infobox {
     ($($arg:tt)*) => {
-        let msg = crate::parm_format_infobox!($($arg)*);
+        let msg = parm_format_infobox!($($arg)*);
         println!("{}", msg);
     }
 }
@@ -146,7 +151,7 @@ macro_rules! infobox {
 #[macro_export]
 macro_rules! parm_error {
     ($($arg:tt)*) => {
-        let msg = crate::parm_format_err!($($arg)*);
+        let msg = parm_format_err!($($arg)*);
         println!("{}", msg);
     }
 }
@@ -154,7 +159,7 @@ macro_rules! parm_error {
 #[macro_export]
 macro_rules! dbgln {
     ($($arg:tt)*) => {
-        let msg = crate::parm_format_dbg!($($arg)*);
+        let msg = parm_format_dbg!($($arg)*);
         println!("{}", msg);
     }
 }
@@ -166,7 +171,7 @@ macro_rules! parm_format_info {
         unsafe {
             let mut msg = format!($($arg)*);
             // calc indentation
-            let mut indent = "  │ ".repeat(crate::LOG_LVL as usize);
+            let mut indent = "  │ ".repeat(LOG_LVL as usize);
             msg = format!("{} 🧀 {}", indent, msg);
             indent = format!("\n{}    ", indent);
             msg = msg.replace("\n", &indent);
@@ -181,7 +186,7 @@ macro_rules! parm_format_dbg {
         unsafe {
             let mut msg = format!($($arg)*);
             // calc indentation
-            let mut indent = "  │ ".repeat(crate::LOG_LVL as usize);
+            let mut indent = "  │ ".repeat(LOG_LVL as usize);
             msg = format!("{}{} {}", indent, String::from("DBG").bold().red(), msg);
             indent = format!("\n{}    ", indent);
             msg = msg.replace("\n", &indent);
@@ -202,7 +207,7 @@ macro_rules! parm_format_infobox {
             let bot_of_box = format!("{}{}{}", String::from("┗").yellow(), String::from("━".repeat(msg.chars().count() + 4)).yellow(), String::from("┛").yellow(), );
             msg = format!("    {}\n{}  {}  {}\n{}", top_of_box, String::from("┃").yellow(), msg, String::from("┃").yellow(), bot_of_box);
             // calc indentation
-            let mut indent = "  │ ".repeat(crate::LOG_LVL as usize);
+            let mut indent = "  │ ".repeat(LOG_LVL as usize);
             msg = format!("{}{}", indent, msg);
             indent = format!("\n{}    ", indent);
             msg = msg.replace("\n", &indent);
@@ -217,8 +222,8 @@ macro_rules! parm_format_err {
         unsafe {
             let mut msg = format!($($arg)*);
             // calc indentation
-            let mut indent = "  ▒ ".repeat(crate::LOG_LVL as usize);
-            // let mut indent = format!("{}", String::from("  X ").red().bold().repeat(crate::LOG_LVL as usize));   // does not work this way, format gets lost after repeat
+            let mut indent = "  ▒ ".repeat(LOG_LVL as usize);
+            // let mut indent = format!("{}", String::from("  X ").red().bold().repeat(LOG_LVL as usize));   // does not work this way, format gets lost after repeat
             msg = format!("{} 🫕  {}{}", indent, String::from("ERR ").red().bold(), msg);
             indent = format!("\n{}        ", indent);
             msg = msg.replace("\n", &indent);

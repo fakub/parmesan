@@ -40,6 +40,12 @@
 #[allow(unused_imports)]
 use colored::Colorize;
 
+//TODO add feature condition
+pub use std::fs::{self,File,OpenOptions};
+pub use std::path::Path;
+pub use std::io::Write;
+use crate::*;
+
 use rand::{distributions::{Distribution,Standard},Rng};
 
 use crate::ParmesanCloudovo;
