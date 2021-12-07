@@ -11,17 +11,25 @@
 
 use std::error::Error;
 
+//TODO check whether needed
+pub use std::fs::{self,File,OpenOptions};
+pub use std::path::Path;
+pub use std::io::Write;
+
 #[allow(unused_imports)]
 use colored::Colorize;
 
 extern crate chrono;
-use chrono::Utc;
+//~ use chrono::Utc;
 
 #[allow(unused_imports)]
 use concrete::LWE;
 
 /// Keeps log level for nested time measurements
 static mut LOG_LVL: u8 = 0;
+
+pub const LOGFILE: &str = "./operations.log";
+pub static mut LOG_INITED: bool = false;
 
 
 // =============================================================================

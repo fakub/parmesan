@@ -3,13 +3,13 @@
 // Note that the variables are not captured.
 #[macro_export]
 macro_rules! measure_duration {
-    ([$($arg:tt)*], [$($block:tt)+]) => {
+    ([$($msg_args:tt)*], [$($code_block:tt)+]) => {
         let __now: std::time::Instant;
         let __msg: String;
         //  Measurement ON
         #[cfg(feature = "measure")]
         {
-            __msg = format!($($arg)*);
+            __msg = format!($($msg_args)*);
             // write title
             crate::infoln!("{} ... ", __msg);
             // increase log level
@@ -17,16 +17,18 @@ macro_rules! measure_duration {
                 if crate::LOG_LVL < u8::MAX {crate::LOG_LVL += 1;}
             }
             // start timer
+            let __utc_start = chrono::Utc::now();
             __now = std::time::Instant::now();
         }
 
-        // run block
-        $($block)+
+        // run block of code
+        $($code_block)+
 
         #[cfg(feature = "measure")]
         {
             // get elapsed time
             let __time = __now.elapsed().as_micros() as f64;
+            let __utc_end = chrono::Utc::now();
             let __s_time = if __time < 1_000. {
                 String::from(format!("{} μs", __time             )).purple()
             } else if __time < 1_000_000. {
@@ -34,13 +36,16 @@ macro_rules! measure_duration {
             } else {
                 String::from(format!("{:.3} s",  __time / 1_000_000.)).cyan().bold()
             };
-            // decrease log level back
+            // decrease log level back & print result
             unsafe {
                 if crate::LOG_LVL > 0 {crate::LOG_LVL -= 1;}
                 let indent = format!("{}  └ ", "  │ ".repeat(crate::LOG_LVL as usize));
                 let status = String::from("OK").green().bold();   // can be other statuses
                 println!("{}{} {}: {} (in {})", indent, String::from("Finished").yellow().bold(), __msg, status, __s_time);
             }
+            //~ // log operation timing into a file
+            //~ #[cfg(feature = "log_ops")]
+            //~ parm_log_ts!(__utc_start, __utc_end, [$($msg_args)*]);
         }
     }
 }
@@ -48,15 +53,20 @@ macro_rules! measure_duration {
 #[macro_export]
 macro_rules! simple_duration {
     ([$($msg_args:tt)*], [$($code_block:tt)+]) => {
+
+        //TODO #[cfg(not(feature = "measure"))]
+
         // print msg
         let __msg = format!($($msg_args)*);
 
-        let __utc_start = Utc::now();
+        let __utc_start = chrono::Utc::now();
         println!(" {}  [{}.{:03}] {} ... ", String::from("+").green().bold(), __utc_start.format("%M:%S"), __utc_start.timestamp_subsec_millis(), __msg);
         // start timer
         let __now = std::time::Instant::now();
+
         // run block of code
         $($code_block)+
+
         // get elapsed time
         let __time = __now.elapsed().as_micros() as f64;
         let __s_time = if __time < 1_000. {
@@ -67,42 +77,46 @@ macro_rules! simple_duration {
             String::from(format!("{:.3} s",  __time / 1_000_000.)).cyan().bold()
         };
         // print result
-        let __utc_end = Utc::now();
+        let __utc_end = chrono::Utc::now();
         println!(" {}  [{}.{:03}] {} (in {})\n", String::from("—").red().bold(), __utc_end.format("%M:%S"), __utc_end.timestamp_subsec_millis(), __msg, __s_time);
+
+        // log operation timing into a file
+        #[cfg(feature = "log_ops")]
+        parm_log_ts!(__utc_start, __utc_end, [$($msg_args)*]);
     }
 }
 
 #[macro_export]
-macro_rules! bench_duration {
-    ([$($xtic_args:tt)*], [$($msg_args:tt)*], [$($code_block:tt)+]) => {
-        // xtic
-        let __xtic = format!($($xtic_args)*);
-        // print msg
+macro_rules! parm_log_ts {
+    ($ts_start:expr, $ts_end:expr, [$($msg_args:tt)*]) => {{
         let __msg = format!($($msg_args)*);
+        parm_log_plain!("{}.{:03}   {}.{:03}   \"{}\"",
+            $ts_start.format("%M %S"), $ts_start.timestamp_subsec_millis(),
+            $ts_end  .format("%M %S"), $ts_end  .timestamp_subsec_millis(),
+            __msg);
+    }}
+}
 
-        let __utc_start = Utc::now();
-        println!(" {}  [{}.{:03}] {} ... ", String::from("+").green().bold(), __utc_start.format("%M:%S"), __utc_start.timestamp_subsec_millis(), __msg);
-        // start timer
-        let __now = std::time::Instant::now();
-        // run block of code
-        $($code_block)+
-        // get elapsed time
-        let __time = __now.elapsed().as_micros() as f64;
-        let __s_time = if __time < 1_000. {
-            String::from(format!("{} μs", __time             )).purple()
-        } else if __time < 1_000_000. {
-            String::from(format!("{} ms", __time / 1_000.    )).blue()
-        } else {
-            String::from(format!("{:.3} s",  __time / 1_000_000.)).cyan().bold()
-        };
-        // print result
-        let __utc_end = Utc::now();
-        println!(" {}  [{}.{:03}] {} (in {})\n", String::from("—").red().bold(), __utc_end.format("%M:%S"), __utc_end.timestamp_subsec_millis(), __msg, __s_time);
-        // write to logfile let file = OpenOptions::new().read(true).open("foo.txt");
-        let mut logfile = OpenOptions::new().write(true).append(true).open(LOGFILE).unwrap();
+#[macro_export]
+macro_rules! parm_log_plain {
+    ($($msg_args:tt)*) => {{
+        let __msg = format!($($msg_args)*);
+        let mut __logfile;
+        unsafe {
+            __logfile = if LOG_INITED {
+                OpenOptions::new().write(true).append(true).open(LOGFILE).unwrap()
+            } else {
+                // clear (if exists) & create log file
+                if Path::new(LOGFILE).exists() {
+                    fs::remove_file(LOGFILE).expect("fs::remove_file failed.");
+                }
+                LOG_INITED = true;
+                File::create(LOGFILE).expect("File::create failed.")
+            }
+        }
         //TODO somehow, handle the retval
-        writeln!(logfile, "{}.{:03} \"{}\"", __utc_start.format("%M %S"), __utc_start.timestamp_subsec_millis(), __xtic);
-    }
+        writeln!(__logfile, "{}", __msg);
+    }}
 }
 
 // Parmesan logging macros

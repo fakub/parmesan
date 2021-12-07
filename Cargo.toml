@@ -25,3 +25,4 @@ concrete = { path = "../concrete-lib/concrete", features = ["unsafe"] }
 default = []        # no feature selected by default
 # sequential = []     # run (selected) algorithms sequentially
 measure = []        # measure duration of selected operations
+log_ops = []        # log operation timing into a logfile (used in gnuplot scripts)
