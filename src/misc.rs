@@ -54,16 +54,19 @@ macro_rules! measure_duration {
 #[macro_export]
 macro_rules! simple_duration {
     ([$($msg_args:tt)*], [$($code_block:tt)+]) => {
+        let __utc_start: chrono::DateTime<chrono::Utc>;
+        let __now: std::time::Instant;
+        let __msg: String;
         // if measure is on, only execute block
         #[cfg(not(feature = "measure"))]
         {
         // print msg
-        let __msg = format!($($msg_args)*);
+        __msg = format!($($msg_args)*);
 
-        let __utc_start = chrono::Utc::now();
+        __utc_start = chrono::Utc::now();
         println!(" {}  [{}.{:03}] {} ... ", String::from("+").green().bold(), __utc_start.format("%M:%S"), __utc_start.timestamp_subsec_millis(), __msg);
         // start timer
-        let __now = std::time::Instant::now();
+        __now = std::time::Instant::now();
         }
 
         // run block of code
@@ -84,8 +87,7 @@ macro_rules! simple_duration {
         let __utc_end = chrono::Utc::now();
         println!(" {}  [{}.{:03}] {} (in {})\n", String::from("—").red().bold(), __utc_end.format("%M:%S"), __utc_end.timestamp_subsec_millis(), __msg, __s_time);
 
-        // log operation timing into a file
-        #[cfg(feature = "log_ops")]
+        // log operation timing into a file (no measure feature => log only here)
         parm_log_ts!(__utc_start, __utc_end, [$($msg_args)*]);
         }
     }
