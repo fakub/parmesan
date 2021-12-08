@@ -126,47 +126,79 @@ fn mul_karatsuba(
             //TODO these can be calculated in parallel (check if this helps for short numbers: isn't there too much overhead?)
 
             // init tmp variables in this scope, only references can be passed to threads
-            let mut a = ParmCiphertext::empty();
-            let mut b = ParmCiphertext::empty();
-            let mut c = ParmCiphertext::empty();
-            let ar = &mut a;
-            let br = &mut b;
-            let cr = &mut c;
+            let mut a       = ParmCiphertext::empty();
+            let mut b       = ParmCiphertext::empty();
+            //~ let mut pa_pb   = ParmCiphertext::empty();
+            let mut na_nb   = ParmCiphertext::triv(len0, &pub_keys.encoder)?;
+            let mut c       = ParmCiphertext::triv(len0, &pub_keys.encoder)?;
+
+            let ar      = &mut a;
+            let br      = &mut b;
+            //~ let pa_pbr  = &mut pa_pb;
+            let na_nbr  = &mut na_nb;
+            let cr      = &mut c;
 
             // parallel pool: A, B, C
             thread::scope(|abc_scope| {
+                // calc A, B, and -A - B
                 abc_scope.spawn(|_| {
-                    // A = x_1 * y_1                   .. len1-bit multiplication
-                    *ar  = mul_impl(
+                    // parallel pool: A, B
+                    thread::scope(|ab_scope| {
+                        ab_scope.spawn(|_| {
+                            // A = x_1 * y_1                   .. len1-bit multiplication
+                            *ar  = mul_impl(
+                                pub_keys,
+                                &x1,
+                                &y1,
+                            ).expect("mul_impl failed.");
+                        });
+                        ab_scope.spawn(|_| {
+                            // B = x_0 * y_0                   .. len0-bit multiplication
+                            *br  = mul_impl(
+                                pub_keys,
+                                &x0,
+                                &y0,
+                            ).expect("mul_impl failed.");
+                        });
+                    }).expect("thread::scope ab_scope failed.");
+                    //  A + B .. -A - B
+                    let pa_pb = addition::add_sub_noise_refresh(
+                        true,
                         pub_keys,
-                        &x1,
-                        &y1,
-                    ).expect("mul_impl failed.");
+                        ar,
+                        br,
+                    ).expect("add_sub_noise_refresh failed.");
+                    for abi in pa_pb {
+                        na_nbr.push(abi.opposite_uint().expect("opposite_uint failed."));
+                    }
                 });
+
+                // calc C
                 abc_scope.spawn(|_| {
-                    // B = x_0 * y_0                   .. len0-bit multiplication
-                    *br  = mul_impl(
-                        pub_keys,
-                        &x0,
-                        &y0,
-                    ).expect("mul_impl failed.");
-                });
-                abc_scope.spawn(|_| {
+                    let mut x01 = ParmCiphertext::empty();
+                    let mut y01 = ParmCiphertext::empty();
+                    let x01r = &mut x01;
+                    let y01r = &mut y01;
+                    // parallel pool: (x_0 + x_1), (y_0 + y_1)
+                    thread::scope(|c_scope| {
+                        c_scope.spawn(|_| {
+                            let x01 = addition::add_sub_noise_refresh(
+                                true,
+                                pub_keys,
+                                &x0,
+                                &x1,
+                            ).expect("add_sub_noise_refresh failed.");
+                        });
+                        c_scope.spawn(|_| {
+                            let y01 = addition::add_sub_noise_refresh(
+                                true,
+                                pub_keys,
+                                &y0,
+                                &y1,
+                            ).expect("add_sub_noise_refresh failed.");
+                        });
+                    }).expect("thread::scope c_scope failed.");
                     // C = (x_0 + x_1) * (y_0 + y_1)   .. (len0 + 1)-bit multiplication
-                    //TODO add parallel pool
-                    let x01 = addition::add_sub_noise_refresh(
-                        true,
-                        pub_keys,
-                        &x0,
-                        &x1,
-                    ).expect("add_sub_noise_refresh failed.");
-                    let y01 = addition::add_sub_noise_refresh(
-                        true,
-                        pub_keys,
-                        &y0,
-                        &y1,
-                    ).expect("add_sub_noise_refresh failed.");
-                    *cr = ParmCiphertext::triv(len0, &pub_keys.encoder).expect("ParmCiphertext::triv failed.");
                     let mut c_plain = mul_impl(
                         pub_keys,
                         &x01,
@@ -175,7 +207,6 @@ fn mul_karatsuba(
                     cr.append(&mut c_plain);
                 });
             }).expect("thread::scope abc_scope failed.");
-
 
                 //~ // -----------------------------------------------------------------
                 //~ //  A = x_1 * y_1                   .. len1-bit multiplication
@@ -213,18 +244,18 @@ fn mul_karatsuba(
                 //~ )?;
                 //~ c.append(&mut c_plain);
 
-                //  A + B .. -A - B
-                let pa_pb = addition::add_sub_noise_refresh(
-                    true,
-                    pub_keys,
-                    &a,
-                    &b,
-                )?;
-                let mut na_nb = ParmCiphertext::triv(len0, &pub_keys.encoder)?;
-                for abi in pa_pb {
-                    na_nb.push(abi.opposite_uint()?);
-                }
-                // -----------------------------------------------------------------
+                //~ //  A + B .. -A - B
+                //~ let pa_pb = addition::add_sub_noise_refresh(
+                    //~ true,
+                    //~ pub_keys,
+                    //~ &a,
+                    //~ &b,
+                //~ )?;
+                //~ let mut na_nb = ParmCiphertext::triv(len0, &pub_keys.encoder)?;
+                //~ for abi in pa_pb {
+                    //~ na_nb.push(abi.opposite_uint()?);
+                //~ }
+                //~ // -----------------------------------------------------------------
 
             //  |   A   |   B   |   TBD based on overlap
             //     |    C   | 0 |   in c
