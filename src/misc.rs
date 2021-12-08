@@ -37,16 +37,17 @@ macro_rules! measure_duration {
             } else {
                 String::from(format!("{:.3} s",  __time / 1_000_000.)).cyan().bold()
             };
-            // decrease log level back & print result
             unsafe {
+                // decrease log level back & print result
                 if LOG_LVL > 0 {LOG_LVL -= 1;}
                 let indent = format!("{}  └ ", "  │ ".repeat(LOG_LVL as usize));
                 let status = String::from("OK").green().bold();   // can be other statuses
                 println!("{}{} {}: {} (in {})", indent, String::from("Finished").yellow().bold(), __msg, status, __s_time);
+
+                // log operation timing into a file
+                #[cfg(feature = "log_ops")]
+                parm_log_ts!(LOG_LVL, __utc_start, __utc_end, [$($msg_args)*]);
             }
-            // log operation timing into a file
-            #[cfg(feature = "log_ops")]
-            parm_log_ts!(__utc_start, __utc_end, [$($msg_args)*]);
         }
     }
 }
@@ -88,16 +89,17 @@ macro_rules! simple_duration {
         println!(" {}  [{}.{:03}] {} (in {})\n", String::from("—").red().bold(), __utc_end.format("%M:%S"), __utc_end.timestamp_subsec_millis(), __msg, __s_time);
 
         // log operation timing into a file (no measure feature => log only here)
-        parm_log_ts!(__utc_start, __utc_end, [$($msg_args)*]);
+        parm_log_ts!(1, __utc_start, __utc_end, [$($msg_args)*]);
         }
     }
 }
 
 #[macro_export]
 macro_rules! parm_log_ts {
-    ($ts_start:expr, $ts_end:expr, [$($msg_args:tt)*]) => {{
+    ($log_lvl:expr, $ts_start:expr, $ts_end:expr, [$($msg_args:tt)*]) => {{
         let __msg = format!($($msg_args)*);
-        parm_log_plain!("{}.{:03}   {}.{:03}   \"{}\"",
+        parm_log_plain!("{}   {}.{:03}   {}.{:03}   \"{}\"",
+            $log_lvl,
             $ts_start.format("%M %S"), $ts_start.timestamp_subsec_millis(),
             $ts_end  .format("%M %S"), $ts_end  .timestamp_subsec_millis(),
             __msg);
