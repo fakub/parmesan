@@ -1,14 +1,11 @@
 use std::error::Error;
 
-<<<<<<< HEAD
 //TODO add feature condition
 pub use std::fs::{self,File,OpenOptions};
 pub use std::path::Path;
 pub use std::io::Write;
 use crate::*;
 
-=======
->>>>>>> WIP: parallelization of ABC in multiplication & squaring. Squaring split from multiplication.
 // parallelization tools
 use rayon::prelude::*;
 use crossbeam_utils::thread;
