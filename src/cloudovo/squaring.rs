@@ -76,12 +76,13 @@ fn squ_dnq(
     measure_duration!(
         ["Squaring Divide & Conquer ({}-bit)", x.len()],
         [
-            //TODO these can be calculated in parallel (check if this helps for short numbers: isn't there too much overhead?)
+            //TODO check if parallelism helps for short numbers: isn't there too much overhead?
 
             // init tmp variables in this scope, only references can be passed to threads
             let mut a = ParmCiphertext::empty();
             let mut b = ParmCiphertext::empty();
             let mut c = ParmCiphertext::empty();
+
             let ar = &mut a;
             let br = &mut b;
             let cr = &mut c;
@@ -247,7 +248,7 @@ fn fill_squary(
     let mut squary_tmp  = vec![ParmCiphertext::triv(2*len, &pub_keys.encoder)?; len];
     let mut squary      = vec![ParmCiphertext::triv(2*len, &pub_keys.encoder)?; len];
 
-    //TODO WISH prepare designated arrays (one for diagonal, another for upper-diagonal; reorder them after calculations)
+    //WISH prepare designated arrays (one for diagonal, another for upper-diagonal; reorder them after calculations; would it help at all?)
     squary_tmp.par_iter_mut().zip(x.par_iter().enumerate()).for_each(| (sqi, (i, xi)) | {
         sqi[i..].par_iter_mut().zip(x2.par_iter().enumerate()).for_each(| (sqij, (j, x2j)) | {
             if j < i {

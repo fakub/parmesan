@@ -123,18 +123,16 @@ fn mul_karatsuba(
     measure_duration!(
         ["Multiplication Karatsuba ({}-bit)", x.len()],
         [
-            //TODO these can be calculated in parallel (check if this helps for short numbers: isn't there too much overhead?)
+            //TODO check if parallelism helps for short numbers: isn't there too much overhead?
 
             // init tmp variables in this scope, only references can be passed to threads
             let mut a       = ParmCiphertext::empty();
             let mut b       = ParmCiphertext::empty();
-            //~ let mut pa_pb   = ParmCiphertext::empty();
             let mut na_nb   = ParmCiphertext::triv(len0, &pub_keys.encoder)?;
             let mut c       = ParmCiphertext::triv(len0, &pub_keys.encoder)?;
 
             let ar      = &mut a;
             let br      = &mut b;
-            //~ let pa_pbr  = &mut pa_pb;
             let na_nbr  = &mut na_nb;
             let cr      = &mut c;
 
