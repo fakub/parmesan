@@ -182,7 +182,7 @@ fn mul_karatsuba(
                     // parallel pool: (x_0 + x_1), (y_0 + y_1)
                     thread::scope(|c_scope| {
                         c_scope.spawn(|_| {
-                            let x01 = addition::add_sub_noise_refresh(
+                            *x01r = addition::add_sub_noise_refresh(
                                 true,
                                 pub_keys,
                                 &x0,
@@ -190,7 +190,7 @@ fn mul_karatsuba(
                             ).expect("add_sub_noise_refresh failed.");
                         });
                         c_scope.spawn(|_| {
-                            let y01 = addition::add_sub_noise_refresh(
+                            *y01r = addition::add_sub_noise_refresh(
                                 true,
                                 pub_keys,
                                 &y0,
