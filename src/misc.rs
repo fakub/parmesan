@@ -58,7 +58,7 @@ macro_rules! simple_duration {
         let __utc_start: chrono::DateTime<chrono::Utc>;
         let __now: std::time::Instant;
         let __msg: String;
-        // if measure is on, only execute block
+        // if measure is on, only execute block (where measurements take place)
         #[cfg(not(feature = "measure"))]
         {
         // print msg
@@ -89,7 +89,7 @@ macro_rules! simple_duration {
         println!(" {}  [{}.{:03}] {} (in {})\n", String::from("—").red().bold(), __utc_end.format("%M:%S"), __utc_end.timestamp_subsec_millis(), __msg, __s_time);
 
         // log operation timing into a file (no measure feature => log only here)
-        parm_log_ts!(1, __utc_start, __utc_end, [$($msg_args)*]);
+        parm_log_ts!(0, __utc_start, __utc_end, [$($msg_args)*]);
         }
     }
 }
