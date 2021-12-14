@@ -108,6 +108,10 @@ pub fn scalar_mul_impl(
         return Ok(mulary[0].clone());
     }
 
+    //TODO
+    //  since there are no subsequent lines of len & len+1 (follows from the fact that there are no neighboring non-zeros in optimized k_vec),
+    //  this mulary does not need to be reduced sequentially, most of it can be done in parallel (carefully; the last row must be added in the last step)
+
     // reduce mulary
     measure_duration!(
         ["Scalar multiplication (non-triv ±{} · {}-bit)", k_abs, x.len()],
