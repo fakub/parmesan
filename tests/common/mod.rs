@@ -37,6 +37,8 @@ lazy_static! {
 pub static TESTS_BITLEN_FULL:       usize     =  62;
 pub static TESTS_BITLEN_MAX:        usize     =   7;
 pub static TESTS_BITLEN_SGN:        usize     =   7;
+pub static TESTS_BITLEN_ROUND:      usize     =   5;
+pub static TESTS_POS_ROUND:         usize     =   7;
 pub static TESTS_BITLEN_MUL:        usize     =   2;
 pub static TESTS_EXTRA_BITLEN_MUL: [usize; 2] =  [8,9];
 pub static TESTS_BITLEN_SQU:        usize     =   7;
@@ -56,6 +58,7 @@ pub static TESTS_NNE_B_ABS_MAX:     i64       =  15;
 pub static TESTS_REPEAT_ENCR:       usize     = 100;
 pub static TESTS_REPEAT_MAX:        usize     =   3;
 pub static TESTS_REPEAT_SGN:        usize     =   3;
+pub static TESTS_REPEAT_ROUND:      usize     =  10;
 pub static TESTS_REPEAT_MUL:        usize     =   1;
 pub static TESTS_REPEAT_SQU:        usize     =   1;
 pub static TESTS_REPEAT_ADD_CONST:  usize     =   3;
