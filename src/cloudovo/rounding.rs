@@ -4,20 +4,14 @@ use std::error::Error;
 pub use std::fs::{self,File,OpenOptions};
 pub use std::path::Path;
 pub use std::io::Write;
-use crate::*;
-
-// parallelization tools
-use rayon::prelude::*;
 
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use concrete::LWE;
-
 use crate::params::Params;
 use crate::userovo::keys::PubKeySet;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
-use super::pbs;
+use super::{pbs,addition,signum};
 
 pub fn round_at_impl(
     params: &Params,
@@ -49,8 +43,7 @@ pub fn round_at_impl(
         //
         // add: 2y + s == 2, 3 .. +1 or 2y + s == -3 .. -1 otherwise 0
         _ => {
-            //TODO `use super::signum` etc (get rid of super::<xyz>)
-            let s = super::signum::sgn_impl(params, pub_keys, &x[0..pos-1].to_vec())?;
+            let s = signum::sgn_impl(params, pub_keys, &x[0..pos-1].to_vec())?;
             // calc 2y
             let mut yy_s = x[pos-1].mul_uint_constant(2)?;
             // 2y + s
@@ -64,7 +57,7 @@ pub fn round_at_impl(
             let mut slx = ParmCiphertext::triv(pos, &pub_keys.encoder)?;
             slx.append(&mut x[pos..].to_vec());
 
-            super::addition::add_sub_impl(
+            addition::add_sub_impl(
                 true,
                 pub_keys,
                 &slx,

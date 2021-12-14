@@ -18,7 +18,7 @@ use concrete::LWE;
 use crate::params::Params;
 use crate::userovo::keys::PubKeySet;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
-use super::pbs;
+use super::{pbs,addition,signum};
 
 /// Implementation of parallel maximum using signum
 pub fn max_impl(
@@ -35,7 +35,7 @@ pub fn max_impl(
         [
             // r = x - y
             //WISH after I implement manual bootstrap after addition, here it can be customized to powers of two (then first layer of bootstraps can be omitted in signum)
-            let r: ParmCiphertext = super::addition::add_sub_impl(
+            let r: ParmCiphertext = addition::add_sub_impl(
                 false,
                 pub_keys,
                 x,
@@ -44,7 +44,7 @@ pub fn max_impl(
 
             // s = 2 * sgn^+(r)
             // returns one sample, not bootstrapped
-            let s_raw: ParmCiphertext = super::signum::sgn_recursion_raw(
+            let s_raw: ParmCiphertext = signum::sgn_recursion_raw(
                 params.bit_precision - 1,
                 pub_keys,
                 &r,

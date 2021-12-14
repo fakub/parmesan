@@ -11,6 +11,7 @@ use colored::Colorize;
 
 use crate::userovo::keys::PubKeySet;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+use super::addition;
 
 /// Implementation of signum via parallel reduction
 pub fn scalar_mul_impl(
@@ -114,7 +115,7 @@ pub fn scalar_mul_impl(
             // reduce multiplication array (of length ≥ 2)
             let mut intmd = vec![ParmCiphertext::empty(); 2];
             let mut idx = 0usize;
-            intmd[idx] = super::addition::add_sub_noise_refresh(
+            intmd[idx] = addition::add_sub_noise_refresh(
                 true,
                 pub_keys,
                 &mulary[0],
@@ -123,7 +124,7 @@ pub fn scalar_mul_impl(
 
             for i in 2..mulary.len() {
                 idx ^= 1;
-                intmd[idx] = super::addition::add_sub_noise_refresh(
+                intmd[idx] = addition::add_sub_noise_refresh(
                     true,
                     pub_keys,
                     &intmd[idx ^ 1],

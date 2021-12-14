@@ -273,15 +273,15 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     //~ }
     //~ return Ok(());
 
-    //DBG BEGIN
-    for pos in 0..10 {
-        let cr = ParmArithmetics::round_at(&pc, &c[0], pos);
-        let mr = ParmArithmetics::round_at(&pc, &m[0], pos);
-        let dr = pu.decrypt(&cr)?;
-        println!("Round  0b{:032b} at {}:\nplain: 0b{:032b}\n decr: 0b{:032b}\n---", m[0], pos, mr, dr);
-    }
-    return Ok(());
-    //DBG END
+    //~ //DBG BEGIN
+    //~ for pos in 0..10 {
+        //~ let cr = ParmArithmetics::round_at(&pc, &c[0], pos);
+        //~ let mr = ParmArithmetics::round_at(&pc, &m[0], pos);
+        //~ let dr = pu.decrypt(&cr)?;
+        //~ println!("Round  0b{:032b} at {}:\nplain: 0b{:032b}\n decr: 0b{:032b}\n---", m[0], pos, mr, dr);
+    //~ }
+    //~ return Ok(());
+    //~ //DBG END
 
     let c_add  = ParmArithmetics::add(&pc, &c[0], &c[1]);
     let c_sub  = ParmArithmetics::sub(&pc, &c[1], &c[0]);

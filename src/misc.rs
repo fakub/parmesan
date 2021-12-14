@@ -123,8 +123,9 @@ macro_rules! parm_log_plain {
                 File::create(LOGFILE).expect("File::create failed.")
             }
         }
-        //TODO somehow, handle the retval
-        writeln!(__logfile, "{}", __msg);
+        if let Err(e) = writeln!(__logfile, "{}", __msg) {
+            eprintln!("(!) Writing error: {}", e.to_string());
+        }
     }}
 }
 
