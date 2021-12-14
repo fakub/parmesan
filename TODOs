@@ -2,37 +2,22 @@
     TODO
 ================================================================================
 
-* make *everything* parallel (e.g., there are many pairs of operations, nested parallel iterators work as expected, i.e., they put everything into one pool)
+* check that *everything* runs in parallel (e.g., pairs of operations; nested parallel iterators work as expected, i.e., they put everything into one pool)
 * for squaring of non-power-of-2: multiply |n|n+1|-bit numbers (isn't this too technical? it can be bypassed by adding a triv zero)
 * make new estimates on Karatsuba and D&C squaring BS complexity (actually only for 2 and more nested recursion levels, schoolbook does not add extra bits)
 
-* just comment on "floating-point-like" feature:
-    * in standard binary repre, rounding is just adding the next word
-    * in redundant binary, a bit more complicated:
-        * for 1 and -1, one must search for the next non-zero ~ calc its sign
-        * SOLUTION:
-            let A = X ∥ y | Z .. s := sgn(Z)
+* "floating-point-like" feature:
+    ? at which position shall the number be rounded?
+    ! it may happen that there is a leading zero
+    * devise a "conditional shift": bootstrap the leading position in a maximum-like manner
+    * here, at i-th position, pick either x_i (leading +-1), or x_i-1 (leading 0)
+        0 1 1 0 1 0 0|1 1   / round and cond. shift
+    ->  1 1 0 1 0 1
 
-            y \ s   |-1 | 0 | 1 |
-            ---------------------
-                1   | 0 | 1 | 1 |
-                0   | 0 | 0 | 0 |
-               -1   |-1 | 0 | 0 |
-
-            add: 2y + s == 2, 3 .. +1 or 2y + s == -3 .. -1 otherwise 0
-        * ISSUE:
-            ? at which position shall the number be rounded?
-            ! it may happen that there is a leading zero
-            * devise a "conditional shift": bootstrap the leading position in a maximum-like manner
-            * here, at i-th position, pick either x_i (leading +-1), or x_i-1 (leading 0)
-                0 1 1 0 1 0 0 1 1   / round and cond. shift
-            ->  1 1 0 1 0 1
-
-* place tests into /tests folder (outside src)
 * make lib & bin in single project: https://stackoverflow.com/questions/26946646/rust-package-with-both-a-library-and-a-binary
 
 * cfg for max{} behavior
 * resolve bootstraps before / after / in between operations
 
-* replace sequential with standard base algorithms
-* wish: add tree-based method for arbitrary function evaluation
+* wish: add standard base algorithms
+* WISH: add tree-based method for arbitrary function evaluation

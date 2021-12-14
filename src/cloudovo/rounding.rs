@@ -34,6 +34,10 @@ pub fn round_at_impl(
         p if p >= x.len() + 1 => { ParmCiphertext::triv(1, &pub_keys.encoder) },
 
         // otherwise, do the job
+
+        //  * in standard binary repre, rounding is just adding the next word
+        //  * in redundant binary, a bit more complicated:
+        //      * for 1 and -1, one must search for the next non-zero ~ calc its sign
         //
         // let A = X ∥ y | Z ... s := sgn(Z)
         //
