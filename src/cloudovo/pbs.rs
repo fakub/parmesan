@@ -190,6 +190,25 @@ pub fn relu_plus__pi_5(
     )
 }
 
+//
+//  Rounding PBS for 2y + s:
+//
+//  -1   (2y + s == -3)
+//   0   (2y + s \in -2..1)
+//   1   (2y + s == 2, 3)
+//
+#[allow(non_snake_case)]
+pub fn round_2y_s__pi_5(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    eval_LUT_5(
+        pub_keys,
+        c,
+        [0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.]
+    )
+}
+
 
 // =============================================================================
 //

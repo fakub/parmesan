@@ -82,6 +82,13 @@ pub trait ParmArithmetics {
         pc: &ParmesanCloudovo,
         x: &Self,
     ) -> Self;
+
+    /// Rounding
+    fn round_at(
+        pc: &ParmesanCloudovo,
+        x: &Self,
+        pos: usize,
+    ) -> Self;
 }
 
 impl ParmArithmetics for i64 {
@@ -139,6 +146,23 @@ impl ParmArithmetics for i64 {
         _pc: &ParmesanCloudovo,
         x: &i64,
     ) -> i64 {x * x}
+
+    fn round_at(
+        _pc: &ParmesanCloudovo,
+        x: &i64,
+        pos: usize,
+    ) -> i64 {
+        match pos {
+            0 => { *x },
+            p if p >= 63 => { panic!("Rounding position ≥ 63 (for i64).") },
+            _ => {
+            //  XXXX XXXX - 0000 0XXX + 0000 0X00 << 1
+                        x
+                          - (x & ((1 << pos) - 1))
+                                      + ((x & (1 << (pos-1))) << 1)
+            },
+        }
+    }
 }
 
 impl ParmArithmetics for ParmCiphertext {
@@ -257,5 +281,18 @@ impl ParmArithmetics for ParmCiphertext {
             pc.pub_keys,
             x,
         ).expect("ParmArithmetics::squ failed.")
+    }
+
+    fn round_at(
+        pc: &ParmesanCloudovo,
+        x: &ParmCiphertext,
+        pos: usize,
+    ) -> ParmCiphertext {
+        rounding::round_at_impl(
+            pc.params,
+            pc.pub_keys,
+            x,
+            pos,
+        ).expect("ParmArithmetics::round_at failed.")
     }
 }
