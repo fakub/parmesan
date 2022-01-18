@@ -18,7 +18,7 @@ In the standard integer representation, parallel addition is not possible due to
 
 ## The Long Story
 
-See our [full paper](https://eprint.iacr.org/2021/TODO).
+See our [full paper](https://eprint.iacr.org/2022/067).
 
 ## Use `parmesan`
 
