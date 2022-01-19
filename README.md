@@ -38,6 +38,8 @@ For the best performance, we recommend to compile & run with the `RUSTFLAGS="-C 
 ```rust
 use std::error::Error;
 
+use colored::Colorize;
+
 use parmesan::params;
 use parmesan::userovo::*;
 use parmesan::ParmesanUserovo;
@@ -50,7 +52,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     //  Initialization
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__LEN_32;
+    let par = &params::PARM90__PI_5__D_20__F;
     // ---------------------------------
     //  Userovo Scope
     let pu = ParmesanUserovo::new(par)?;
@@ -85,7 +87,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     summary_text = format!("{}\nAddition:", summary_text);
     summary_text = format!("{}\na + b         = {:12} :: {} (exp. {})", summary_text,
                             add_a_b,
-                            if add_a_b == a_val + b_val {"PASS"} else {"FAIL"},
+                            if add_a_b == a_val + b_val {String::from("PASS").bold().green()} else {String::from("FAIL").bold().red()},
                             a_val + b_val
     );
 
