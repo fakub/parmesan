@@ -85,7 +85,7 @@ impl PrivKeySet {
     }
 
     /// Generate a fresh TFHE key set
-    fn generate(params: &params::Params) -> Result<PrivKeySet, Box<dyn Error>> {
+    fn generate(params: &Params) -> Result<PrivKeySet, Box<dyn Error>> {
         // generate LWE & RLWE secret keys
         measure_duration!(
             ["Generating  LWE secret key ({}-bit)", params.lwe_params.dimension],
@@ -133,7 +133,7 @@ impl PrivKeySet {
     }
 
     /// Get filenames from params
-    fn filenames_from_params(params: &params::Params) -> (String, String, String) {
+    fn filenames_from_params(params: &Params) -> (String, String, String) {
         let  sk_file: String = format!("secret-key__n-{}.key",
                                                       params.lwe_params.dimension,
         );

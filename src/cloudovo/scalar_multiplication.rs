@@ -41,7 +41,7 @@ pub fn scalar_mul_impl(
 
     // |k| < 2 already resolved, set to len = 2 and start from length 3: take 1 << 2 (which is 0b100 = 4)
     let mut k_len = 2usize;
-    for i in 2..31 {if k_abs & (1 << i) != 0 {k_len = i + 1;}}   //WISH as macro?
+    for i in 2..31 {if k_abs & (1 << i) != 0 {k_len = i + 1;}}   //TODO as macro?
 
     // k as a vector of bits
     // replace sequences of 1's with 1|zeros|-1
