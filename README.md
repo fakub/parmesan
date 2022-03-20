@@ -52,7 +52,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     //  Initialization
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__F;
+    let par = &params::PARM80__PI_5__D_20;
     // ---------------------------------
     //  Userovo Scope
     let pu = ParmesanUserovo::new(par)?;
