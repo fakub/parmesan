@@ -176,7 +176,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__F;   //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
+    let par = &params::PARM80__PI_5__D_20;   //  80    112    128
 
     // ---------------------------------
     //  Userovo Scope
@@ -473,7 +473,7 @@ pub fn nn_demo() -> Result<(), Box<dyn Error>> {
 
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM90__PI_5__D_20__F;   //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
+    let par = &params::PARM80__PI_5__D_20;   //  80    112    128
 
     // ---------------------------------
     //  Userovo Scope

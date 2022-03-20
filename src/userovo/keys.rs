@@ -1,21 +1,21 @@
 use std::error::Error;
 use std::path::Path;
-
+#[allow(unused_imports)]
+use std::io::{self,Write};
 //TODO add feature condition
 pub use std::fs::{self,File,OpenOptions};
 //~ pub use std::path::Path;
 //~ pub use std::io::Write;
-use crate::*;
-
-#[allow(unused_imports)]
-use std::io::{self,Write};
 
 #[allow(unused_imports)]
 use colored::Colorize;
 
 use concrete::*;
 
-use crate::params::{self,Params};
+use crate::*;
+use crate::params::Params;
+
+pub const KEYS_PATH: &str = "./keys/";
 
 
 
@@ -133,26 +133,20 @@ impl PrivKeySet {
     }
 
     /// Get filenames from params
-    fn filenames_from_params(params: &Params) -> (String, String, String) {
-        let  sk_file: String = format!("secret-key__n-{}.key",
-                                                      params.lwe_params.dimension,
+    fn filenames_from_params(par: &Params) -> (String, String, String) {
+        let suffix = format!("n-{}_N-{}_gamma-{}_l-{}_kappa-{}_t-{}.key",
+                                par.lwe_params.dimension,
+                                     par.rlwe_params.polynomial_size,
+                                              par.bs_base_log,
+                                                   par.bs_level,
+                                                            par.ks_base_log,
+                                                                 par.ks_level,
         );
-        let bsk_file: String = format!("bootstrapping-keys__n-{}_k-{}_N-{}_gamma-{}_l-{}.key",
-                                                            params.lwe_params.dimension,
-                                                                 params.rlwe_params.dimension,
-                                                                      params.rlwe_params.polynomial_size,
-                                                                           params.bs_base_log,
-                                                                                    params.bs_level,
-        );
-        let ksk_file: String = format!("key-switching-keys__n-{}_k-{}_N-{}_kappa-{}_t-{}.key",
-                                                            params.lwe_params.dimension,
-                                                                 params.rlwe_params.dimension,
-                                                                      params.rlwe_params.polynomial_size,
-                                                                           params.ks_base_log,
-                                                                                    params.ks_level,
-        );
+        let  sk_file = format!( "{}/SK__{}", KEYS_PATH, suffix);
+        let  bk_file = format!( "{}/BK__{}", KEYS_PATH, suffix);
+        let ksk_file = format!("{}/KSK__{}", KEYS_PATH, suffix);
 
-        (sk_file, bsk_file, ksk_file)
+        (sk_file, bk_file, ksk_file)
     }
 }
 
