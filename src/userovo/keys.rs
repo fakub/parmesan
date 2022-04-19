@@ -67,7 +67,11 @@ impl PrivKeySet {
                 ["Generate & Save PrivKeySet"],
                 [
                     let keys = PrivKeySet::generate(params)?;
-
+                    measure_duration!(
+                        ["Creating empty keys directory"],
+                        [fs::create_dir_all(Path::new(sk_file.as_str()).parent().unwrap())?;
+                         fs::create_dir_all(Path::new(bsk_file.as_str()).parent().unwrap())?;
+                         fs::create_dir_all(Path::new(ksk_file.as_str()).parent().unwrap())?;]);
                     measure_duration!(
                         ["Saving  LWE secret key"],
                         [keys .sk.save( sk_file.as_str())?;]);
