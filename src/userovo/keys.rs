@@ -68,6 +68,9 @@ impl PrivKeySet {
                 [
                     let keys = PrivKeySet::generate(params)?;
 
+                    // create KEYS_PATH directory, unless it exists
+                    fs::create_dir_all(KEYS_PATH)?;
+
                     measure_duration!(
                         ["Saving  LWE secret key"],
                         [keys .sk.save( sk_file.as_str())?;]);

@@ -63,7 +63,7 @@ pub const PARMXX__TRIVIAL: Params = Params {
 
 // =============================================================================
 //
-//  112-bit security
+//  NEW 80, 112 & 128-bit security
 //
 
 /// TFHE Parameter Set (81.2-bit)
