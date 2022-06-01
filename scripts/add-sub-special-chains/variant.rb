@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-LIMIT_LOG = 10
+LIMIT_LOG = 11
 DBG = false
 
 # equivalence class containing the only positive odd number as its representative
@@ -69,7 +69,7 @@ def extend_chain(chain, db)
         chain.each do |q|
             puts "    q = #{q}" if DBG
             #~ (1..LIMIT_LOG).each do |r|
-            (1..LIMIT_LOG-q.wid+1).each do |r|
+            (1..LIMIT_LOG-q.wid).each do |r|
                 puts "      r = #{r}" if DBG
                 [true, false].each do |p_pos|
                     [true, false].each do |q_pos|
@@ -120,11 +120,16 @@ end
 
 # print DB
 i = 1
+wpr = false
 db.sort_by{|v,c| v }.each do |v, c|
     if v > i
-        puts "---"
+        puts "----"
         i = v
     end
+    if v > (1 << (LIMIT_LOG-1)) and not wpr
+        puts "====    no guarantee    ===="
+        wpr = true
+    end
     i += 2
-    puts "#{v}: #{c}"
+    puts "#{wpr ? "  ? " : ""}#{v}: #{c}"
 end
