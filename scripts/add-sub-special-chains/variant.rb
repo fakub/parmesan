@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-LIMIT_WID = 11
+LIMIT_WID = 14
 #~ DBG = true
 DBG = false
 
@@ -152,18 +152,6 @@ chains << extend_chains_ary(chains, db)
 # 4th extend
 chains << extend_chains_ary(chains, db)
 
-#~ ecccs = []
-#~ eccs.each do |ecc|
-    #~ ecccs += extend_chain ecc, db
-#~ end
-
-#~ # 4th extend
-#~ # eccccs = []
-#~ ecccs.each do |eccc|
-    #~ # eccccs += extend_chain ecc, db
-    #~ extend_chain eccc, db
-#~ end
-
 # print DB
 i = 1
 wpr = false
@@ -177,5 +165,5 @@ db.sort_by{|v,c| v }.each do |v, c|
         wpr = true
     end
     i += 2
-    puts "#{wpr ? "  ? " : ""}#{v}: #{c}"
+    puts "#{wpr ? "  ? " : ""}#{"%5d" % [v]} /#{c.size-1}/ #{c}"
 end
