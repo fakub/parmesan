@@ -10,6 +10,7 @@ DBG = false
 #   for chains with 3 and more additions, it might worth using overlapping bits
 #   e.g. (maybe) 1 -> 1001 -> 10010001001 -> 100100010100010001001 (overlap & 3 add's)
 #        naively 1 -> 1001 -> 10010001    -> 1001000101 -> 10010001010001 -> 100100010100010001001 (no overlap & 5 add's)
+#   for sure this has shown for 805
 class OddClass
 
     attr_reader :p, :p_pos, :q, :q_pos, :r, :val, :wid, :posi, :negi
@@ -44,7 +45,7 @@ class OddClass
 
             @posi = (p.posi + q_posi).sort
             @negi = (p.negi + q_negi).sort
-            # this is the overlap check, which must not be applied for 3-add's and more
+            # this is the overlap check, which must not be applied for 3-add's and more (btw only place where posi/negi are used)
             # raise "[OddClass::new] Overlapping 1-positions." unless (@posi + @negi).uniq.size == p.posi.size + p.negi.size + q_posi.size + q_negi.size
         end
     end
@@ -122,6 +123,10 @@ def extend_chains_ary(chains_arys, db)
             #~ (1..LIMIT_WID).each do |r|
             # for 3-add's chains, it seems that deleting the leading 1 does not bring anything new
             # however, for 5-add's, there apparently is an example: 10110011011000110110011011
+
+            # possible issues:
+            #   1) only the 1st variant found is added to the DB and chain ary
+            #   2) only the last elements of both chains are taken (indeed an issue? all subchains are in the chain ary)
             (1..LIMIT_WID-cq.last.wid).each do |r|
                 puts "      r = #{r}" if DBG
                 [true, false].each do |p_pos|
