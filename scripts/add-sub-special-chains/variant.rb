@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-LIMIT_WID = 12
+LIMIT_WID = 13
 #~ DBG = true
 DBG = false
 
