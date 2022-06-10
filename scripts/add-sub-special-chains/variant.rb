@@ -78,6 +78,7 @@ class ASChain < Array
 
     # this is also problematic for longer chains (however, does not affect last round, useful only to generate all of the intermediates)
     # is it problematic for 3-chains? no.
+    # for longer: it should be safe to merge like set union
     def merge(other)
         raise "[ASChain::#{__method__}] Merging with non-ASChain class." unless other.class == ASChain
         difi = self.size
@@ -89,6 +90,12 @@ class ASChain < Array
         end
         raise "[ASChain::#{__method__}] Chains differ even in first element, which is supposed to be ◖ 1 ◗." if difi == 0
         ASChain[*(self + other[difi..])]
+    end
+
+    def to_vals
+        self.map do |on|
+            on.val
+        end
     end
 
     def to_s
@@ -108,13 +115,13 @@ def extend_chains_ary(chains_arys, db)
     ecs = []
     lvl = chains_arys.last.last.size
 
-    puts "Loop p ..." if DBG
-    # loop p (in all existing chains)
+    #~ $stderr.puts "Loop p ..." if DBG
+    # loop p (in all existing chains .. of the form [ASChain[1], ASChain[1,3], ASChain[1,5], ...])
     chains_arys.flatten(1).each do |cp|
-        puts "  chain for p = #{cp}" if DBG
+        #~ $stderr.puts "  chain for p = #{cp}" if DBG
         # loop q
         chains_arys.flatten(1).each do |cq|
-            puts "    chain for q = #{cq}" if DBG
+            #~ $stderr.puts "    chain for q = #{cq}" if DBG
 
             # check if the combination of chosen chains gives expected length
             cpq = cp.merge(cq)
@@ -128,23 +135,34 @@ def extend_chains_ary(chains_arys, db)
             #   1) only the 1st variant found is added to the DB and chain ary
             #   2) only the last elements of both chains are taken (indeed an issue? all subchains are in the chain ary)
             (1..LIMIT_WID-cq.last.wid).each do |r|
-                puts "      r = #{r}" if DBG
+                #~ $stderr.puts "      r = #{r}" if DBG
                 [true, false].each do |p_pos|
                     [true, false].each do |q_pos|
-                        begin
+                        #~ begin   # when checking non-overlap condition
                             on = OddClass.new(p_pos, cp.last, q_pos, cq.last, r)
-                            if on.val > 0 and db[on.val].nil?
-                                puts "      Adding #{on}" if DBG
-                                ecs << ASChain[*(cpq + [on])]
-                                db[on.val] = ASChain[*(cpq + [on])]
+                            if on.val > 0
+                                cand_chain = ASChain[*(cpq + [on])]
+                                # add whenever chain is optimal (TODO check that intermediates differ !! implement ASChain comparison?)
+                                if db[on.val].nil? or \
+                                    (db[on.val].first.size == cand_chain.size and not db[on.val].map{|asc|asc.to_vals}.include?(cand_chain.to_vals))
+                                    #~ $stderr.puts "      Adding #{on}" if DBG
+                                    #~ puts "      Adding #{on} cause db[on.val].nil? #{db[on.val].nil?} ; db[on.val].first.size - 1 = #{db[on.val].nil? ? "NIL" : db[on.val].first.size - 1} ; lvl = #{lvl}" if on.val == 3
+                                    ecs << cand_chain
+                                    if db[on.val].nil?
+                                        db[on.val] = [cand_chain]
+                                    else
+                                        db[on.val] << cand_chain
+                                    end
+                                end
                             end
-                        rescue => error
-                            puts "Skipping: #{error}" if DBG
-                        end
+                        #~ rescue => error
+                            #~ $stderr.puts "Skipping: #{error}" if DBG
+                        #~ end
                     end
                 end
             end
         end
+        $stderr.puts "----    Done with chain p = #{cp}"
     end
 
     ecs
@@ -153,24 +171,28 @@ end
 # init chains array with [[◖ 1 ◗]]
 chains = [[ASChain[OddClass.new]]]
 # init DB of values <=> chains
-db = {1 => ASChain[OddClass.new]}
+db = {1 => [ASChain[OddClass.new]]}
 
 # 1st extend
 chains << extend_chains_ary(chains, db)
+$stderr.puts "====    1st extend FINISHED    ===="
 
 # 2nd extend
 chains << extend_chains_ary(chains, db)
+$stderr.puts "====    2nd extend FINISHED    ===="
 
 # 3rd extend
 chains << extend_chains_ary(chains, db)
+$stderr.puts "====    3rd extend FINISHED    ===="
 
 # 4th extend
 chains << extend_chains_ary(chains, db)
+$stderr.puts "====    4th extend FINISHED    ===="
 
 # print DB
 i = 1
 wpr = false
-db.sort_by{|v,c| v }.each do |v, c|
+db.sort_by{|v, ca| v }.each do |v, ca|
     if v > i
         puts "----"
         i = v
@@ -180,5 +202,6 @@ db.sort_by{|v,c| v }.each do |v, c|
         wpr = true
     end
     i += 2
-    puts "#{wpr ? "  ? " : ""}#{"%5d" % [v]} /#{c.size-1}/ #{c}"
+    puts "#{wpr ? "  ? " : ""}#{"%5d" % [v]} /#{ca.first.size-1}/ #{ca.first}"
+    #~ puts "#{wpr ? "  ? " : ""}#{"%5d" % [v]} /#{ca.first.size-1}/ #{ca.first}#{ca.size > 1 ? " (other #{ca.size-1} chains)" : ""}"
 end
