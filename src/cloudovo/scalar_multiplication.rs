@@ -6,6 +6,8 @@ use serde::{Serialize, Deserialize};
 pub use std::fs::{self,File,OpenOptions};
 pub use std::path::Path;
 pub use std::io::Write;
+pub use std::collections::BTreeMap;
+
 use crate::*;
 
 #[allow(unused_imports)]
@@ -20,6 +22,9 @@ pub fn scalar_mul_impl(
     k: i32,
     x: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
+
+    //TODO instead of this NAF, use representation with longer zero intervals and then apply window method with ASC_12
+    let _ = ASC_12.len();
 
     // move sign of k to x, prepare both +1 and -1 multiples
     let mut x_pos = ParmCiphertext::empty();
@@ -203,7 +208,7 @@ pub trait AscValue {
     ) -> i64;
 
     /// Load from YAML file
-    fn vec_from_yaml(filename: &str) -> Result<Vec<Self>, Box<dyn Error>> where Self: Sized;
+    fn map_from_yaml(filename: &str) -> Result<BTreeMap<usize, Self>, Box<dyn Error>> where Self: Sized;
 }
 
 impl AscValue for Asc {
@@ -219,27 +224,29 @@ impl AscValue for Asc {
         //~ self.eval(_, 1i64).expect("Asc::value failed.")
     //~ }
 
-    fn vec_from_yaml(filename: &str) -> Result<Vec<Self>, Box<dyn Error>> {
-        let mut asc_vec: Vec<Self> = vec![];
+    fn map_from_yaml(filename: &str) -> Result<BTreeMap<usize, Self>, Box<dyn Error>> {
+        let mut asc_map: BTreeMap<usize, Self> = BTreeMap::new();
 
         // check if YAML file exists
         if Path::new(filename).is_file() {
-            println!("\n(i) Loading ASC's from '{}' ...", filename);
+            println!("(i) Loading ASC's from '{}' ...", filename);
 
-            // load YAML struct
+            // read YAML file
             let yaml_str = fs::read_to_string(filename)?;
 
-            // load Asc from YAML
-            let asc: Asc = serde_yaml::from_str(&yaml_str)?;
-
-            asc_vec.push(asc);
+            // load map of ASC's from YAML string
+            asc_map = serde_yaml::from_str(&yaml_str)?;
 
         } else {
             eprintln!("(!) ASC file '{}' does not exist.", filename);
+            //TODO return some error please
         }
 
-        eprintln!("(i) Asc vec: {:?}.", asc_vec);
+        //WISH check correctness? or is it sufficient in tests?
+        //~ for (n, asc) in asc_map.iter() {
+            //~ assert_eq!(*n as i64, asc.value(&pc));
+        //~ }
 
-        Ok(asc_vec)
+        Ok(asc_map)
     }
 }

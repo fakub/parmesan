@@ -28,12 +28,15 @@ use std::error::Error;
 pub use std::fs::{self,File,OpenOptions};
 pub use std::path::Path;
 pub use std::io::Write;
+pub use std::collections::BTreeMap;
 
 #[allow(unused_imports)]
 use colored::Colorize;
 
 extern crate chrono;
 //~ use chrono::Utc;
+
+extern crate lazy_static;
 
 #[allow(unused_imports)]
 use concrete::LWE;
@@ -69,6 +72,7 @@ pub use userovo::keys::{PrivKeySet,PubKeySet};
 pub mod cloudovo;
 pub use cloudovo::*;
 pub use cloudovo::neural_network::{Perceptron, PercType, NeuralNetwork};
+pub use cloudovo::scalar_multiplication::*;
 
 
 // =============================================================================
@@ -156,7 +160,21 @@ impl ParmesanCloudovo<'_> {
 
 // =============================================================================
 //
-//  Global Functions
+//  Global Variables
+//
+
+//TODO this file must be present in project dir, not in lib dir !!
+static ASC_12_FILE: &str = "asc-12.yaml";
+
+lazy_static::lazy_static! {
+/// Addition-Subtraction Chains for Scalar Multiplication
+pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = scalar_multiplication::Asc::map_from_yaml(ASC_12_FILE).expect("Asc::map_from_yaml failed.");
+}
+
+
+// =============================================================================
+//
+//  DEMO Functions
 //
 
 // -----------------------------------------------------------------------------
