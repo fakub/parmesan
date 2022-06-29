@@ -1,5 +1,7 @@
 use std::error::Error;
 
+use serde::{Serialize, Deserialize};
+
 //TODO add feature condition
 pub use std::fs::{self,File,OpenOptions};
 pub use std::path::Path;
@@ -9,7 +11,6 @@ use crate::*;
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use crate::userovo::keys::PubKeySet;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use super::addition;
 
@@ -144,6 +145,7 @@ pub fn scalar_mul_impl(
 
 /// element of ASC -- prescription (combination of previous):
 /// left addend's sign, left addend's index (within the ASC), <same for right addend>, right addend's shift
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct AddShift {
     pub l_pos:      bool,
     pub l_idx:      usize,
@@ -199,6 +201,9 @@ pub trait AscValue {
         &self,
         pc: &ParmesanCloudovo,
     ) -> i64;
+
+    /// Load from YAML file
+    fn vec_from_yaml(filename: &str) -> Result<Vec<Self>, Box<dyn Error>> where Self: Sized;
 }
 
 impl AscValue for Asc {
@@ -213,4 +218,28 @@ impl AscValue for Asc {
         //~ // hence ParmesanCloudovo must be present
         //~ self.eval(_, 1i64).expect("Asc::value failed.")
     //~ }
+
+    fn vec_from_yaml(filename: &str) -> Result<Vec<Self>, Box<dyn Error>> {
+        let mut asc_vec: Vec<Self> = vec![];
+
+        // check if YAML file exists
+        if Path::new(filename).is_file() {
+            println!("\n(i) Loading ASC's from '{}' ...", filename);
+
+            // load YAML struct
+            let yaml_str = fs::read_to_string(filename)?;
+
+            // load Asc from YAML
+            let asc: Asc = serde_yaml::from_str(&yaml_str)?;
+
+            asc_vec.push(asc);
+
+        } else {
+            eprintln!("(!) ASC file '{}' does not exist.", filename);
+        }
+
+        eprintln!("(i) Asc vec: {:?}.", asc_vec);
+
+        Ok(asc_vec)
+    }
 }

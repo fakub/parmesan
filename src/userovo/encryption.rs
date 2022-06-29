@@ -66,7 +66,7 @@ fn parm_encr_word(
     // check that mi is in alphabet
     if mi < -1 || mi > 1 {
         //TODO: #[allow(non_fmt_panics)] does not work this way (and braces will be in Rust 2021)
-        panic!("Word to be encrypted outside alphabet {{-1,0,1}}.");
+        panic!("{}", "Word to be encrypted outside the alphabet {-1,0,1}.");
     }
 
     // little hack, how to bring mi into positive interval [0, 2^pi)
