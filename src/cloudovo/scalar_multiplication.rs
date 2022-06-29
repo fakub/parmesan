@@ -135,3 +135,82 @@ pub fn scalar_mul_impl(
 
     Ok(intmd[idx].clone())
 }
+
+
+// =============================================================================
+//
+//  Addition-Subtraction Chains
+//
+
+/// element of ASC -- prescription (combination of previous):
+/// left addend's sign, left addend's index (within the ASC), <same for right addend>, right addend's shift
+pub struct AddShift {
+    pub l_pos:      bool,
+    pub l_idx:      usize,
+    pub r_pos:      bool,
+    pub r_idx:      usize,
+    pub r_shift:    usize,
+}
+
+/// Addition-Subtraction Chain as a vector of 'prescriptions'
+pub type Asc = Vec<AddShift>;
+
+pub trait AscEval<T: ParmArithmetics> {
+    /// Evaluation function for `ParmArithmetics` types (no parallelization yet .. TODO)
+    fn eval(
+        &self,
+        pc: &ParmesanCloudovo,
+        x: T,
+    ) -> Result<T, Box<dyn Error>>;
+}
+
+impl<T: ParmArithmetics + Clone> AscEval<T> for Asc
+{
+    fn eval(
+        &self,
+        pc: &ParmesanCloudovo,
+        x: T,
+    ) -> Result<T, Box<dyn Error>> {
+        let mut asc_vals = vec![x];
+
+        for adsh in self {
+            //                     +-1                  *          left_val     +          +-1                  *           right_val   << right_shift
+            //~ asc_vals.push((if adsh.l_pos {1} else {-1}) * asc_vals[adsh.l_idx]  + (if adsh.r_pos {1} else {-1}) * (asc_vals[adsh.r_idx] << adsh.r_shift));
+
+            let neg_l = ParmArithmetics::opp(&asc_vals[adsh.l_idx]);
+
+            let r_sh = ParmArithmetics::shift(pc, &asc_vals[adsh.r_idx], adsh.r_shift);
+            let neg_r_sh = ParmArithmetics::opp(&r_sh);
+
+            asc_vals.push(
+                ParmArithmetics::add(&pc,
+                    if adsh.l_pos {&asc_vals[adsh.l_idx]} else {&neg_l},
+                    if adsh.r_pos {&r_sh} else {&neg_r_sh})
+            );
+        }
+        //          Option<&T>   &T       T
+        Ok(asc_vals.last()      .unwrap().clone())
+    }
+}
+
+pub trait AscValue {
+    /// Value (i64) of ASC
+    fn value(
+        &self,
+        pc: &ParmesanCloudovo,
+    ) -> i64;
+}
+
+impl AscValue for Asc {
+    fn value(
+        &self,
+        pc: &ParmesanCloudovo,
+    ) -> i64 {
+        self.eval(pc, 1i64).expect("Asc::value failed.")
+    }
+    //~ fn value(&self) -> i64 {
+        //~ // destructuring assignments are unstable: issue #71126 <https://github.com/rust-lang/rust/issues/71126>
+        //~ // hence ParmesanCloudovo must be present
+        //~ self.eval(_, 1i64).expect("Asc::value failed.")
+    //~ }
+}
