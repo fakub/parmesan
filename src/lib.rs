@@ -164,7 +164,7 @@ impl ParmesanCloudovo<'_> {
 //
 
 //TODO this file must be present in project dir, not in lib dir !!
-static ASC_12_FILE: &str = "asc-12.yaml";
+static ASC_12_FILE: &str = "assets/asc-12.yaml";
 
 lazy_static::lazy_static! {
 /// Addition-Subtraction Chains for Scalar Multiplication
