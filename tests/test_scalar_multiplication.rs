@@ -5,6 +5,7 @@ use rand::Rng;
 
 use parmesan::userovo::encryption;
 use parmesan::arithmetics::ParmArithmetics;
+use parmesan::*;
 
 #[allow(dead_code)]
 mod common;
@@ -19,6 +20,20 @@ use common::*;
 fn t_scm_non_triv() {
     println!("Non-Triv ...");
     t_impl_scm_with_mode(EncrVsTriv::ENCR);
+}
+
+#[test]
+/// Addition-Subtraction Chains: non-emptiness & correctness.
+fn t_asc() {
+    println!("ASC ...");
+
+    // ASC_12 has 2048 elements
+    assert_eq!(ASC_12.len(), 2048);
+
+    // ASC_12 is correct
+    for (n, asc) in ASC_12.iter() {
+        assert_eq!(*n as i64, asc.value(&common::TEST_PC));
+    }
 }
 
 //WISH
