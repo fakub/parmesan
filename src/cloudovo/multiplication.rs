@@ -128,7 +128,7 @@ fn mul_karatsuba(
             // init tmp variables in this scope, only references can be passed to threads
             let mut a       = ParmCiphertext::empty();
             let mut b       = ParmCiphertext::empty();
-            let mut na_nb   = ParmCiphertext::triv(len0, &pub_keys.encoder)?;
+            let mut na_nb   = ParmCiphertext::triv(len0, &pub_keys.encoder)?;   //TODO consider using ParmArithmetics::shift
             let mut c       = ParmCiphertext::triv(len0, &pub_keys.encoder)?;
 
             let ar      = &mut a;

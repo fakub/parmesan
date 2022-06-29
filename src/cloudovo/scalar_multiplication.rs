@@ -15,7 +15,7 @@ use super::addition;
 
 /// Implementation of signum via parallel reduction
 pub fn scalar_mul_impl(
-    pub_keys: &PubKeySet,
+    pc: &ParmesanCloudovo,
     k: i32,
     x: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
@@ -93,13 +93,8 @@ pub fn scalar_mul_impl(
     let mut mulary: Vec<ParmCiphertext> = Vec::new();
     for (i, ki) in k_vec.iter().enumerate() {
         if *ki != 0 {
-            // shift x_sgn
-            let mut x_shifted = ParmCiphertext::triv(i, &pub_keys.encoder)?;
-            let mut x_cl = if *ki == 1 {x_pos.clone()} else {x_neg.clone()};   // there shall be no option other than -1, 0, +1
-            x_shifted.append(&mut x_cl);
-
-            // push shifted x_sgn to mulary
-            mulary.push(x_shifted);
+            // push shifted x_<pos/neg> to mulary
+            mulary.push(ParmArithmetics::shift(pc, if *ki == 1 {&x_pos} else {&x_neg}, i));
         }
     }
 
@@ -121,7 +116,7 @@ pub fn scalar_mul_impl(
             let mut idx = 0usize;
             intmd[idx] = addition::add_sub_noise_refresh(
                 true,
-                pub_keys,
+                pc.pub_keys,
                 &mulary[0],
                 &mulary[1],
             )?;
@@ -130,7 +125,7 @@ pub fn scalar_mul_impl(
                 idx ^= 1;
                 intmd[idx] = addition::add_sub_noise_refresh(
                     true,
-                    pub_keys,
+                    pc.pub_keys,
                     &intmd[idx ^ 1],
                     &mulary[i],
                 )?;

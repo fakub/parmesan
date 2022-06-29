@@ -13,7 +13,7 @@ pub trait ParmArithmetics {
     /// Zero: `0`
     fn zero() -> Self;
 
-    // needed?
+    //TODO (add parameter length)
     //~ /// Const: `k`
     //~ fn constant(
         //~ pc: &ParmesanCloudovo,
@@ -22,6 +22,13 @@ pub trait ParmArithmetics {
 
     /// Opposite: `-X`
     fn opp(x: &Self) -> Self;
+
+    /// Binary Shift: `X << k`
+    fn shift(
+        pc: &ParmesanCloudovo,
+        x: &Self,
+        k: usize,
+    ) -> Self;
 
     /// Addition: `X + Y`
     fn add(
@@ -95,6 +102,12 @@ impl ParmArithmetics for i64 {
     fn zero() -> i64 {0i64}
 
     fn opp(x: &i64) -> i64 {-x}
+
+    fn shift(
+        _pc: &ParmesanCloudovo,
+        x: &i64,
+        k: usize,
+    ) -> i64 {x << k}
 
     fn add(
         _pc: &ParmesanCloudovo,
@@ -174,6 +187,17 @@ impl ParmArithmetics for ParmCiphertext {
         addition::opposite_impl(x).expect("ParmArithmetics::opp failed.")
     }
 
+    fn shift(
+        pc: &ParmesanCloudovo,
+        x: &ParmCiphertext,
+        k: usize,
+    ) -> ParmCiphertext {
+        if k == 0 {return x.clone();}
+        let mut x_shifted = ParmCiphertext::triv(k, &pc.pub_keys.encoder).expect("ParmCiphertext::triv failed.");
+        x_shifted.append(&mut x.clone());
+        x_shifted
+    }
+
     fn add(
         pc: &ParmesanCloudovo,
         x: &ParmCiphertext,
@@ -219,7 +243,7 @@ impl ParmArithmetics for ParmCiphertext {
         x: &ParmCiphertext,
     ) -> ParmCiphertext {
         scalar_multiplication::scalar_mul_impl(
-            pc.pub_keys,
+            pc,
             k,
             x,
         ).expect("ParmArithmetics::scalar_mul failed.")
