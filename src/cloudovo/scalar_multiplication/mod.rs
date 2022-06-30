@@ -25,6 +25,9 @@ pub fn scalar_mul_impl(
     x: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
+    //DBG
+    println!("input: {}", x.to_str());
+
     // move sign of k to x, prepare both +1 and -1 multiples
     let mut x_pos = ParmCiphertext::empty();
     let mut x_neg = ParmCiphertext::empty();
@@ -44,7 +47,9 @@ pub fn scalar_mul_impl(
     if k_abs == 0 {return Ok(ParmCiphertext::empty());}
     if k_abs == 1 {return Ok(x_pos);}
 
-    //TODO FIXME works fine with 40970, fails with 409701
+    //TODO FIXME works fine with 40970, fails with 409701, also works fine with 1-bit shorter c
+    // let c: Vec<i32> = vec![0,-1,-1,0,-1,0,0,-1,-1,-1,]
+    // let k = 409701;
 
     // sliding window
     let ws = naf::wind_shifts(k_abs, ASC_BITLEN);  // pairs of window values and shifts, built-up from certain NAF (or other repre)
@@ -69,6 +74,11 @@ pub fn scalar_mul_impl(
         } else {
             mulary.push(ParmArithmetics::shift(pc, &wi_x, sh));
         }
+    }
+    //DBG
+    println!("mulary:");
+    for c in mulary.clone() {
+        println!("{}", c.to_str());
     }
 
     //~ // calc a NAF

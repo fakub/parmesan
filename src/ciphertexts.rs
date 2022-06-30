@@ -17,6 +17,8 @@ pub trait ParmCiphertextExt {
     fn empty() -> ParmCiphertext;
 
     fn single(c: LWE) -> ParmCiphertext;
+
+    fn to_str(&self) -> String;
 }
 
 impl ParmCiphertextExt for ParmCiphertext {
@@ -34,4 +36,25 @@ impl ParmCiphertextExt for ParmCiphertext {
     fn single(c: LWE) -> ParmCiphertext {
         vec![c]
     }
+
+    fn to_str(&self) -> String {
+        let mut s = "[[".to_string();
+        for c in self {
+            s += &*format!("<{}>, ", if c.dimension == 0 {format!("{:3}", c.ciphertext.get_body().0)} else {"###".to_string()})
+        }
+        s += "]]";
+        s
+    }
 }
+
+//WISH this is not possible: error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+//~ impl fmt::Debug for ParmCiphertext {
+    //~ // This trait requires `fmt` with this exact signature.
+    //~ fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //~ write!(f, "[[");
+        //~ for c in self {
+            //~ write!(f, "<{}>, ", if c.dimension == 0 {format!("{:3}", c.ciphertext.get_body().0)} else {"###"})
+        //~ }
+        //~ write!(f, "]]");
+    //~ }
+//~ }
