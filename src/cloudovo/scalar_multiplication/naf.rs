@@ -7,7 +7,7 @@ pub fn wind_shifts(
     // pairs of window values and shifts, built-up from certain NAF (or other repre)
     let mut ws: Vec<(i32, usize)> = Vec::new();
 
-    //TODO to be exchanged with Koyama-Tsuruoka
+    //TODO prospectively Koyama-Tsuruoka "NAF"
     let k_vec = naf_vec(k);
 
     // sliding window

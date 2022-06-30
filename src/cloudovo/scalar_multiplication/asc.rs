@@ -30,18 +30,19 @@ pub trait AscEval<T: ParmArithmetics> {
     fn eval(
         &self,
         pc: &ParmesanCloudovo,
-        x: T,
+        x: &T,
     ) -> Result<T, Box<dyn Error>>;
 }
 
 impl<T: ParmArithmetics + Clone> AscEval<T> for Asc
 {
+    //TODO eval with sign
     fn eval(
         &self,
         pc: &ParmesanCloudovo,
-        x: T,
+        x: &T,
     ) -> Result<T, Box<dyn Error>> {
-        let mut asc_vals = vec![x];
+        let mut asc_vals = vec![x.clone()];
 
         for adsh in self {
             //                     +-1                  *          left_val     +          +-1                  *           right_val   << right_shift
@@ -82,7 +83,7 @@ impl AscValue for Asc {
         &self,
         pc: &ParmesanCloudovo,
     ) -> i64 {
-        self.eval(pc, 1i64).expect("Asc::value failed.")
+        self.eval(pc, &1i64).expect("Asc::value failed.")
     }
     //~ fn value(&self) -> i64 {
         //~ // destructuring assignments are unstable: issue #71126 <https://github.com/rust-lang/rust/issues/71126>

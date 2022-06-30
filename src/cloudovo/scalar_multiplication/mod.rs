@@ -44,27 +44,36 @@ pub fn scalar_mul_impl(
     if k_abs == 0 {return Ok(ParmCiphertext::empty());}
     if k_abs == 1 {return Ok(x_pos);}
 
-    // calc a NAF (prospectively Koyama-Tsuruoka "NAF")
-    let k_vec = naf::naf_vec(k_abs);
+    //TODO FIXME works fine with 40970, fails with 409701
 
-    //~ //TODO implement sliding window, sth like this:
-    //~ // omit naf_vec .. that would be called internally
-    //~ let ws = naf::wind_shifts(k_abs, ASC_BITLEN);  // pairs of window values and shifts, built-up from certain NAF (or other repre)
-    //~ // in parallel do:
-    //~ for (wi, sh) in ws { // search for non-zero, then process the following 12 bits
-        //~ // also resolve repeating wi's .. don't calculate twice .. put into Map and check if entry exists
-        //~ let wi_x = ASC_12.entry(wi).eval(pc, x);
-        //~ mulary.push(ParmArithmetics::shift(pc, wi_x), sh);
-    //~ }
-
-    // k_len ≥ 2
+    // sliding window
+    let ws = naf::wind_shifts(k_abs, ASC_BITLEN);  // pairs of window values and shifts, built-up from certain NAF (or other repre)
     let mut mulary: Vec<ParmCiphertext> = Vec::new();
-    for (i, ki) in k_vec.iter().enumerate() {
-        if *ki != 0 {
-            // push shifted x_<pos/neg> to mulary
-            mulary.push(ParmArithmetics::shift(pc, if *ki == 1 {&x_pos} else {&x_neg}, i));
+    //~ // in parallel do:
+    for (wi, sh) in ws {
+        //TODO resolve repeating wi's .. don't calculate twice .. put into Map and check if entry exists
+        //TODO eval with sign
+        let wi_asc = &ASC_12[&(wi.abs() as usize)];
+        let wi_x = wi_asc.eval(pc, x)?;
+        if wi < 0 {
+            let neg_wi_x = ParmArithmetics::opp(&wi_x);
+            mulary.push(ParmArithmetics::shift(pc, &neg_wi_x, sh));
+        } else {
+            mulary.push(ParmArithmetics::shift(pc, &wi_x, sh));
         }
     }
+
+    //~ // calc a NAF
+    //~ let k_vec = naf::naf_vec(k_abs);
+
+    //~ // k_len ≥ 2
+    //~ let mut mulary: Vec<ParmCiphertext> = Vec::new();
+    //~ for (i, ki) in k_vec.iter().enumerate() {
+        //~ if *ki != 0 {
+            //~ // push shifted x_<pos/neg> to mulary
+            //~ mulary.push(ParmArithmetics::shift(pc, if *ki == 1 {&x_pos} else {&x_neg}, i));
+        //~ }
+    //~ }
 
     // Hamming weight of k is 1
     if mulary.len() == 1 {
