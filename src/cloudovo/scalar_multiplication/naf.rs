@@ -10,15 +10,26 @@ pub fn wind_shifts(
     //TODO prospectively Koyama-Tsuruoka "NAF"
     let k_vec = naf_vec(k);
 
+    //DBG
+    println!("k = {:?} ({})", k_vec, k);
+
     // sliding window
     let mut sh = 0usize;
     loop {
         // find next non-zero (short circuit eval)
         while sh < k_vec.len() && k_vec[sh] == 0 {sh += 1;}
 
-        // take window of size bitlen -> convert to scalar -> push to result
-        let w = k_vec[sh..(if sh + bitlen >= k_vec.len() {k_vec.len()-1} else {sh + bitlen})].to_vec();
+        // take window of size bitlen -> convert to scalar -> push to result (n.b.! Rust's ranges!)
+        let w = k_vec[sh..=(if sh + bitlen - 1 >= k_vec.len() {k_vec.len()-1} else {sh + bitlen-1})].to_vec();
+
+        //DBG
+        println!("    window = {:?} << {}", w, sh);
+
         let wi = encryption::convert(&w).expect("encryption::convert failed.");
+
+        //DBG
+        println!("    w_val = {}", wi);
+
         ws.push((wi as i32,sh));
 
         // increment shift/index
