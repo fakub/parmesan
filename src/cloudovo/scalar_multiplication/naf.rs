@@ -1,3 +1,36 @@
+use crate::userovo::encryption;
+
+pub fn wind_shifts(
+    k: u32,
+    bitlen: usize,
+) -> Vec<(i32, usize)> {
+    // pairs of window values and shifts, built-up from certain NAF (or other repre)
+    let mut ws: Vec<(i32, usize)> = Vec::new();
+
+    //TODO to be exchanged with Koyama-Tsuruoka
+    let k_vec = naf_vec(k);
+
+    // sliding window
+    let mut sh = 0usize;
+    loop {
+        // find next non-zero (short circuit eval)
+        while sh < k_vec.len() && k_vec[sh] == 0 {sh += 1;}
+
+        // take window of size bitlen -> convert to scalar -> push to result
+        let w = k_vec[sh..(if sh + bitlen >= k_vec.len() {k_vec.len()-1} else {sh + bitlen})].to_vec();
+        let wi = encryption::convert(&w).expect("encryption::convert failed.");
+        ws.push((wi as i32,sh));
+
+        // increment shift/index
+        sh += bitlen;
+
+        // whole vector processed
+        if sh >= k_vec.len() {break;}
+    }
+
+    ws
+}
+
 pub fn naf_vec(k: u32) -> Vec<i32> {
 
     // resolve trivial cases

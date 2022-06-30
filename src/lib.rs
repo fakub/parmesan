@@ -164,7 +164,7 @@ impl ParmesanCloudovo<'_> {
 //
 
 //TODO put all of this into some sort of config
-static ASC_BITLEN: usize = 12;
+pub static ASC_BITLEN: usize = 12;
 // this file must be present in <exec-dir/assets>, copy it from <lib-root/assets>
 static ASC_12_FILE: &str = "assets/asc-12.yaml";
 

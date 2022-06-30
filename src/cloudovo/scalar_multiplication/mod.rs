@@ -47,8 +47,9 @@ pub fn scalar_mul_impl(
     // calc a NAF (prospectively Koyama-Tsuruoka "NAF")
     let k_vec = naf::naf_vec(k_abs);
 
-    //TODO implement sliding window, sth like this:
-    //~ ws = naf::into_windows(k_vec, ASC_BITLEN);  // pairs of window values and shifts
+    //~ //TODO implement sliding window, sth like this:
+    //~ // omit naf_vec .. that would be called internally
+    //~ let ws = naf::wind_shifts(k_abs, ASC_BITLEN);  // pairs of window values and shifts, built-up from certain NAF (or other repre)
     //~ // in parallel do:
     //~ for (wi, sh) in ws { // search for non-zero, then process the following 12 bits
         //~ // also resolve repeating wi's .. don't calculate twice .. put into Map and check if entry exists

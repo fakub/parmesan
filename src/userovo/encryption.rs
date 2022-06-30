@@ -132,10 +132,10 @@ pub fn convert(mv: &Vec<i32>) -> Result<i64, Box<dyn Error>> {
     let mut m = 0i64;
     for (i, mi) in mv.iter().enumerate() {
         m += match mi {
-             1 => {  1i64 << i},
-             0 => {  0i64},
-            -1 => {-(1i64 << i)},
-             _ => {panic!("Word m_[{}] out of redundant bin alphabet: {}.", i, mi)},
+             1 =>   1i64 << i,
+             0 =>   0i64,
+            -1 => -(1i64 << i),
+             _ => return Err(format!("Word m_[{}] out of redundant bin alphabet: {}.", i, mi).into()),
         };
     }
     Ok(m)
