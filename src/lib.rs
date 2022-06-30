@@ -163,12 +163,14 @@ impl ParmesanCloudovo<'_> {
 //  Global Variables
 //
 
-//TODO this file must be present in project dir, not in lib dir !!
+//TODO put all of this into some sort of config
+static ASC_BITLEN: usize = 12;
+// this file must be present in <exec-dir/assets>, copy it from <lib-root/assets>
 static ASC_12_FILE: &str = "assets/asc-12.yaml";
 
 lazy_static::lazy_static! {
 /// Addition-Subtraction Chains for Scalar Multiplication
-pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = scalar_multiplication::Asc::map_from_yaml(ASC_12_FILE).expect("Asc::map_from_yaml failed.");
+pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = scalar_multiplication::Asc::map_from_yaml(ASC_BITLEN, ASC_12_FILE).expect("Asc::map_from_yaml failed.");
 }
 
 

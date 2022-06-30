@@ -208,7 +208,10 @@ pub trait AscValue {
     ) -> i64;
 
     /// Load from YAML file
-    fn map_from_yaml(filename: &str) -> Result<BTreeMap<usize, Self>, Box<dyn Error>> where Self: Sized;
+    fn map_from_yaml(
+        bitlen: usize,
+        filename: &str,
+    ) -> Result<BTreeMap<usize, Self>, Box<dyn Error>> where Self: Sized;
 }
 
 impl AscValue for Asc {
@@ -224,8 +227,11 @@ impl AscValue for Asc {
         //~ self.eval(_, 1i64).expect("Asc::value failed.")
     //~ }
 
-    fn map_from_yaml(filename: &str) -> Result<BTreeMap<usize, Self>, Box<dyn Error>> {
-        let mut asc_map: BTreeMap<usize, Self> = BTreeMap::new();
+    fn map_from_yaml(
+        bitlen: usize,
+        filename: &str,
+    ) -> Result<BTreeMap<usize, Self>, Box<dyn Error>> {
+        let asc_map: BTreeMap<usize, Self>;
 
         // check if YAML file exists
         if Path::new(filename).is_file() {
@@ -238,13 +244,18 @@ impl AscValue for Asc {
             asc_map = serde_yaml::from_str(&yaml_str)?;
 
         } else {
-            eprintln!("(!) ASC file '{}' does not exist.", filename);
-            //TODO return some error please
+            return Err(format!("ASC file '{}' does not exist.", filename).into());
         }
 
-        //WISH check correctness? or is it sufficient in tests?
+        // number of elements = 2^bitlen / 2
+        if asc_map.len() != (1 << bitlen) / 2 {return Err(format!("Wrong number of ASC's: {}, expected {} (n.b., '1: []' is expected, too).", asc_map.len(), (1 << bitlen) / 2).into());}
+
+        // check correctness of chains
+        //TODO ASC eval without ParmesanCloudovo
         //~ for (n, asc) in asc_map.iter() {
-            //~ assert_eq!(*n as i64, asc.value(&pc));
+            //~ if *n as i64 != asc.value_i64() {
+                //~ return Err(format!("Incorrect ASC value: '{:?}' evaluates to {}, expected {}.", asc, asc.value_i64(), *n as i64).into());
+            //~ }
         //~ }
 
         Ok(asc_map)
