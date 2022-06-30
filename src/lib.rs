@@ -72,7 +72,7 @@ pub use userovo::keys::{PrivKeySet,PubKeySet};
 pub mod cloudovo;
 pub use cloudovo::*;
 pub use cloudovo::neural_network::{Perceptron, PercType, NeuralNetwork};
-pub use cloudovo::scalar_multiplication::*;
+pub use cloudovo::scalar_multiplication::asc::*;
 
 
 // =============================================================================
@@ -170,7 +170,7 @@ static ASC_12_FILE: &str = "assets/asc-12.yaml";
 
 lazy_static::lazy_static! {
 /// Addition-Subtraction Chains for Scalar Multiplication
-pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = scalar_multiplication::Asc::map_from_yaml(ASC_BITLEN, ASC_12_FILE).expect("Asc::map_from_yaml failed.");
+pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = Asc::map_from_yaml(ASC_BITLEN, ASC_12_FILE).expect("Asc::map_from_yaml failed.");
 }
 
 
