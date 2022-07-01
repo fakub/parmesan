@@ -44,7 +44,21 @@ pub trait ParmArithmetics {
         y: &Self,
     ) -> Self;
 
-    //TODO noisy variant of add/sub for performance
+    /// Noisy Addition: `X + Y`
+    /// (n.b., only when result gets immediately decrypted)
+    fn add_noisy(
+        pc: &ParmesanCloudovo,
+        x: &Self,
+        y: &Self,
+    ) -> Self;
+
+    /// Noisy Subtraction: `X - Y`
+    /// (n.b., only when result gets immediately decrypted)
+    fn sub_noisy(
+        pc: &ParmesanCloudovo,
+        x: &Self,
+        y: &Self,
+    ) -> Self;
 
     /// Add constant: `X + k`
     fn add_const(
@@ -118,6 +132,18 @@ impl ParmArithmetics for i64 {
     ) -> i64 {x + y}
 
     fn sub(
+        _pc: &ParmesanCloudovo,
+        x: &i64,
+        y: &i64,
+    ) -> i64 {x - y}
+
+    fn add_noisy(
+        _pc: &ParmesanCloudovo,
+        x: &i64,
+        y: &i64,
+    ) -> i64 {x + y}
+
+    fn sub_noisy(
         _pc: &ParmesanCloudovo,
         x: &i64,
         y: &i64,
@@ -219,6 +245,32 @@ impl ParmArithmetics for ParmCiphertext {
         y: &ParmCiphertext,
     ) -> ParmCiphertext {
         addition::add_sub_impl(
+            false,
+            pc.pub_keys,
+            x,
+            y,
+        ).expect("ParmArithmetics::sub failed.")
+    }
+
+    fn add_noisy(
+        pc: &ParmesanCloudovo,
+        x: &ParmCiphertext,
+        y: &ParmCiphertext,
+    ) -> ParmCiphertext {
+        addition::add_sub_noisy(
+            true,
+            pc.pub_keys,
+            x,
+            y,
+        ).expect("ParmArithmetics::add failed.")
+    }
+
+    fn sub_noisy(
+        pc: &ParmesanCloudovo,
+        x: &ParmCiphertext,
+        y: &ParmCiphertext,
+    ) -> ParmCiphertext {
+        addition::add_sub_noisy(
             false,
             pc.pub_keys,
             x,

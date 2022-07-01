@@ -99,7 +99,7 @@ pub fn scalar_mul_impl(
             // reduce multiplication array (of length ≥ 2)
             let mut intmd = vec![ParmCiphertext::empty(); 2];
             let mut idx = 0usize;
-            intmd[idx] = addition::add_sub_noise_refresh(
+            intmd[idx] = addition::add_sub_impl(
                 true,
                 pc.pub_keys,
                 &mulary[0],
@@ -108,7 +108,7 @@ pub fn scalar_mul_impl(
 
             for i in 2..mulary.len() {
                 idx ^= 1;
-                intmd[idx] = addition::add_sub_noise_refresh(
+                intmd[idx] = addition::add_sub_impl(
                     true,
                     pc.pub_keys,
                     &intmd[idx ^ 1],

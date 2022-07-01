@@ -54,7 +54,6 @@ impl<T: ParmArithmetics + Clone> AscEval<T> for Asc
             let neg_r_sh = ParmArithmetics::opp(&r_sh);
 
             asc_vals.push(
-                //FIXME due to this, add must be implemented with add_sub_noise_refresh
                 ParmArithmetics::add(&pc,
                     if adsh.l_pos {&asc_vals[adsh.l_idx]} else {&neg_l},
                     if adsh.r_pos {&r_sh} else {&neg_r_sh})

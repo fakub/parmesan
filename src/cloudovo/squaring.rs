@@ -144,7 +144,7 @@ fn squ_dnq(
             let res = if b.len() == 2*len0 {
                 //  | A | B |   simply concat
                 b.append(&mut a);
-                addition::add_sub_noise_refresh(
+                addition::add_sub_impl(
                     true,
                     pub_keys,
                     &b,
@@ -152,7 +152,7 @@ fn squ_dnq(
                 )?
             } else {
                 //  first, add | C |0| to | B |
-                let b_c = addition::add_sub_noise_refresh(
+                let b_c = addition::add_sub_impl(
                     true,
                     pub_keys,
                     &b,
@@ -161,7 +161,7 @@ fn squ_dnq(
                 //  second, add | C |0|+| B | to | A |0|0|
                 let mut a_sh  = ParmCiphertext::triv(2*len0, &pub_keys.encoder)?;
                 a_sh.append(&mut a);
-                addition::add_sub_noise_refresh(   //TODO check why there was addition::add_sub_impl
+                addition::add_sub_impl(   //TODO check why there was addition::add_sub_noisy
                     true,
                     pub_keys,
                     &a_sh,
@@ -193,7 +193,7 @@ fn squ_schoolbook(
             //TODO write a function that will be common with scalar_multiplication (if this is possible with strategies 2+)
             let mut intmd = vec![ParmCiphertext::empty(); 2];
             let mut idx = 0usize;
-            intmd[idx] = addition::add_sub_noise_refresh(
+            intmd[idx] = addition::add_sub_impl(
                 true,
                 pub_keys,
                 &squary[0],
@@ -202,7 +202,7 @@ fn squ_schoolbook(
 
             for i in 2..x.len() {
                 idx ^= 1;
-                intmd[idx] = addition::add_sub_noise_refresh(
+                intmd[idx] = addition::add_sub_impl(
                     true,
                     pub_keys,
                     &intmd[idx ^ 1],

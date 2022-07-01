@@ -160,12 +160,12 @@ fn mul_karatsuba(
                         });
                     }).expect("thread::scope ab_scope failed.");
                     //  A + B .. -A - B
-                    let pa_pb = addition::add_sub_noise_refresh(
+                    let pa_pb = addition::add_sub_impl(
                         true,
                         pub_keys,
                         ar,
                         br,
-                    ).expect("add_sub_noise_refresh failed.");
+                    ).expect("add_sub_impl failed.");
                     for abi in pa_pb {
                         na_nbr.push(abi.opposite_uint().expect("opposite_uint failed."));
                     }
@@ -180,20 +180,20 @@ fn mul_karatsuba(
                     // parallel pool: (x_0 + x_1), (y_0 + y_1)
                     thread::scope(|c_scope| {
                         c_scope.spawn(|_| {
-                            *x01r = addition::add_sub_noise_refresh(
+                            *x01r = addition::add_sub_impl(
                                 true,
                                 pub_keys,
                                 &x0,
                                 &x1,
-                            ).expect("add_sub_noise_refresh failed.");
+                            ).expect("add_sub_impl failed.");
                         });
                         c_scope.spawn(|_| {
-                            *y01r = addition::add_sub_noise_refresh(
+                            *y01r = addition::add_sub_impl(
                                 true,
                                 pub_keys,
                                 &y0,
                                 &y1,
-                            ).expect("add_sub_noise_refresh failed.");
+                            ).expect("add_sub_impl failed.");
                         });
                     }).expect("thread::scope c_scope failed.");
                     // C = (x_0 + x_1) * (y_0 + y_1)   .. (len0 + 1)-bit multiplication
@@ -222,13 +222,13 @@ fn mul_karatsuba(
                 //~ )?;
 
                 //~ //  C = (x_0 + x_1) * (y_0 + y_1)   .. (len0 + 1)-bit multiplication
-                //~ let x01 = addition::add_sub_noise_refresh(
+                //~ let x01 = addition::add_sub_impl(
                     //~ true,
                     //~ pub_keys,
                     //~ &x0,
                     //~ &x1,
                 //~ )?;
-                //~ let y01 = addition::add_sub_noise_refresh(
+                //~ let y01 = addition::add_sub_impl(
                     //~ true,
                     //~ pub_keys,
                     //~ &y0,
@@ -243,7 +243,7 @@ fn mul_karatsuba(
                 //~ c.append(&mut c_plain);
 
                 //~ //  A + B .. -A - B
-                //~ let pa_pb = addition::add_sub_noise_refresh(
+                //~ let pa_pb = addition::add_sub_impl(
                     //~ true,
                     //~ pub_keys,
                     //~ &a,
@@ -260,7 +260,7 @@ fn mul_karatsuba(
             //      | -A-B  | 0 |   in na_nb
 
             //  |  C | 0 | + | -A-B | 0 |
-            let c_nanb = addition::add_sub_noise_refresh(
+            let c_nanb = addition::add_sub_impl(
                 true,
                 pub_keys,
                 &c,
@@ -271,7 +271,7 @@ fn mul_karatsuba(
             let res = if b.len() == 2*len0 {
                 //  | A | B |   simply concat
                 b.append(&mut a);
-                addition::add_sub_noise_refresh(
+                addition::add_sub_impl(
                     true,
                     pub_keys,
                     &b,
@@ -279,7 +279,7 @@ fn mul_karatsuba(
                 )?
             } else {
                 //  first, add |c-a-b|0| to |b|
-                let b_cnanb = addition::add_sub_noise_refresh(
+                let b_cnanb = addition::add_sub_impl(
                     true,
                     pub_keys,
                     &b,
@@ -289,7 +289,7 @@ fn mul_karatsuba(
                 //  n.b., this way, the resulting ciphertext grows the least (1 bit only) and it also uses least BS inside additions
                 let mut a_sh  = ParmCiphertext::triv(2*len0, &pub_keys.encoder)?;
                 a_sh.append(&mut a);
-                addition::add_sub_noise_refresh(
+                addition::add_sub_impl(
                     true,
                     pub_keys,
                     &a_sh,
@@ -323,7 +323,7 @@ fn mul_schoolbook(
             //TODO write a function that will be common with scalar_multiplication (if this is possible with strategies 2+)
             let mut intmd = vec![ParmCiphertext::empty(); 2];
             let mut idx = 0usize;
-            intmd[idx] = addition::add_sub_noise_refresh(
+            intmd[idx] = addition::add_sub_impl(
                 true,
                 pub_keys,
                 &mulary[0],
@@ -332,7 +332,7 @@ fn mul_schoolbook(
 
             for i in 2..x.len() {
                 idx ^= 1;
-                intmd[idx] = addition::add_sub_noise_refresh(
+                intmd[idx] = addition::add_sub_impl(
                     true,
                     pub_keys,
                     &intmd[idx ^ 1],

@@ -20,13 +20,13 @@ use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use super::pbs;
 
 /// Parallel addition/subtraction followed by noise refreshal
-pub fn add_sub_noise_refresh(
+pub fn add_sub_impl(
     is_add: bool,
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
-    let z_noisy = add_sub_impl(
+    let z_noisy = add_sub_noisy(
         is_add,
         pub_keys,
         x,
@@ -43,7 +43,7 @@ pub fn add_sub_noise_refresh(
 }
 
 /// Implementation of parallel addition/subtraction
-pub fn add_sub_impl(
+pub fn add_sub_noisy(
     is_add: bool,
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
@@ -202,6 +202,7 @@ pub fn add_const_impl(
 
     let mut ck = ParmCiphertext::empty();
 
+    //TODO put into ParmArithmetics::const (check!)
     for i in 0..k_len {
         // calculate i-th bit with sign
         let ki = if ((k_abs >> i) & 1) == 0 {
@@ -219,7 +220,7 @@ pub fn add_const_impl(
         ck.push(cti);
     }
 
-    Ok(add_sub_impl(   //TODO add_sub_noise_refresh
+    Ok(add_sub_impl(
         true,
         pub_keys,
         x,

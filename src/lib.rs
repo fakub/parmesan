@@ -712,4 +712,4 @@ pub fn arrhythmia_nn() -> NeuralNetwork {
 }
 
 //TODO
-// add/sub must be refreshing noise!
+// use ParmArithmetics::add rather than add_sub_impl/add_sub_noisy
