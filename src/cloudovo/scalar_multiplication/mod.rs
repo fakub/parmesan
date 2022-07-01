@@ -25,9 +25,6 @@ pub fn scalar_mul_impl(
     x: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
-    //DBG
-    println!("input: {}", x.to_str());
-
     // move sign of k to x, prepare both +1 and -1 multiples
     let mut x_pos = ParmCiphertext::empty();
     let mut x_neg = ParmCiphertext::empty();
@@ -58,9 +55,6 @@ pub fn scalar_mul_impl(
     // sliding window
     let ws = naf::wind_shifts(k_abs, ASC_BITLEN);  // pairs of window values and shifts, built-up from certain NAF (or other repre)
 
-    //DBG
-    println!("Wind-Shifts: {:?} for {}", ws, k_abs);
-
     let mut mulary: Vec<ParmCiphertext> = Vec::new();
     //~ // in parallel do:
     for (wi, sh) in ws {
@@ -69,20 +63,12 @@ pub fn scalar_mul_impl(
         let wi_asc = &ASC_12[&(wi.abs() as usize)];
         let wi_x = wi_asc.eval(pc, x)?;
 
-        //DBG
-        println!("wi_eval = {} (orig {} << {})", wi_asc.value(pc), wi, sh);
-
         if wi < 0 {
             let neg_wi_x = ParmArithmetics::opp(&wi_x);
             mulary.push(ParmArithmetics::shift(pc, &neg_wi_x, sh));
         } else {
             mulary.push(ParmArithmetics::shift(pc, &wi_x, sh));
         }
-    }
-    //DBG
-    println!("mulary:");
-    for c in mulary.clone() {
-        println!("{}", c.to_str());
     }
 
     //~ // calc a NAF

@@ -710,3 +710,6 @@ pub fn arrhythmia_nn() -> NeuralNetwork {
         n_inputs: 16,
     }
 }
+
+//TODO
+//  - if any panic! inside Result<..> => replace with return Err("msg".into())

@@ -44,6 +44,8 @@ pub trait ParmArithmetics {
         y: &Self,
     ) -> Self;
 
+    //TODO noisy variant of add/sub for performance
+
     /// Add constant: `X + k`
     fn add_const(
         pc: &ParmesanCloudovo,

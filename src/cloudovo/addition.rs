@@ -144,7 +144,7 @@ pub fn add_sub_impl(
                 println!("\ty.len = {}", y.len());
                 println!("\ty_rzero = {}", y_rzero);
                 println!("\ty_lzero = {}", y_lzero);
-                panic!("Unexpected fatal error!");
+                return Err("Unexpected fatal error!".into());
             }
 
             q[r_triv..].par_iter_mut().zip(w[r_triv..].par_iter().enumerate()).for_each(| (qi, (i0, wi)) | {
@@ -219,7 +219,7 @@ pub fn add_const_impl(
         ck.push(cti);
     }
 
-    Ok(add_sub_impl(
+    Ok(add_sub_impl(   //TODO add_sub_noise_refresh
         true,
         pub_keys,
         x,
