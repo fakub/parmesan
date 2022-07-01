@@ -44,19 +44,17 @@ pub fn scalar_mul_impl(
     if k_abs == 0 {return Ok(ParmCiphertext::empty());}
     if k_abs == 1 {return Ok(x_pos);}
 
-    //TODO FIXME works fine with 40970, fails with 409701, also works fine with 1-bit shorter c
-    // let c: Vec<i32> = vec![0,-1,-1,0,-1,0,0,-1,-1,-1,]
-    // let k = 409701;
-            // add debug to Concrete's LWE mod.rs -- there show up different nb_bit_precision's
-            //~ //DBG
-            //~ eprintln!("self.encoder.nb_bit_precision = {}, ct.encoder.nb_bit_precision = {}", self.encoder.nb_bit_precision, ct.encoder.nb_bit_precision);
-            //~ return Err(InvalidEncoderError!(42,0.6));
+
+    // ====    Sliding Window    ===============================================
+
+    //TODO does not pass NN tests !! whereas Standard NAF does
+    // => this variant forgets sign, for some reason FIXME
 
     // sliding window
     let ws = naf::wind_shifts(k_abs, ASC_BITLEN);  // pairs of window values and shifts, built-up from certain NAF (or other repre)
 
     let mut mulary: Vec<ParmCiphertext> = Vec::new();
-    //~ // in parallel do:
+    // in parallel do:
     for (wi, sh) in ws {
         //TODO resolve repeating wi's .. don't calculate twice .. put into Map and check if entry exists
         //TODO eval with sign
@@ -71,6 +69,8 @@ pub fn scalar_mul_impl(
         }
     }
 
+    // ====    Standard NAF    =================================================
+
     //~ // calc a NAF
     //~ let k_vec = naf::naf_vec(k_abs);
 
@@ -82,6 +82,9 @@ pub fn scalar_mul_impl(
             //~ mulary.push(ParmArithmetics::shift(pc, if *ki == 1 {&x_pos} else {&x_neg}, i));
         //~ }
     //~ }
+
+    // =========================================================================
+
 
     // Hamming weight of k is 1
     if mulary.len() == 1 {
