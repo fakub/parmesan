@@ -50,6 +50,10 @@ pub fn scalar_mul_impl(
     //TODO FIXME works fine with 40970, fails with 409701, also works fine with 1-bit shorter c
     // let c: Vec<i32> = vec![0,-1,-1,0,-1,0,0,-1,-1,-1,]
     // let k = 409701;
+            // add debug to Concrete's LWE mod.rs -- there show up different nb_bit_precision's
+            //~ //DBG
+            //~ eprintln!("self.encoder.nb_bit_precision = {}, ct.encoder.nb_bit_precision = {}", self.encoder.nb_bit_precision, ct.encoder.nb_bit_precision);
+            //~ return Err(InvalidEncoderError!(42,0.6));
 
     // sliding window
     let ws = naf::wind_shifts(k_abs, ASC_BITLEN);  // pairs of window values and shifts, built-up from certain NAF (or other repre)

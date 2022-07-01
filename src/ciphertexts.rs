@@ -40,7 +40,7 @@ impl ParmCiphertextExt for ParmCiphertext {
     fn to_str(&self) -> String {
         let mut s = "[[".to_string();
         for c in self {
-            s += &*format!("<{}>, ", if c.dimension == 0 {format!("{:3}", c.ciphertext.get_body().0)} else {"###".to_string()})
+            s += &*format!("<{}|{}-bit>, ", if c.dimension == 0 {format!("{}", c.ciphertext.get_body().0)} else {"#".to_string()}, c.encoder.nb_bit_precision)
         }
         s += "]]";
         s
