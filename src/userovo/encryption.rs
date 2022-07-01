@@ -1,5 +1,8 @@
 use std::error::Error;
 
+// parallelization tools
+use rayon::prelude::*;
+
 #[allow(unused_imports)]
 use colored::Colorize;
 
@@ -8,6 +11,8 @@ use concrete::LWE;
 use crate::params::Params;
 use crate::userovo::keys::PrivKeySet;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+
+pub const PARM_CT_MAXLEN: usize = 63;
 
 
 
@@ -65,8 +70,7 @@ fn parm_encr_word(
 
     // check that mi is in alphabet
     if mi < -1 || mi > 1 {
-        //TODO: #[allow(non_fmt_panics)] does not work this way (and braces will be in Rust 2021)
-        panic!("{}", "Word to be encrypted outside the alphabet {-1,0,1}.");
+        return Err(format!("{}", "Word to be encrypted outside the alphabet {-1,0,1}.").into());
     }
 
     // little hack, how to bring mi into positive interval [0, 2^pi)
@@ -92,23 +96,16 @@ fn parm_encr_word(
 pub fn parm_decrypt(
     params: &Params,
     priv_keys: &PrivKeySet,
-    pc: &ParmCiphertext,
+    ct: &ParmCiphertext,
 ) -> Result<i64, Box<dyn Error>> {
-    let mut m = 0i64;
-
-    for (i, ct) in pc.iter().enumerate() {
-        let mi = parm_decr_word(params, priv_keys, ct)?;
-        // infoln!("m[{}] = {} (pi = {})", i, mi, ct.encoder.nb_bit_precision);
-        // if i >= 63 {dbgln!("i >= 63 !! namely {}", i);}
-        m += match mi {
-             1 => {  1i64 << i},
-             0 => {  0i64},
-            -1 => {-(1i64 << i)},
-             _ => {panic!("Word m_[{}] out of redundant bin alphabet: {}.", i, mi)},
-        };
-    }
-
-    Ok(m)
+    // init plain vector
+    let mut pt: Vec<i32> = vec![0; ct.len()];
+    // decrypt ct into pt (in parallel)
+    ct.par_iter().zip(pt.par_iter_mut()).for_each(| (cti, pti) | {
+        *pti = parm_decr_word(params, priv_keys, cti).expect("parm_decr_word failed.");
+    });
+    // convert vec to i64
+    Ok(convert(&pt)?)
 }
 
 fn parm_decr_word(
@@ -129,6 +126,7 @@ fn parm_decr_word(
 
 /// Conversion from redundant
 pub fn convert(mv: &Vec<i32>) -> Result<i64, Box<dyn Error>> {
+    if mv.len() > PARM_CT_MAXLEN {return Err(format!("ParmCiphertext longer than {}.", PARM_CT_MAXLEN).into());}
     let mut m = 0i64;
     for (i, mi) in mv.iter().enumerate() {
         m += match mi {

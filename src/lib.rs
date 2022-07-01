@@ -712,4 +712,4 @@ pub fn arrhythmia_nn() -> NeuralNetwork {
 }
 
 //TODO
-//  - if any panic! inside Result<..> => replace with return Err("msg".into())
+// add/sub must be refreshing noise!

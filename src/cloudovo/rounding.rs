@@ -10,6 +10,7 @@ use colored::Colorize;
 
 use crate::params::Params;
 use crate::userovo::keys::PubKeySet;
+use crate::userovo::encryption::*;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use super::{pbs,addition,signum};
 
@@ -22,10 +23,11 @@ pub fn round_at_impl(
 
     match pos {
         // no rounding needed
-        0 => { Ok(x.clone()) },
-        //WISH add some constant for maximum ParmCiphertext length .. p if p >= MAX_PARM_CT_LEN => { panic!("Rounding position ≥ MAX_PARM_CT_LEN.") },
+        0 => Ok(x.clone()),
+        // consider if this behavior is desired:
+        // p if p > PARM_CT_MAXLEN => Err(format!("Rounding position > ParmCiphertext max length {}.", PARM_CT_MAXLEN).into()),
         // rounding 1 digit after x.len() -> return triv of length 1 (as in multiplication of empty ciphertexts)
-        p if p >= x.len() + 1 => { ParmCiphertext::triv(1, &pub_keys.encoder) },
+        p if p >= x.len() + 1 => ParmCiphertext::triv(1, &pub_keys.encoder),
 
         // otherwise, do the job
 
@@ -63,8 +65,6 @@ pub fn round_at_impl(
                 &slx,
                 &r,
             )
-
-            //~ Ok(x.clone())
         }
     }
 }
