@@ -8,6 +8,9 @@ pub use std::collections::BTreeMap;
 
 use crate::*;
 
+// parallelization tools
+use rayon::prelude::*;
+
 #[allow(unused_imports)]
 use colored::Colorize;
 
@@ -50,20 +53,21 @@ pub fn scalar_mul_impl(
     // sliding window
     let ws = naf::wind_shifts(k_abs, ASC_BITLEN);  // pairs (window value, shift), built-up from certain NAF (or other repre)
 
-    let mut mulary: Vec<ParmCiphertext> = Vec::new();
-    //TODO in parallel do:
-    for (wi, sh) in ws {
+    let mut mulary: Vec<ParmCiphertext> = vec![ParmCiphertext::empty(); ws.len()];
+
+    // in parallel, fill mulary
+    mulary.par_iter_mut().zip(ws.par_iter()).for_each(|(wi_x, (wi, shi))| {
         //TODO resolve repeating wi's .. don't calculate twice .. put into Map and check if entry exists
         let wi_asc = &ASC_12[&(wi.abs() as usize)];
-        let wi_x = wi_asc.eval(pc, &x_pos)?;   // due to wi.abs, x_pos must be taken
+        let wi_x_plain = wi_asc.eval(pc, &x_pos).expect("Asc::eval failed.");   // due to wi.abs, x_pos must be taken
 
-        if wi < 0 {
-            let neg_wi_x = ParmArithmetics::opp(&wi_x);
-            mulary.push(ParmArithmetics::shift(pc, &neg_wi_x, sh));
+        *wi_x = if *wi < 0 {
+            let neg_wi_x_plain = ParmArithmetics::opp(&wi_x_plain);
+            ParmArithmetics::shift(pc, &neg_wi_x_plain, *shi)
         } else {
-            mulary.push(ParmArithmetics::shift(pc, &wi_x, sh));
-        }
-    }
+            ParmArithmetics::shift(pc, &wi_x_plain, *shi)
+        };
+    });
 
     // ====    Standard NAF    =================================================
 
