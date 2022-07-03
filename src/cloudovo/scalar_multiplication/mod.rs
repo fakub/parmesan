@@ -47,19 +47,15 @@ pub fn scalar_mul_impl(
 
     // ====    Sliding Window    ===============================================
 
-    //TODO does not pass NN tests !! whereas Standard NAF does
-    // => this variant forgets sign, for some reason FIXME
-
     // sliding window
-    let ws = naf::wind_shifts(k_abs, ASC_BITLEN);  // pairs of window values and shifts, built-up from certain NAF (or other repre)
+    let ws = naf::wind_shifts(k_abs, ASC_BITLEN);  // pairs (window value, shift), built-up from certain NAF (or other repre)
 
     let mut mulary: Vec<ParmCiphertext> = Vec::new();
-    // in parallel do:
+    //TODO in parallel do:
     for (wi, sh) in ws {
         //TODO resolve repeating wi's .. don't calculate twice .. put into Map and check if entry exists
-        //TODO eval with sign
         let wi_asc = &ASC_12[&(wi.abs() as usize)];
-        let wi_x = wi_asc.eval(pc, x)?;
+        let wi_x = wi_asc.eval(pc, &x_pos)?;   // due to wi.abs, x_pos must be taken
 
         if wi < 0 {
             let neg_wi_x = ParmArithmetics::opp(&wi_x);
