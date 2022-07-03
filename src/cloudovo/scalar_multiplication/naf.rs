@@ -100,4 +100,80 @@ pub fn naf_vec(k: u32) -> Vec<i32> {
     k_vec
 }
 
-//TODO implement Koyama-Tsuruoka "NAF"
+//FIXME: Koyama-Tsuruoka "NAF" .. gives leading 1 shifted by 1 position to MSB
+pub fn koyama_tsuruoka_vec(k: u32) -> Vec<i32> {
+
+    // resolve trivial cases
+    if k == 0 {return vec![0];}
+    if k == 1 {return vec![1];}
+
+    // |k| < 2 resolved -> set len = 2 and continue from 0b100
+    let mut k_len = 2usize;
+    // 1 << 31 is indeed 0b100..00 (for u32)
+    for i in 2..=31 {if k & (1 << i) != 0 {k_len = i + 1;}}   //TODO as macro?
+
+    //TODO check if k_len+2 is sufficient
+    //~ let mut k_vec: Vec<i32> = vec![0; k_len+2];
+    let mut k_vec: Vec<i32> = vec![0; k_len+5];
+
+    // Koyama-Tsuruoka algorithm
+    let mut j = 0;  let mut m: i32 = 0;
+    let mut x = 0;  let mut y = 0;  let mut z = 0;
+    let mut u = 0;  let mut v = 0;  let mut w = 0;
+
+    while x < k_len {
+        y = if (k >> x) & 1 == 1 {y+1} else {y-1};
+        x += 1;
+        if m == 0 {
+            if y >= z+3 {
+                while j < w {
+                    k_vec[j] = ((k >> j) & 1) as i32;
+                    j += 1;
+                }
+                k_vec[j] = -1;  j += 1;
+                v = y;  u = x;  m = 1;
+            } else {
+                if y < z {z = y; w = x;}
+            }
+        } else {
+            if v >= y+3 {
+                while j < u {
+                    k_vec[j] = (((k >> j) & 1) - 1) as i32;
+                    j += 1;
+                }
+                k_vec[j] = 1;   j += 1;
+                z = y;  w = x;  m = 0;
+            } else {
+                if y > v {v = y; u = x;}
+            }
+        }
+    }
+
+    if m == 0 || (m == 1 && v <= y) {
+        while j < x {
+            k_vec[j] = ((k >> j) & 1) as i32 - m;
+            j += 1;
+        }
+        k_vec[j] = 1 - m;
+        k_vec[j+1] = m;
+    } else {
+        while j < u {
+            k_vec[j] = (((k >> j) & 1) - 1) as i32;
+            j += 1;
+        }
+        k_vec[j] = 1;
+        j += 1;
+
+        while j < x {
+            k_vec[j] = ((k >> j) & 1) as i32;
+            j += 1;
+        }
+        k_vec[j] = 1;
+        k_vec[j+1] = 0;
+    }
+
+    //TODO while?
+    //~ if k_vec.last() == Some(&0) {k_vec.pop();}
+
+    k_vec
+}
