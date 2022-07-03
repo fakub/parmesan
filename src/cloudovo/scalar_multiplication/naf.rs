@@ -101,6 +101,7 @@ pub fn naf_vec(k: u32) -> Vec<i32> {
 }
 
 //FIXME: Koyama-Tsuruoka "NAF" .. gives leading 1 shifted by 1 position to MSB
+//  how-to: evaluate for k = 2 and find the problem..
 pub fn koyama_tsuruoka_vec(k: u32) -> Vec<i32> {
 
     // resolve trivial cases
@@ -113,10 +114,14 @@ pub fn koyama_tsuruoka_vec(k: u32) -> Vec<i32> {
     for i in 2..=31 {if k & (1 << i) != 0 {k_len = i + 1;}}   //TODO as macro?
 
     //TODO check if k_len+2 is sufficient
-    //~ let mut k_vec: Vec<i32> = vec![0; k_len+2];
-    let mut k_vec: Vec<i32> = vec![0; k_len+5];
+    let mut k_vec: Vec<i32> = vec![0; k_len+2];
+    //~ let mut k_vec: Vec<i32> = vec![0; k_len+5];
 
-    // Koyama-Tsuruoka algorithm
+
+    // =========================================================================
+    //
+    //  Koyama-Tsuruoka algorithm
+    //
     let mut j = 0;  let mut m: i32 = 0;
     let mut x = 0;  let mut y = 0;  let mut z = 0;
     let mut u = 0;  let mut v = 0;  let mut w = 0;
@@ -171,9 +176,17 @@ pub fn koyama_tsuruoka_vec(k: u32) -> Vec<i32> {
         k_vec[j] = 1;
         k_vec[j+1] = 0;
     }
+    //
+    // =========================================================================
+
 
     //TODO while?
-    //~ if k_vec.last() == Some(&0) {k_vec.pop();}
+    if k_vec.last() == Some(&0) {k_vec.pop();}
+    if k_vec.last() == Some(&0) {k_vec.pop();}
+
+    //TODO this is just an experimental hotfix of Koyama-Tsuruoka algorithm as presented in their paper .. get rid of the leading 1
+    if k_vec[k_vec.len()-1] == 1 && k_vec[k_vec.len()-2] == 1 {k_vec.pop();}
+    else if k_vec[k_vec.len()-1] == 1 && k_vec[k_vec.len()-2] == 0 {k_vec.pop(); *k_vec.last_mut().expect("Koyama-Tsuruoka hotfix .. index out of bounds") = 1;}
 
     k_vec
 }
