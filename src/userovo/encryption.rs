@@ -121,7 +121,7 @@ fn parm_decr_word(
 
 // =============================================================================
 //
-//  Conversion
+//  Conversion, Hamming Weight, ...
 //
 
 /// Conversion from redundant
@@ -137,4 +137,14 @@ pub fn convert(mv: &Vec<i32>) -> Result<i64, Box<dyn Error>> {
         };
     }
     Ok(m)
+}
+
+/// Hamming Weight of (expected) binary vector
+pub fn bin_hw(v: &Vec<i32>) -> Result<usize, Box<dyn Error>> {
+    let mut hw = 0;
+    for vi in v {
+        if vi.abs() > 1 {return Err("Element in abs > 1 for binary HW!".into());}
+        hw += vi.abs() as usize;
+    }
+    Ok(hw)
 }
