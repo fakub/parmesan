@@ -7,11 +7,8 @@ pub fn wind_shifts(
     // pairs of window values and shifts, built-up from certain NAF (or other repre)
     let mut ws: Vec<(i32, usize)> = Vec::new();
 
-    //TODO prospectively Koyama-Tsuruoka "NAF"
-    let k_vec = naf_vec(k);
-
-    //DBG
-    println!("k = {:?} ({})", k_vec, k);
+    // Koyama-Tsuruoka "NAF" .. longer sections of zeros with the same Hamming weight as an ordinary NAF
+    let k_vec = koyama_tsuruoka_vec(k);
 
     // sliding window
     let mut sh = 0usize;
@@ -21,15 +18,7 @@ pub fn wind_shifts(
 
         // take window of size bitlen -> convert to scalar -> push to result (n.b.! Rust's ranges!)
         let w = k_vec[sh..=(if sh + bitlen - 1 >= k_vec.len() {k_vec.len()-1} else {sh + bitlen-1})].to_vec();
-
-        //DBG
-        println!("    window = {:?} << {}", w, sh);
-
         let wi = encryption::convert(&w).expect("encryption::convert failed.");
-
-        //DBG
-        println!("    w_val = {}", wi);
-
         ws.push((wi as i32,sh));
 
         // increment shift/index

@@ -36,7 +36,6 @@ pub trait AscEval<T: ParmArithmetics> {
 
 impl<T: ParmArithmetics + Clone> AscEval<T> for Asc
 {
-    //TODO eval with sign
     fn eval(
         &self,
         pc: &ParmesanCloudovo,
@@ -45,14 +44,15 @@ impl<T: ParmArithmetics + Clone> AscEval<T> for Asc
         let mut asc_vals = vec![x.clone()];
 
         for adsh in self {
-            //                     +-1                  *          left_val     +          +-1                  *           right_val   << right_shift
-            //~ asc_vals.push((if adsh.l_pos {1} else {-1}) * asc_vals[adsh.l_idx]  + (if adsh.r_pos {1} else {-1}) * (asc_vals[adsh.r_idx] << adsh.r_shift));
+            // +-1 * left_val  +  +-1 * right_val << right_shift
 
             let neg_l = ParmArithmetics::opp(&asc_vals[adsh.l_idx]);
 
             let r_sh = ParmArithmetics::shift(pc, &asc_vals[adsh.r_idx], adsh.r_shift);
             let neg_r_sh = ParmArithmetics::opp(&r_sh);
 
+            // only limited space for parallelization
+            // (no example on the first sight)
             asc_vals.push(
                 ParmArithmetics::add(&pc,
                     if adsh.l_pos {&asc_vals[adsh.l_idx]} else {&neg_l},
