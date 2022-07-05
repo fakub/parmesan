@@ -47,7 +47,8 @@ pub static TESTS_BITLEN_ADD:        usize     =   2;
 pub static TESTS_EXTRA_BITLEN_ADD: [usize; 2] = [15,TESTS_BITLEN_FULL-1];
 pub static TESTS_BITLEN_ADD_CONST:  usize     =   8;
 pub static TESTS_BITLEN_SCM:        usize     =   9;
-pub static TESTS_BITLEN_SCALAR:     usize     =   5;
+pub static TESTS_BITLEN_SCALAR:     usize     =  30;
+pub static TESTS_BITLEN_KOY_TSU:    usize     =  30;
 pub static TESTS_BITLEN_NNE:        usize     =   5;
 
 // NN-specific
@@ -64,6 +65,7 @@ pub static TESTS_REPEAT_SQU:        usize     =   1;
 pub static TESTS_REPEAT_ADD_CONST:  usize     =   3;
 pub static TESTS_REPEAT_ADD_TRIV_0: usize     =   3;
 pub static TESTS_REPEAT_SCM:        usize     =   3;
+pub static TESTS_REPEAT_KOY_TSU:    usize     =1000;
 pub static TESTS_REPEAT_NNE:        usize     =   3;
 
 #[derive(Clone,Copy)]

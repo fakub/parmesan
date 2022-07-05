@@ -3,8 +3,9 @@ extern crate lazy_static;
 
 use rand::Rng;
 
-use parmesan::userovo::encryption;
+use parmesan::userovo::encryption::{self, *};
 use parmesan::arithmetics::ParmArithmetics;
+use parmesan::scalar_multiplication::*;
 use parmesan::*;
 
 #[allow(dead_code)]
@@ -33,6 +34,32 @@ fn t_asc() {
     // ASC_12 is correct
     for (n, asc) in ASC_12.iter() {
         assert_eq!(*n as i64, asc.value(&common::TEST_PC));
+    }
+}
+
+#[test]
+/// Koyama-Tsuruoka representation
+fn t_koy_tsu() {
+    println!("Koyama-Tsuruoka ...");
+
+    // for random scalar generation
+    let mut rng = rand::thread_rng();
+
+    for _ in 0..common::TESTS_REPEAT_KOY_TSU {
+        // generate random scalar
+        let k: i32 = rng.gen_range(0..=(1 << common::TESTS_BITLEN_KOY_TSU));
+
+        println!("  k = {}", k);
+
+        // calc Koyama-Tsuruoka representation
+        let kt_vec = naf::koyama_tsuruoka_vec(k.abs() as u32);
+        // eval it
+        let k_val = convert(&kt_vec).expect("convert failed.");
+
+        println!("  kt_vec = {:?} ~ {}", kt_vec, k_val);
+
+        // compare results
+        assert_eq!(k.abs() as i64, k_val);
     }
 }
 
