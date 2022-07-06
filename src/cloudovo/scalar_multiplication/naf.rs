@@ -38,6 +38,8 @@ pub fn naf_vec(k: u32) -> Vec<i32> {
     if k == 0 {return vec![0];}
     if k == 1 {return vec![1];}
 
+    //TODO implement variant by Algorithm 9.14 from ECC book (Cohen, Frey)
+
     // |k| < 2 resolved -> set len = 2 and continue from 0b100
     let mut k_len = 2usize;
     // 1 << 31 is indeed 0b100..00 (for u32)
