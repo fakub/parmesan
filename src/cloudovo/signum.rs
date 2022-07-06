@@ -19,9 +19,8 @@ use super::pbs;
 
 /// Implementation of signum via parallel reduction
 pub fn sgn_impl(
-    params: &Params,
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     measure_duration!(
@@ -34,13 +33,13 @@ pub fn sgn_impl(
             //TODO resolve case x.len() == 1 .. only clone, no bootstrap
 
             let s_raw: ParmCiphertext = sgn_recursion_raw(
-                params.bit_precision - 1,
-                pub_keys,
+                pc.params.bit_precision - 1,
+                &pc.pub_keys,
                 x,
             )?;
 
             let s_lwe = pbs::f_1__pi_5__with_val(
-                pub_keys,
+                &pc.pub_keys,
                 &s_raw[0],
                 1,
             )?;

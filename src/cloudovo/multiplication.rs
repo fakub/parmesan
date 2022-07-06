@@ -27,9 +27,9 @@ use super::{pbs,addition};
 
 /// Choose & call appropriate algorithm for a product of two ciphertexts (Karatsuba, or schoolbook multiplication)
 pub fn mul_impl(
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
-    y: &ParmCiphertext,
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
+    y:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     //  Karatsuba for lengths 14 or >= 16, otherwise schoolbook (i.e., lengths < 14 or 15)
@@ -58,27 +58,27 @@ pub fn mul_impl(
 
         for _i in 0..len_diff {
             if x_in.len() < y_in.len() {
-                x_in.push(LWE::encrypt_uint_triv(0, &pub_keys.encoder)?);
+                x_in.push(LWE::encrypt_uint_triv(0, &pc.pub_keys.encoder)?);
             } else {
-                y_in.push(LWE::encrypt_uint_triv(0, &pub_keys.encoder)?);
+                y_in.push(LWE::encrypt_uint_triv(0, &pc.pub_keys.encoder)?);
             }
         }
     }
 
     let p = match x_in.len() {
-        l if l == 0 => ParmCiphertext::triv(1, &pub_keys.encoder)?,
+        l if l == 0 => ParmCiphertext::triv(1, &pc.pub_keys.encoder)?,
         l if l == 1 => mul_1word(
-            pub_keys,
+            pc,
             &x_in,
             &y_in,
         )?,
         l if l < 14 || l == 15 => mul_schoolbook(
-            pub_keys,
+            pc,
             &x_in,
             &y_in,
         )?,
         l if l <= 32 => mul_karatsuba(
-            pub_keys,
+            pc,
             &x_in,
             &y_in,
         )?,
@@ -90,9 +90,9 @@ pub fn mul_impl(
 
 /// Karatsuba multiplication
 fn mul_karatsuba(
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
-    y: &ParmCiphertext,
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
+    y:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     //WISH  be able to calculate n and n-1 bit numbers (useful for squaring of non-power of two lengths)
@@ -128,8 +128,8 @@ fn mul_karatsuba(
             // init tmp variables in this scope, only references can be passed to threads
             let mut a       = ParmCiphertext::empty();
             let mut b       = ParmCiphertext::empty();
-            let mut na_nb   = ParmCiphertext::triv(len0, &pub_keys.encoder)?;   //TODO consider using ParmArithmetics::shift
-            let mut c       = ParmCiphertext::triv(len0, &pub_keys.encoder)?;
+            let mut na_nb   = ParmCiphertext::triv(len0, &pc.pub_keys.encoder)?;   //TODO consider using ParmArithmetics::shift
+            let mut c       = ParmCiphertext::triv(len0, &pc.pub_keys.encoder)?;
 
             let ar      = &mut a;
             let br      = &mut b;
@@ -145,7 +145,7 @@ fn mul_karatsuba(
                         ab_scope.spawn(|_| {
                             // A = x_1 * y_1                   .. len1-bit multiplication
                             *ar  = mul_impl(
-                                pub_keys,
+                                pc,
                                 &x1,
                                 &y1,
                             ).expect("mul_impl failed.");
@@ -153,7 +153,7 @@ fn mul_karatsuba(
                         ab_scope.spawn(|_| {
                             // B = x_0 * y_0                   .. len0-bit multiplication
                             *br  = mul_impl(
-                                pub_keys,
+                                pc,
                                 &x0,
                                 &y0,
                             ).expect("mul_impl failed.");
@@ -162,7 +162,7 @@ fn mul_karatsuba(
                     //  A + B .. -A - B
                     let pa_pb = addition::add_sub_impl(
                         true,
-                        pub_keys,
+                        pc,
                         ar,
                         br,
                     ).expect("add_sub_impl failed.");
@@ -182,7 +182,7 @@ fn mul_karatsuba(
                         c_scope.spawn(|_| {
                             *x01r = addition::add_sub_impl(
                                 true,
-                                pub_keys,
+                                pc,
                                 &x0,
                                 &x1,
                             ).expect("add_sub_impl failed.");
@@ -190,7 +190,7 @@ fn mul_karatsuba(
                         c_scope.spawn(|_| {
                             *y01r = addition::add_sub_impl(
                                 true,
-                                pub_keys,
+                                pc,
                                 &y0,
                                 &y1,
                             ).expect("add_sub_impl failed.");
@@ -198,7 +198,7 @@ fn mul_karatsuba(
                     }).expect("thread::scope c_scope failed.");
                     // C = (x_0 + x_1) * (y_0 + y_1)   .. (len0 + 1)-bit multiplication
                     let mut c_plain = mul_impl(
-                        pub_keys,
+                        pc,
                         &x01,
                         &y01,
                     ).expect("mul_impl failed.");
@@ -262,7 +262,7 @@ fn mul_karatsuba(
             //  |  C | 0 | + | -A-B | 0 |
             let c_nanb = addition::add_sub_impl(
                 true,
-                pub_keys,
+                pc,
                 &c,
                 &na_nb,
             )?;
@@ -273,7 +273,7 @@ fn mul_karatsuba(
                 b.append(&mut a);
                 addition::add_sub_impl(
                     true,
-                    pub_keys,
+                    pc,
                     &b,
                     &c_nanb,
                 )?
@@ -281,17 +281,17 @@ fn mul_karatsuba(
                 //  first, add |c-a-b|0| to |b|
                 let b_cnanb = addition::add_sub_impl(
                     true,
-                    pub_keys,
+                    pc,
                     &b,
                     &c_nanb,
                 )?;
                 //  second, add |c-a-b|0|+|b| to a|0|0|
                 //  n.b., this way, the resulting ciphertext grows the least (1 bit only) and it also uses least BS inside additions
-                let mut a_sh  = ParmCiphertext::triv(2*len0, &pub_keys.encoder)?;
+                let mut a_sh  = ParmCiphertext::triv(2*len0, &pc.pub_keys.encoder)?;
                 a_sh.append(&mut a);
                 addition::add_sub_impl(
                     true,
-                    pub_keys,
+                    pc,
                     &a_sh,
                     &b_cnanb,
                 )?
@@ -304,9 +304,9 @@ fn mul_karatsuba(
 
 /// Schoolbook multiplication `O(n^2)`
 fn mul_schoolbook(
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
-    y: &ParmCiphertext,
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
+    y:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     measure_duration!(
@@ -314,7 +314,7 @@ fn mul_schoolbook(
         [
             // calc multiplication array
             let mulary = fill_mulary(
-                pub_keys,
+                &pc.pub_keys,
                 x,
                 y,
             )?;
@@ -325,7 +325,7 @@ fn mul_schoolbook(
             let mut idx = 0usize;
             intmd[idx] = addition::add_sub_impl(
                 true,
-                pub_keys,
+                pc,
                 &mulary[0],
                 &mulary[1],
             )?;
@@ -334,7 +334,7 @@ fn mul_schoolbook(
                 idx ^= 1;
                 intmd[idx] = addition::add_sub_impl(
                     true,
-                    pub_keys,
+                    pc,
                     &intmd[idx ^ 1],
                     &mulary[i],
                 )?;
@@ -347,9 +347,9 @@ fn mul_schoolbook(
 
 /// Product of two 1-word ciphertexts
 fn mul_1word(
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
-    y: &ParmCiphertext,
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
+    y:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     measure_duration!(
@@ -357,7 +357,7 @@ fn mul_1word(
         [
             // calc multiplication array
             let mulary = fill_mulary(
-                pub_keys,
+                &pc.pub_keys,
                 x,
                 y,
             )?;

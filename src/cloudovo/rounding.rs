@@ -4,6 +4,7 @@ use std::error::Error;
 pub use std::fs::{self,File,OpenOptions};
 pub use std::path::Path;
 pub use std::io::Write;
+use crate::*;
 
 #[allow(unused_imports)]
 use colored::Colorize;
@@ -14,9 +15,8 @@ use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use super::{pbs,addition,signum};
 
 pub fn round_at_impl(
-    params: &Params,
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
     pos: usize,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
@@ -26,7 +26,7 @@ pub fn round_at_impl(
         // consider if this behavior is desired:
         // p if p > PARM_CT_MAXLEN => Err(format!("Rounding position > ParmCiphertext max length {}.", PARM_CT_MAXLEN).into()),
         // rounding 1 digit after x.len() -> return triv of length 1 (as in multiplication of empty ciphertexts)
-        p if p >= x.len() + 1 => ParmCiphertext::triv(1, &pub_keys.encoder),
+        p if p >= x.len() + 1 => ParmCiphertext::triv(1, &pc.pub_keys.encoder),
 
         // otherwise, do the job
 
@@ -44,23 +44,23 @@ pub fn round_at_impl(
         //
         // add: 2y + s == 2, 3 .. +1 or 2y + s == -3 .. -1 otherwise 0
         _ => {
-            let s = signum::sgn_impl(params, pub_keys, &x[0..pos-1].to_vec())?;
+            let s = signum::sgn_impl(pc, &x[0..pos-1].to_vec())?;
             // calc 2y
             let mut yy_s = x[pos-1].mul_uint_constant(2)?;
             // 2y + s
             yy_s.add_uint_inplace(&s[0])?;
 
             // factor that is to be added
-            let mut r = ParmCiphertext::triv(pos, &pub_keys.encoder)?;
-            r.push(pbs::round_2y_s__pi_5(pub_keys, &yy_s)?);
+            let mut r = ParmCiphertext::triv(pos, &pc.pub_keys.encoder)?;
+            r.push(pbs::round_2y_s__pi_5(&pc.pub_keys, &yy_s)?);
 
             // sliced input
-            let mut slx = ParmCiphertext::triv(pos, &pub_keys.encoder)?;
+            let mut slx = ParmCiphertext::triv(pos, &pc.pub_keys.encoder)?;
             slx.append(&mut x[pos..].to_vec());
 
             addition::add_sub_impl(
                 true,
-                pub_keys,
+                pc,
                 &slx,
                 &r,
             )

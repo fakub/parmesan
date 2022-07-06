@@ -27,24 +27,15 @@ use super::{pbs,addition,multiplication};
 
 /// Choose & call appropriate algorithm for a square of a ciphertexts (Divide'n'Conquer, or schoolbook multiplication)
 pub fn squ_impl(
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     let s = match x.len() {
-        l if l == 0 => ParmCiphertext::triv(1, &pub_keys.encoder)?,
-        l if l == 1 => squ_1word(
-            pub_keys,
-            x,
-        )?,
-        l if l < 4 => squ_schoolbook(
-            pub_keys,
-            x,
-        )?,
-        l if l <= 32 => squ_dnq(
-            pub_keys,
-            x,
-        )?,
+        l if l == 0 => ParmCiphertext::triv(1, &pc.pub_keys.encoder)?,
+        l if l == 1 => squ_1word(pc, x)?,
+        l if l <  4 => squ_schoolbook(pc, x)?,
+        l if l <=32 => squ_dnq(pc, x)?,
         _ => return Err(format!("Squaring for {}-word integer not implemented.", x.len()).into()),
     };
 
@@ -53,8 +44,8 @@ pub fn squ_impl(
 
 /// Divide'n'Conquer squaring
 fn squ_dnq(
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     let len0 = (x.len() + 1) / 2;
@@ -92,22 +83,22 @@ fn squ_dnq(
                 abc_scope.spawn(|_| {
                     //  A = x_1 ^ 2                     .. len1-bit squaring
                     *ar = squ_impl(
-                        pub_keys,
+                        pc,
                         &x1,
                     ).expect("squ_impl failed.");
                 });
                 abc_scope.spawn(|_| {
                     //  B = x_0 ^2                      .. len0-bit squaring
                     *br = squ_impl(
-                        pub_keys,
+                        pc,
                         &x0,
                     ).expect("squ_impl failed.");
                 });
                 abc_scope.spawn(|_| {
                     //  C = x_0 * x_1                   .. len0- x len1-bit multiplication (to be shifted len0 + 1 bits where 1 bit is for 2x AB)
-                    *cr = ParmCiphertext::triv(len0 + 1, &pub_keys.encoder).expect("ParmCiphertext::triv failed.");
+                    *cr = ParmCiphertext::triv(len0 + 1, &pc.pub_keys.encoder).expect("ParmCiphertext::triv failed.");
                     let mut c_plain = multiplication::mul_impl(
-                        pub_keys,
+                        pc,
                         &x0,
                         &x1,
                     ).expect("mul_impl failed.");
@@ -118,20 +109,20 @@ fn squ_dnq(
                 //~ // -----------------------------------------------------------------
                 //~ //  A = x_1 ^ 2                     .. len1-bit squaring
                 //~ let mut a = squ_impl(
-                    //~ pub_keys,
+                    //~ &pc.pub_keys,
                     //~ &x1,
                 //~ )?;
 
                 //~ //  B = x_0 ^2                      .. len0-bit squaring
                 //~ let mut b = squ_impl(
-                    //~ pub_keys,
+                    //~ &pc.pub_keys,
                     //~ &x0,
                 //~ )?;
 
                 //~ //  C = x_0 * x_1                   .. len0- x len1-bit multiplication (to be shifted len0 + 1 bits where 1 bit is for 2x AB)
-                //~ let mut c = ParmCiphertext::triv(len0 + 1, &pub_keys.encoder)?;
+                //~ let mut c = ParmCiphertext::triv(len0 + 1, &pc.pub_keys.encoder)?;
                 //~ let mut c_plain = multiplication::mul_impl(
-                    //~ pub_keys,
+                    //~ &pc.pub_keys,
                     //~ &x0,
                     //~ &x1,
                 //~ )?;
@@ -146,7 +137,7 @@ fn squ_dnq(
                 b.append(&mut a);
                 addition::add_sub_impl(
                     true,
-                    pub_keys,
+                    pc,
                     &b,
                     &c,
                 )?
@@ -154,16 +145,16 @@ fn squ_dnq(
                 //  first, add | C |0| to | B |
                 let b_c = addition::add_sub_impl(
                     true,
-                    pub_keys,
+                    pc,
                     &b,
                     &c,
                 )?;
                 //  second, add | C |0|+| B | to | A |0|0|
-                let mut a_sh  = ParmCiphertext::triv(2*len0, &pub_keys.encoder)?;
+                let mut a_sh  = ParmCiphertext::triv(2*len0, &pc.pub_keys.encoder)?;
                 a_sh.append(&mut a);
                 addition::add_sub_impl(
                     true,
-                    pub_keys,
+                    pc,
                     &a_sh,
                     &b_c,
                 )?
@@ -176,8 +167,8 @@ fn squ_dnq(
 
 /// Schoolbook squaring `O(n^2)`
 fn squ_schoolbook(
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     measure_duration!(
@@ -185,7 +176,7 @@ fn squ_schoolbook(
         [
             // calc multiplication array
             let squary = fill_squary(
-                pub_keys,
+                &pc.pub_keys,
                 x,
             )?;
 
@@ -195,7 +186,7 @@ fn squ_schoolbook(
             let mut idx = 0usize;
             intmd[idx] = addition::add_sub_impl(
                 true,
-                pub_keys,
+                pc,
                 &squary[0],
                 &squary[1],
             )?;
@@ -204,7 +195,7 @@ fn squ_schoolbook(
                 idx ^= 1;
                 intmd[idx] = addition::add_sub_impl(
                     true,
-                    pub_keys,
+                    pc,
                     &intmd[idx ^ 1],
                     &squary[i],
                 )?;
@@ -217,8 +208,8 @@ fn squ_schoolbook(
 
 /// Square of a 1-word ciphertext
 fn squ_1word(
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     measure_duration!(
@@ -226,7 +217,7 @@ fn squ_1word(
         [
             // calc squaring array
             let squary = fill_squary(
-                pub_keys,
+                &pc.pub_keys,
                 x,
             )?;
         ]

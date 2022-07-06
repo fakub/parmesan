@@ -235,7 +235,7 @@ impl ParmArithmetics for ParmCiphertext {
     ) -> ParmCiphertext {
         addition::add_sub_impl(
             true,
-            pc.pub_keys,
+            pc,
             x,
             y,
         ).expect("ParmArithmetics::add failed.")
@@ -248,7 +248,7 @@ impl ParmArithmetics for ParmCiphertext {
     ) -> ParmCiphertext {
         addition::add_sub_impl(
             false,
-            pc.pub_keys,
+            pc,
             x,
             y,
         ).expect("ParmArithmetics::sub failed.")
@@ -261,7 +261,7 @@ impl ParmArithmetics for ParmCiphertext {
     ) -> ParmCiphertext {
         addition::add_sub_noisy(
             true,
-            pc.pub_keys,
+            pc,
             x,
             y,
         ).expect("ParmArithmetics::add failed.")
@@ -274,7 +274,7 @@ impl ParmArithmetics for ParmCiphertext {
     ) -> ParmCiphertext {
         addition::add_sub_noisy(
             false,
-            pc.pub_keys,
+            pc,
             x,
             y,
         ).expect("ParmArithmetics::sub failed.")
@@ -286,8 +286,7 @@ impl ParmArithmetics for ParmCiphertext {
         k: i64,
     ) -> ParmCiphertext {
         addition::add_const_impl(
-            pc.params,
-            pc.pub_keys,
+            pc,
             x,
             k,
         ).expect("ParmArithmetics::add_const failed.")
@@ -310,8 +309,7 @@ impl ParmArithmetics for ParmCiphertext {
         x: &ParmCiphertext,
     ) -> ParmCiphertext {
         signum::sgn_impl(
-            pc.params,
-            pc.pub_keys,
+            pc,
             x,
         ).expect("ParmArithmetics::sgn failed.")
     }
@@ -322,8 +320,7 @@ impl ParmArithmetics for ParmCiphertext {
         y: &ParmCiphertext,
     ) -> ParmCiphertext {
         maximum::max_impl(
-            pc.params,
-            pc.pub_keys,
+            pc,
             x,
             y,
         ).expect("ParmArithmetics::max failed.")
@@ -334,8 +331,7 @@ impl ParmArithmetics for ParmCiphertext {
         x: &ParmCiphertext,
     ) -> ParmCiphertext {
         maximum::max_impl(
-            pc.params,
-            pc.pub_keys,
+            pc,
             &ParmArithmetics::zero(),
             x,
         ).expect("ParmArithmetics::relu failed.")
@@ -347,7 +343,7 @@ impl ParmArithmetics for ParmCiphertext {
         y: &ParmCiphertext,
     ) -> ParmCiphertext {
         multiplication::mul_impl(
-            pc.pub_keys,
+            pc,
             x,
             y,
         ).expect("ParmArithmetics::mul failed.")
@@ -358,7 +354,7 @@ impl ParmArithmetics for ParmCiphertext {
         x: &ParmCiphertext,
     ) -> ParmCiphertext {
         squaring::squ_impl(
-            pc.pub_keys,
+            pc,
             x,
         ).expect("ParmArithmetics::squ failed.")
     }
@@ -369,8 +365,7 @@ impl ParmArithmetics for ParmCiphertext {
         pos: usize,
     ) -> ParmCiphertext {
         rounding::round_at_impl(
-            pc.params,
-            pc.pub_keys,
+            pc,
             x,
             pos,
         ).expect("ParmArithmetics::round_at failed.")

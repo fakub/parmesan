@@ -23,21 +23,21 @@ use super::pbs;
 /// Parallel addition/subtraction followed by noise refreshal
 pub fn add_sub_impl(
     is_add: bool,
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
-    y: &ParmCiphertext,
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
+    y:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
     let z_noisy = add_sub_noisy(
         is_add,
-        pub_keys,
+        pc,
         x,
         y,
     )?;
 
-    let mut z = ParmCiphertext::triv(z_noisy.len(), &pub_keys.encoder)?;
+    let mut z = ParmCiphertext::triv(z_noisy.len(), &pc.pub_keys.encoder)?;
 
     z_noisy.par_iter().zip(z.par_iter_mut()).for_each(| (zni, zi) | {
-        *zi = pbs::id__pi_5(pub_keys, zni).expect("pbs::id__pi_5 failed.");
+        *zi = pbs::id__pi_5(&pc.pub_keys, zni).expect("pbs::id__pi_5 failed.");
     });
 
     Ok(z)
@@ -46,9 +46,9 @@ pub fn add_sub_impl(
 /// Implementation of parallel addition/subtraction
 pub fn add_sub_noisy(
     is_add: bool,
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
-    y: &ParmCiphertext,
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
+    y:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     // calculate right overlap of trivial zero samples (any)
@@ -99,7 +99,7 @@ pub fn add_sub_noisy(
             }
             // if x is shorter than wlen, fill the rest with zeros
             for _ in 0..((wlen as i64) - (x.len() as i64)) {
-                w.push(LWE::encrypt_uint_triv(0, &pub_keys.encoder)?);
+                w.push(LWE::encrypt_uint_triv(0, &pc.pub_keys.encoder)?);
             }
             // now w has the correct length!
 
@@ -131,10 +131,10 @@ pub fn add_sub_noisy(
             //~ ]);
             // -----------------------------------------------------------------
 
-            let mut q = ParmCiphertext::triv(w.len(), &pub_keys.encoder)?;
+            let mut q = ParmCiphertext::triv(w.len(), &pc.pub_keys.encoder)?;
             z = w.clone();
             // one more word for "carry"
-            z.push(LWE::encrypt_uint_triv(0, &pub_keys.encoder)?);
+            z.push(LWE::encrypt_uint_triv(0, &pc.pub_keys.encoder)?);
 
             // this shall not happen
             if r_triv >= q.len() {
@@ -153,10 +153,10 @@ pub fn add_sub_noisy(
                 // calc   3 w_i + w_i-1
                 let mut wi_3 = wi.mul_uint_constant(3).expect("mul_uint_constant failed.");
                 if i0 > 0 { wi_3.add_uint_inplace(&w[i-1]).expect("add_uint_inplace failed."); }
-                *qi = pbs::f_4__pi_5(pub_keys, &wi_3).expect("f_4__pi_5 failed.");
+                *qi = pbs::f_4__pi_5(&pc.pub_keys, &wi_3).expect("f_4__pi_5 failed.");
             });
             // q must have the same length as z
-            q.push(LWE::encrypt_uint_triv(0, &pub_keys.encoder)?);
+            q.push(LWE::encrypt_uint_triv(0, &pc.pub_keys.encoder)?);
 
             z.par_iter_mut().zip(q.par_iter().enumerate()).for_each(| (zi, (i, qi)) | {
                 // calc   2 q_i
@@ -185,10 +185,9 @@ pub fn opposite_impl(
 }
 
 pub fn add_const_impl(
-    params: &Params,
-    pub_keys: &PubKeySet,
-    x: &ParmCiphertext,
-    k: i64,
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
+    k:  i64,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
     // resolve k == 0
     if k == 0 {
@@ -209,13 +208,13 @@ pub fn add_const_impl(
         let ki = if ((k_abs >> i) & 1) == 0 {
             0u32
         } else {
-            if k_pos {1u32} else {params.plaintext_mask() as u32}
+            if k_pos {1u32} else {pc.params.plaintext_mask() as u32}
         };
 
         // encrypt as trivial sample
         let cti = LWE::encrypt_uint_triv(
             ki,
-            &pub_keys.encoder,
+            &pc.pub_keys.encoder,
         )?;
 
         ck.push(cti);
@@ -223,7 +222,7 @@ pub fn add_const_impl(
 
     Ok(add_sub_impl(
         true,
-        pub_keys,
+        pc,
         x,
         &ck,
     )?)

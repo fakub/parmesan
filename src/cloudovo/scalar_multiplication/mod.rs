@@ -104,7 +104,7 @@ pub fn scalar_mul_impl(
             let mut idx = 0usize;
             intmd[idx] = addition::add_sub_impl(
                 true,
-                pc.pub_keys,
+                pc,
                 &mulary[0],
                 &mulary[1],
             )?;
@@ -113,7 +113,7 @@ pub fn scalar_mul_impl(
                 idx ^= 1;
                 intmd[idx] = addition::add_sub_impl(
                     true,
-                    pc.pub_keys,
+                    pc,
                     &intmd[idx ^ 1],
                     &mulary[i],
                 )?;
