@@ -16,7 +16,7 @@ pub trait ParmCiphertextExt {
         encoder: &Encoder,
     ) -> Result<ParmCiphertext, Box<dyn Error>>;
 
-    //TODO add triv_const (from vec?), the above is triv_zero
+    //TODO add triv_const (from vec?), the above is triv_zero, used internally (there is ParmArithmetics::zero)
 
     fn empty() -> ParmCiphertext;
 

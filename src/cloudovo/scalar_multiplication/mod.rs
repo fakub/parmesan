@@ -1,6 +1,5 @@
 use std::error::Error;
 
-//TODO add feature condition
 pub use std::fs::{self,File,OpenOptions};
 pub use std::path::Path;
 pub use std::io::Write;
@@ -91,8 +90,8 @@ pub fn scalar_mul_impl(
     }
 
     //TODO
-    //  since there are no subsequent lines of len & len+1 (follows from the fact that there are no neighboring non-zeros in optimized k_vec),
-    //  this mulary does not need to be reduced sequentially, most of it can be done in parallel (carefully; the last row must be added in the last step)
+    //  check if there are no subsequent lines of len & len+1 (with NAF, thisfollows from the fact that there are no neighboring non-zeros),
+    //  then this mulary might be reduced in parallel (carefully; up to the last row which must be added in the last step)
 
     // reduce mulary
     measure_duration!(

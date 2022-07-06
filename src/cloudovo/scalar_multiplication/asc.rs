@@ -26,7 +26,7 @@ pub struct AddShift {
 pub type Asc = Vec<AddShift>;
 
 pub trait AscEval<T: ParmArithmetics> {
-    /// Evaluation function for `ParmArithmetics` types (no parallelization yet .. TODO)
+    /// Evaluation function for `ParmArithmetics` types
     fn eval(
         &self,
         pc: &ParmesanCloudovo,
@@ -43,6 +43,8 @@ impl<T: ParmArithmetics + Clone> AscEval<T> for Asc
     ) -> Result<T, Box<dyn Error>> {
         let mut asc_vals = vec![x.clone()];
 
+        // in short ASC's, there's only little space for parallelization -> not worth it
+        // instead, scalar mul by window values are parallelized
         for adsh in self {
             // +-1 * left_val  +  +-1 * right_val << right_shift
 

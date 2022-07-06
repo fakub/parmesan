@@ -1,6 +1,5 @@
 use std::error::Error;
 
-//TODO add feature condition
 pub use std::fs::{self,File,OpenOptions};
 pub use std::path::Path;
 pub use std::io::Write;
@@ -17,7 +16,7 @@ use concrete::LWE;
 
 use crate::userovo::keys::PubKeySet;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
-use super::pbs;
+use super::{pbs, multiplication};
 
 
 // =============================================================================
@@ -65,7 +64,7 @@ fn squ_dnq(
     measure_duration!(
         ["Squaring Divide & Conquer ({}-bit)", x.len()],
         [
-            //TODO check if parallelism helps for short numbers: isn't there too much overhead?
+            //WISH check if parallelism helps for short numbers: isn't there too much overhead?
 
             // init tmp variables in this scope, only references can be passed to threads
             let mut a = ParmCiphertext::empty();
@@ -136,20 +135,11 @@ fn squ_schoolbook(
                 x,
             )?;
 
-            // reduce squaring array
-            //TODO write a function that will be common with scalar_multiplication (if this is possible with strategies 2+)
-            let mut intmd = vec![ParmCiphertext::empty(); 2];
-            let mut idx = 0usize;
-            intmd[idx] = ParmArithmetics::add(pc, &squary[0], &squary[1]);
-
-            for i in 2..x.len() {
-                idx ^= 1;
-                intmd[idx] = ParmArithmetics::add(pc, &intmd[idx ^ 1], &squary[i]);
-            }
+            let res = multiplication::reduce_mulsquary(pc, &squary);
         ]
     );
 
-    Ok(intmd[idx].clone())
+    Ok(res)
 }
 
 /// Square of a 1-word ciphertext
@@ -179,7 +169,7 @@ fn fill_squary(
 ) -> Result<Vec<ParmCiphertext>, Box<dyn Error>> {
 
     let len = x.len();
-    let x2 = x.clone();   //TODO needed? intended for parallel addition to avoid concurrent memory access
+    let x2 = x.clone();   //WISH needed? intended for parallel addition to avoid concurrent memory access
 
     // fill temp squaring array
     let mut squary_tmp  = vec![ParmCiphertext::triv(2*len, &pub_keys.encoder)?; len];

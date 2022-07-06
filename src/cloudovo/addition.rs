@@ -1,6 +1,5 @@
 use std::error::Error;
 
-//TODO add feature condition
 pub use std::fs::{self,File,OpenOptions};
 pub use std::path::Path;
 pub use std::io::Write;
@@ -162,8 +161,6 @@ pub fn add_sub_noisy(
                 zi.sub_uint_inplace(&qi_2).expect("sub_uint_inplace failed.");
                 if i > 0 { zi.add_uint_inplace(&q[i-1]).expect("add_uint_inplace failed."); }
             });
-            //TODO add one more bootstrap with identity (or leave it for user? in some cases BS could be saved)
-            //TODO add one more thread if < maxlen
         ]
     );
 

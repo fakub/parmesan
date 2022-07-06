@@ -148,3 +148,23 @@ pub fn bin_hw(v: &Vec<i32>) -> Result<usize, Box<dyn Error>> {
     }
     Ok(hw)
 }
+
+/// Bit length of 32-bit unsigned integer
+#[inline]
+pub fn bit_len_32(k: u32) -> usize {
+    // no 1 in binary
+    if k == 0 {return 0;}
+    let mut k_len = 1;
+    for i in 1..=31 {if k & (1 << i) != 0 {k_len = i + 1;}}
+    k_len
+}
+
+/// Bit length of 64-bit unsigned integer
+#[inline]
+pub fn bit_len_64(k: u64) -> usize {
+    // no 1 in binary
+    if k == 0 {return 0;}
+    let mut k_len = 1;
+    for i in 1..=63 {if k & (1 << i) != 0 {k_len = i + 1;}}
+    k_len
+}

@@ -37,13 +37,10 @@ pub fn naf_vec(k: u32) -> Vec<i32> {
     // resolve trivial cases
     if k == 0 {return vec![0];}
     if k == 1 {return vec![1];}
+    // |k| < 2 resolved
 
     //TODO implement variant by Algorithm 9.14 from ECC book (Cohen, Frey)
-
-    // |k| < 2 resolved -> set len = 2 and continue from 0b100
-    let mut k_len = 2usize;
-    // 1 << 31 is indeed 0b100..00 (for u32)
-    for i in 2..=31 {if k & (1 << i) != 0 {k_len = i + 1;}}   //TODO as macro?
+    let k_len = encryption::bit_len_32(k);
 
     // k as a vector of bits
     // replace sequences of 1's with 1|zeros|-1
@@ -100,11 +97,10 @@ pub fn koyama_tsuruoka_vec(k: u32) -> Vec<i32> {
     // resolve trivial cases
     if k == 0 {return vec![0];}
     if k == 1 {return vec![1];}
+    // |k| < 2 resolved
 
-    // |k| < 2 resolved -> set len = 2 and continue from 0b100
-    let mut k_len = 2usize;
-    // 1 << 31 is indeed 0b100..00 (for u32)
-    for i in 2..=31 {if k & (1 << i) != 0 {k_len = i + 1;}}   //TODO as macro?
+    //TODO implement as in ECC book
+    let k_len = encryption::bit_len_32(k);
 
     // grows max by 1 index
     let mut k_vec: Vec<i32> = vec![0; k_len+1];

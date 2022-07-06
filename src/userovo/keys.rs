@@ -1,11 +1,9 @@
 use std::error::Error;
+
 use std::path::Path;
 #[allow(unused_imports)]
 use std::io::{self,Write};
-//TODO add feature condition
 pub use std::fs::{self,File,OpenOptions};
-//~ pub use std::path::Path;
-//~ pub use std::io::Write;
 
 #[allow(unused_imports)]
 use colored::Colorize;

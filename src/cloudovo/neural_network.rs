@@ -40,7 +40,6 @@
 #[allow(unused_imports)]
 use colored::Colorize;
 
-//TODO add feature condition
 pub use std::fs::{self,File,OpenOptions};
 pub use std::path::Path;
 pub use std::io::Write;
@@ -176,7 +175,7 @@ impl NeuralNetwork {
             scm = ParmArithmetics::scalar_mul(pc, *wi, ai);
             println!(">>> addition ...");
             agg = ParmArithmetics::add(pc, &res, &scm);
-            //TODO try directly to res, or implement add_inplace? (rather not..)
+            //WISH try directly to res, or implement add_inplace? (rather not..)
             res = agg.clone();
         }
 
@@ -214,7 +213,7 @@ impl NeuralNetwork {
         a: &Vec<T>,
     ) -> T {
         if a.len() == 0 {
-            //TODO return MAX_NEG .. should be returned from mathematical point of view .. write a macro for its behavior?
+            //WISH return MAX_NEG .. should be returned from mathematical point of view .. write a macro for its behavior?
             return ParmArithmetics::zero();
         } else if a.len() == 1 {
             return a[0].clone();

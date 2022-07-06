@@ -1,6 +1,5 @@
 use std::error::Error;
 
-//TODO add feature condition
 pub use std::fs::{self,File,OpenOptions};
 pub use std::path::Path;
 pub use std::io::Write;
@@ -22,14 +21,19 @@ pub fn sgn_impl(
     x:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
+    if x.len() == 0 {
+        return Ok(ParmArithmetics::zero());
+    } else if x.len() == 1 {
+        // sgn(1-bit x) = x
+        return Ok(x.clone());
+    }
+
     measure_duration!(
         ["Signum ({}-bit)", x.len()],
         [
             // comment: it would be nice to skip the first-layer bootstrap and just add values with appropriate power of 2
             //          but this would make enormously large 2Delta (for pi = 5 -> gamma = 4, we have weights 8, 4, 2, 1 -> sum of quad weights = 85 ... that might be too much)
             //WISH however, this is worth investigation as signum is a popular NN activation function
-
-            //TODO resolve case x.len() == 1 .. only clone, no bootstrap
 
             let s_raw: ParmCiphertext = sgn_recursion_raw(
                 pc.params.bit_precision - 1,

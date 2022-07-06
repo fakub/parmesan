@@ -1,6 +1,5 @@
 use std::error::Error;
 
-//TODO add feature condition
 pub use std::fs::{self,File,OpenOptions};
 pub use std::path::Path;
 pub use std::io::Write;
@@ -52,8 +51,6 @@ pub fn mul_impl(
 
     // align lengths of x & y
     if x_in.len() != y_in.len() {
-        //TODO check if this is efficient
-
         let len_diff = ((y_in.len() as i32) - (x_in.len() as i32)).abs();
 
         for _i in 0..len_diff {
@@ -121,7 +118,7 @@ fn mul_karatsuba(
     measure_duration!(
         ["Multiplication Karatsuba ({}-bit)", x.len()],
         [
-            //TODO check if parallelism helps for short numbers: isn't there too much overhead?
+            //WISH check if parallelism helps for short numbers: isn't there too much overhead?
 
             // init tmp variables in this scope, only references can be passed to threads
             let mut a       = ParmCiphertext::empty();
@@ -220,20 +217,11 @@ fn mul_schoolbook(
                 y,
             )?;
 
-            // reduce multiplication array
-            //TODO write a function that will be common with scalar_multiplication (if this is possible with strategies 2+)
-            let mut intmd = vec![ParmCiphertext::empty(); 2];
-            let mut idx = 0usize;
-            intmd[idx] = ParmArithmetics::add(pc, &mulary[0], &mulary[1]);
-
-            for i in 2..x.len() {
-                idx ^= 1;
-                intmd[idx] = ParmArithmetics::add(pc, &intmd[idx ^ 1], &mulary[i]);
-            }
+            let res = reduce_mulsquary(pc, &mulary);
         ]
     );
 
-    Ok(intmd[idx].clone())
+    Ok(res)
 }
 
 /// Product of two 1-word ciphertexts
@@ -271,7 +259,7 @@ fn fill_mulary(
 
     // fill multiplication array
     //TODO check the size, it might grow outsite due to redundant representation
-    //TODO try different approaches and compare
+    //WISH try different approaches and compare
     let mut mulary = vec![ParmCiphertext::triv(2*len, &pub_keys.encoder)?; len];
 
     // nested parallel iterators work as expected: they indeed create nested pools
@@ -295,7 +283,7 @@ pub fn mul_lwe(
     let mut z: LWE;
 
     // resolve trivial cases
-    //TODO check correctness
+    //WISH check correctness
     let pi = x.encoder.nb_bit_precision;
     if x.dimension == 0 {
         let mut mx: i32 = x.decrypt_uint_triv()? as i32;
@@ -352,4 +340,20 @@ pub fn mul_lwe(
     //~ );
 
     Ok(z)
+}
+
+pub fn reduce_mulsquary (
+    pc: &ParmesanCloudovo,
+    mulary: &Vec<ParmCiphertext>,
+) -> ParmCiphertext {
+    let mut intmd = vec![ParmCiphertext::empty(); 2];
+    let mut idx = 0usize;
+    intmd[idx] = ParmArithmetics::add(pc, &mulary[0], &mulary[1]);
+
+    for i in 2..mulary.len() {
+        idx ^= 1;
+        intmd[idx] = ParmArithmetics::add(pc, &intmd[idx ^ 1], &mulary[i]);
+    }
+
+    intmd[idx].clone()
 }
