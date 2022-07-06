@@ -140,8 +140,8 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
     //~ return Ok(());
     //~ //DBG END
 
-    let c_add  = ParmArithmetics::add(&pc, &c[0], &c[1]);
-    let c_sub  = ParmArithmetics::sub(&pc, &c[1], &c[0]);
+    let c_add  = ParmArithmetics::add(&pc, &c[0], &c[1]);   // noisy variant: add_noisy
+    let c_sub  = ParmArithmetics::sub(&pc, &c[1], &c[0]);   // noisy variant: sub_noisy
     let c_adc  = ParmArithmetics::add_const(&pc,  &c[0], DEMO_ADC);
     let c_sgn  = ParmArithmetics::sgn(&pc, &c[2]       );
     let c_max  = ParmArithmetics::max(&pc, &c[1], &c[0]);

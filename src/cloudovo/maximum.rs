@@ -35,7 +35,7 @@ pub fn max_impl(
         [
             // r = x - y
             //WISH after I implement manual bootstrap after addition, here it can be customized to powers of two (then first layer of bootstraps can be omitted in signum)
-            let r: ParmCiphertext = addition::add_sub_noisy(   //TODO check if this is used correctly, i.e., whether noisy addition can be used? or implement a noisy version
+            let r: ParmCiphertext = addition::add_sub_noisy(   // can be noisy -- sgn_recursion_raw bootstraps the sample without adding
                 false,
                 pub_keys,
                 x,

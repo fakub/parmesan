@@ -161,7 +161,7 @@ fn squ_dnq(
                 //  second, add | C |0|+| B | to | A |0|0|
                 let mut a_sh  = ParmCiphertext::triv(2*len0, &pub_keys.encoder)?;
                 a_sh.append(&mut a);
-                addition::add_sub_impl(   //TODO check why there was addition::add_sub_noisy
+                addition::add_sub_impl(
                     true,
                     pub_keys,
                     &a_sh,

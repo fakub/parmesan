@@ -58,7 +58,7 @@ pub fn round_at_impl(
             let mut slx = ParmCiphertext::triv(pos, &pub_keys.encoder)?;
             slx.append(&mut x[pos..].to_vec());
 
-            addition::add_sub_noisy(   //TODO check if this is used correctly, i.e., whether noisy addition can be used? or implement a noisy version
+            addition::add_sub_impl(
                 true,
                 pub_keys,
                 &slx,

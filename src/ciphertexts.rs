@@ -4,7 +4,11 @@ use concrete::{LWE,Encoder};
 
 //WISH  ciphertext should be more standalone type: it should hold a reference to its public keys & params so that operations can be done with only this type parameter
 //      ale je to: zasrane, zamrdane
-pub type ParmCiphertext = Vec<LWE>;
+pub type ParmCiphertext = Vec<LWE>;   // idea: Vec<(LWE, usize)> .. to hold quadratic weights, bootstrap only when necessary
+//~ pub struct ParmCiphertext {
+    //~ pub ct: Vec<(LWE, usize)>,
+    //~ pub pc: &ParmesanCloudovo,
+//~ }
 
 pub trait ParmCiphertextExt {
     fn triv(
