@@ -17,7 +17,7 @@ use concrete::LWE;
 
 use crate::userovo::keys::PubKeySet;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
-use super::{pbs,addition};
+use super::pbs;
 
 
 // =============================================================================
@@ -160,12 +160,7 @@ fn mul_karatsuba(
                         });
                     }).expect("thread::scope ab_scope failed.");
                     //  A + B .. -A - B
-                    let pa_pb = addition::add_sub_impl(
-                        true,
-                        pc,
-                        ar,
-                        br,
-                    ).expect("add_sub_impl failed.");
+                    let pa_pb = ParmArithmetics::add(pc, ar, br);
                     for abi in pa_pb {
                         na_nbr.push(abi.opposite_uint().expect("opposite_uint failed."));
                     }
@@ -179,22 +174,8 @@ fn mul_karatsuba(
                     let y01r = &mut y01;
                     // parallel pool: (x_0 + x_1), (y_0 + y_1)
                     thread::scope(|c_scope| {
-                        c_scope.spawn(|_| {
-                            *x01r = addition::add_sub_impl(
-                                true,
-                                pc,
-                                &x0,
-                                &x1,
-                            ).expect("add_sub_impl failed.");
-                        });
-                        c_scope.spawn(|_| {
-                            *y01r = addition::add_sub_impl(
-                                true,
-                                pc,
-                                &y0,
-                                &y1,
-                            ).expect("add_sub_impl failed.");
-                        });
+                        c_scope.spawn(|_| { *x01r = ParmArithmetics::add(pc, &x0, &x1); });
+                        c_scope.spawn(|_| { *y01r = ParmArithmetics::add(pc, &y0, &y1); });
                     }).expect("thread::scope c_scope failed.");
                     // C = (x_0 + x_1) * (y_0 + y_1)   .. (len0 + 1)-bit multiplication
                     let mut c_plain = mul_impl(
@@ -206,95 +187,26 @@ fn mul_karatsuba(
                 });
             }).expect("thread::scope abc_scope failed.");
 
-                //~ // -----------------------------------------------------------------
-                //~ //  A = x_1 * y_1                   .. len1-bit multiplication
-                //~ let mut a = mul_impl(
-                    //~ pub_keys,
-                    //~ &x1,
-                    //~ &y1,
-                //~ )?;
-
-                //~ //  B = x_0 * y_0                   .. len0-bit multiplication
-                //~ let mut b = mul_impl(
-                    //~ pub_keys,
-                    //~ &x0,
-                    //~ &y0,
-                //~ )?;
-
-                //~ //  C = (x_0 + x_1) * (y_0 + y_1)   .. (len0 + 1)-bit multiplication
-                //~ let x01 = addition::add_sub_impl(
-                    //~ true,
-                    //~ pub_keys,
-                    //~ &x0,
-                    //~ &x1,
-                //~ )?;
-                //~ let y01 = addition::add_sub_impl(
-                    //~ true,
-                    //~ pub_keys,
-                    //~ &y0,
-                    //~ &y1,
-                //~ )?;
-                //~ let mut c = ParmCiphertext::triv(len0, &pub_keys.encoder)?;
-                //~ let mut c_plain = mul_impl(
-                    //~ pub_keys,
-                    //~ &x01,
-                    //~ &y01,
-                //~ )?;
-                //~ c.append(&mut c_plain);
-
-                //~ //  A + B .. -A - B
-                //~ let pa_pb = addition::add_sub_impl(
-                    //~ true,
-                    //~ pub_keys,
-                    //~ &a,
-                    //~ &b,
-                //~ )?;
-                //~ let mut na_nb = ParmCiphertext::triv(len0, &pub_keys.encoder)?;
-                //~ for abi in pa_pb {
-                    //~ na_nb.push(abi.opposite_uint()?);
-                //~ }
-                //~ // -----------------------------------------------------------------
-
             //  |   A   |   B   |   TBD based on overlap
             //     |    C   | 0 |   in c
             //      | -A-B  | 0 |   in na_nb
 
             //  |  C | 0 | + | -A-B | 0 |
-            let c_nanb = addition::add_sub_impl(
-                true,
-                pc,
-                &c,
-                &na_nb,
-            )?;
+            let c_nanb = ParmArithmetics::add(pc, &c, &na_nb);
 
             //  add everything together
             let res = if b.len() == 2*len0 {
                 //  | A | B |   simply concat
                 b.append(&mut a);
-                addition::add_sub_impl(
-                    true,
-                    pc,
-                    &b,
-                    &c_nanb,
-                )?
+                ParmArithmetics::add(pc, &b, &c_nanb)
             } else {
                 //  first, add |c-a-b|0| to |b|
-                let b_cnanb = addition::add_sub_impl(
-                    true,
-                    pc,
-                    &b,
-                    &c_nanb,
-                )?;
+                let b_cnanb = ParmArithmetics::add(pc, &b, &c_nanb);
                 //  second, add |c-a-b|0|+|b| to a|0|0|
                 //  n.b., this way, the resulting ciphertext grows the least (1 bit only) and it also uses least BS inside additions
                 let mut a_sh  = ParmCiphertext::triv(2*len0, &pc.pub_keys.encoder)?;
                 a_sh.append(&mut a);
-                addition::add_sub_impl(
-                    true,
-                    pc,
-                    &a_sh,
-                    &b_cnanb,
-                )?
+                ParmArithmetics::add(pc, &a_sh, &b_cnanb)
             };
         ]
     );
@@ -323,21 +235,11 @@ fn mul_schoolbook(
             //TODO write a function that will be common with scalar_multiplication (if this is possible with strategies 2+)
             let mut intmd = vec![ParmCiphertext::empty(); 2];
             let mut idx = 0usize;
-            intmd[idx] = addition::add_sub_impl(
-                true,
-                pc,
-                &mulary[0],
-                &mulary[1],
-            )?;
+            intmd[idx] = ParmArithmetics::add(pc, &mulary[0], &mulary[1]);
 
             for i in 2..x.len() {
                 idx ^= 1;
-                intmd[idx] = addition::add_sub_impl(
-                    true,
-                    pc,
-                    &intmd[idx ^ 1],
-                    &mulary[i],
-                )?;
+                intmd[idx] = ParmArithmetics::add(pc, &intmd[idx ^ 1], &mulary[i]);
             }
         ]
     );

@@ -17,7 +17,7 @@ use concrete::LWE;
 
 use crate::userovo::keys::PubKeySet;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
-use super::{pbs,addition,multiplication};
+use super::{pbs,multiplication};
 
 
 // =============================================================================
@@ -106,58 +106,20 @@ fn squ_dnq(
                 });
             }).expect("thread::scope abc_scope failed.");
 
-                //~ // -----------------------------------------------------------------
-                //~ //  A = x_1 ^ 2                     .. len1-bit squaring
-                //~ let mut a = squ_impl(
-                    //~ &pc.pub_keys,
-                    //~ &x1,
-                //~ )?;
-
-                //~ //  B = x_0 ^2                      .. len0-bit squaring
-                //~ let mut b = squ_impl(
-                    //~ &pc.pub_keys,
-                    //~ &x0,
-                //~ )?;
-
-                //~ //  C = x_0 * x_1                   .. len0- x len1-bit multiplication (to be shifted len0 + 1 bits where 1 bit is for 2x AB)
-                //~ let mut c = ParmCiphertext::triv(len0 + 1, &pc.pub_keys.encoder)?;
-                //~ let mut c_plain = multiplication::mul_impl(
-                    //~ &pc.pub_keys,
-                    //~ &x0,
-                    //~ &x1,
-                //~ )?;
-                //~ c.append(&mut c_plain);
-                //~ // -----------------------------------------------------------------
-
             //  |   A   |   B   |   TBD based on overlap
             //     |   C   |  0 |   in c
             //  add everything together
             let res = if b.len() == 2*len0 {
                 //  | A | B |   simply concat
                 b.append(&mut a);
-                addition::add_sub_impl(
-                    true,
-                    pc,
-                    &b,
-                    &c,
-                )?
+                ParmArithmetics::add(pc, &b, &c)
             } else {
                 //  first, add | C |0| to | B |
-                let b_c = addition::add_sub_impl(
-                    true,
-                    pc,
-                    &b,
-                    &c,
-                )?;
+                let b_c = ParmArithmetics::add(pc, &b, &c);
                 //  second, add | C |0|+| B | to | A |0|0|
                 let mut a_sh  = ParmCiphertext::triv(2*len0, &pc.pub_keys.encoder)?;
                 a_sh.append(&mut a);
-                addition::add_sub_impl(
-                    true,
-                    pc,
-                    &a_sh,
-                    &b_c,
-                )?
+                ParmArithmetics::add(pc, &a_sh, &b_c)
             };
         ]
     );
@@ -184,21 +146,11 @@ fn squ_schoolbook(
             //TODO write a function that will be common with scalar_multiplication (if this is possible with strategies 2+)
             let mut intmd = vec![ParmCiphertext::empty(); 2];
             let mut idx = 0usize;
-            intmd[idx] = addition::add_sub_impl(
-                true,
-                pc,
-                &squary[0],
-                &squary[1],
-            )?;
+            intmd[idx] = ParmArithmetics::add(pc, &squary[0], &squary[1]);
 
             for i in 2..x.len() {
                 idx ^= 1;
-                intmd[idx] = addition::add_sub_impl(
-                    true,
-                    pc,
-                    &intmd[idx ^ 1],
-                    &squary[i],
-                )?;
+                intmd[idx] = ParmArithmetics::add(pc, &intmd[idx ^ 1], &squary[i]);
             }
         ]
     );

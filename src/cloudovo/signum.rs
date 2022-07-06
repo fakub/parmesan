@@ -12,7 +12,6 @@ use rayon::prelude::*;
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use crate::params::Params;
 use crate::userovo::keys::PubKeySet;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use super::pbs;

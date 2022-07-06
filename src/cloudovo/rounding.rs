@@ -9,10 +9,8 @@ use crate::*;
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use crate::params::Params;
-use crate::userovo::keys::PubKeySet;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
-use super::{pbs,addition,signum};
+use super::{pbs,signum};
 
 pub fn round_at_impl(
     pc: &ParmesanCloudovo,
@@ -58,12 +56,7 @@ pub fn round_at_impl(
             let mut slx = ParmCiphertext::triv(pos, &pc.pub_keys.encoder)?;
             slx.append(&mut x[pos..].to_vec());
 
-            addition::add_sub_impl(
-                true,
-                pc,
-                &slx,
-                &r,
-            )
+            Ok(ParmArithmetics::add(pc, &slx, &r))
         }
     }
 }
