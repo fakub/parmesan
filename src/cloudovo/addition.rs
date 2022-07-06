@@ -63,7 +63,7 @@ pub fn add_sub_noisy(
         if yi.dimension == 0 && yi.ciphertext.get_body().0 == 0 {y_rzero += 1;} else {break;}
     }
     // resolve all-triv-zeros cases
-    if x_rzero == x.len() { return if is_add {Ok(y.clone())} else {opposite_impl(y)};}
+    if x_rzero == x.len() { return if is_add {Ok(y.clone())} else {Ok(ParmArithmetics::opp(y))};}
     if y_rzero == y.len() { return Ok(x.clone());}
     // continue with non-trivial cases
     let r_triv = std::cmp::max(x_rzero, y_rzero);
@@ -218,10 +218,5 @@ pub fn add_const_impl(
         ck.push(cti);
     }
 
-    Ok(add_sub_impl(
-        true,
-        pc,
-        x,
-        &ck,
-    )?)
+    Ok(ParmArithmetics::add(pc, x, &ck))
 }

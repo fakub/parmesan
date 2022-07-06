@@ -142,19 +142,11 @@ fn mul_karatsuba(
                     thread::scope(|ab_scope| {
                         ab_scope.spawn(|_| {
                             // A = x_1 * y_1                   .. len1-bit multiplication
-                            *ar  = mul_impl(
-                                pc,
-                                &x1,
-                                &y1,
-                            ).expect("mul_impl failed.");
+                            *ar  = ParmArithmetics::mul(pc, &x1, &y1);
                         });
                         ab_scope.spawn(|_| {
                             // B = x_0 * y_0                   .. len0-bit multiplication
-                            *br  = mul_impl(
-                                pc,
-                                &x0,
-                                &y0,
-                            ).expect("mul_impl failed.");
+                            *br  = ParmArithmetics::mul(pc, &x0, &y0);
                         });
                     }).expect("thread::scope ab_scope failed.");
                     //  A + B .. -A - B
@@ -176,11 +168,7 @@ fn mul_karatsuba(
                         c_scope.spawn(|_| { *y01r = ParmArithmetics::add(pc, &y0, &y1); });
                     }).expect("thread::scope c_scope failed.");
                     // C = (x_0 + x_1) * (y_0 + y_1)   .. (len0 + 1)-bit multiplication
-                    let mut c_plain = mul_impl(
-                        pc,
-                        &x01,
-                        &y01,
-                    ).expect("mul_impl failed.");
+                    let mut c_plain = ParmArithmetics::mul(pc, &x01, &y01);
                     cr.append(&mut c_plain);
                 });
             }).expect("thread::scope abc_scope failed.");

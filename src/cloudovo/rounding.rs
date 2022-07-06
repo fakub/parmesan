@@ -10,7 +10,7 @@ use crate::*;
 use colored::Colorize;
 
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
-use super::{pbs,signum};
+use super::pbs;
 
 pub fn round_at_impl(
     pc: &ParmesanCloudovo,
@@ -42,7 +42,7 @@ pub fn round_at_impl(
         //
         // add: 2y + s == 2, 3 .. +1 or 2y + s == -3 .. -1 otherwise 0
         _ => {
-            let s = signum::sgn_impl(pc, &x[0..pos-1].to_vec())?;
+            let s = ParmArithmetics::sgn(pc, &x[0..pos-1].to_vec());
             // calc 2y
             let mut yy_s = x[pos-1].mul_uint_constant(2)?;
             // 2y + s

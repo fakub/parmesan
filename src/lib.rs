@@ -173,9 +173,7 @@ pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = Asc::map_from_yaml(ASC_B
 //
 //  TODO / Wishlist
 //
-//  - use ParmArithmetics::add rather than add_sub_impl/add_sub_noisy (put pc inside)
 //  - WISH: track quadratic weight within Parmesan Ciphertext (Vec<(LWE, usize)> ??)
 //      - identity-bootstrapped only if needed
 //      => keeps track of sample freshness (e.g., in signum recursion that's mess)
 //      - warn if a fresh sample gets bootstraped -- that could be done a step in advance
-//  - squ_impl and mul_impl

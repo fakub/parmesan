@@ -16,7 +16,7 @@ use colored::Colorize;
 use concrete::LWE;
 
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
-use super::{pbs,addition,signum};
+use super::{pbs,signum};
 
 /// Implementation of parallel maximum using signum
 pub fn max_impl(
@@ -32,15 +32,10 @@ pub fn max_impl(
         [
             // r = x - y
             //WISH after I implement manual bootstrap after addition, here it can be customized to powers of two (then first layer of bootstraps can be omitted in signum)
-            let r: ParmCiphertext = addition::add_sub_noisy(   // can be noisy -- sgn_recursion_raw bootstraps the sample without adding
-                false,
-                pc,
-                x,
-                y,
-            )?;
+            let r: ParmCiphertext = ParmArithmetics::sub_noisy(pc, x, y);   // can be noisy -- sgn_recursion_raw bootstraps the sample without adding
 
             // s = 2 * sgn^+(r)
-            // returns one sample, not bootstrapped
+            // returns one sample, not bootstrapped (to be bootstrapped with val = 2)
             let s_raw: ParmCiphertext = signum::sgn_recursion_raw(
                 pc.params.bit_precision - 1,
                 &pc.pub_keys,

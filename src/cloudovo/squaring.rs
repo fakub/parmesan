@@ -17,7 +17,7 @@ use concrete::LWE;
 
 use crate::userovo::keys::PubKeySet;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
-use super::{pbs,multiplication};
+use super::pbs;
 
 
 // =============================================================================
@@ -80,25 +80,15 @@ fn squ_dnq(
             thread::scope(|abc_scope| {
                 abc_scope.spawn(|_| {
                     //  A = x_1 ^ 2                     .. len1-bit squaring
-                    *ar = squ_impl(
-                        pc,
-                        &x1,
-                    ).expect("squ_impl failed.");
+                    *ar = ParmArithmetics::squ(pc, &x1);
                 });
                 abc_scope.spawn(|_| {
                     //  B = x_0 ^2                      .. len0-bit squaring
-                    *br = squ_impl(
-                        pc,
-                        &x0,
-                    ).expect("squ_impl failed.");
+                    *br = ParmArithmetics::squ(pc, &x0);
                 });
                 abc_scope.spawn(|_| {
                     //  C = x_0 * x_1                   .. len0- x len1-bit multiplication (to be shifted len0 + 1 bits where 1 bit is for 2x AB)
-                    let c_plain = multiplication::mul_impl(
-                        pc,
-                        &x0,
-                        &x1,
-                    ).expect("mul_impl failed.");
+                    let c_plain = ParmArithmetics::mul(pc, &x0, &x1);
                         // was:
                         //~ *cr = ParmCiphertext::triv(len0 + 1, &pc.pub_keys.encoder).expect("ParmCiphertext::triv failed.");
                         //~ cr.append(&mut c_plain);
