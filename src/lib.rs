@@ -178,3 +178,4 @@ pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = Asc::map_from_yaml(ASC_B
 //      - identity-bootstrapped only if needed
 //      => keeps track of sample freshness (e.g., in signum recursion that's mess)
 //      - warn if a fresh sample gets bootstraped -- that could be done a step in advance
+//  - squ_impl and mul_impl

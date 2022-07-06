@@ -24,7 +24,7 @@ pub fn round_at_impl(
         // consider if this behavior is desired:
         // p if p > PARM_CT_MAXLEN => Err(format!("Rounding position > ParmCiphertext max length {}.", PARM_CT_MAXLEN).into()),
         // rounding 1 digit after x.len() -> return triv of length 1 (as in multiplication of empty ciphertexts)
-        p if p >= x.len() + 1 => ParmCiphertext::triv(1, &pc.pub_keys.encoder),
+        p if p >= x.len() + 1 => Ok(ParmArithmetics::zero()),
 
         // otherwise, do the job
 
@@ -53,8 +53,11 @@ pub fn round_at_impl(
             r.push(pbs::round_2y_s__pi_5(&pc.pub_keys, &yy_s)?);
 
             // sliced input
-            let mut slx = ParmCiphertext::triv(pos, &pc.pub_keys.encoder)?;
-            slx.append(&mut x[pos..].to_vec());
+                // was:
+                //~ let mut slx = ParmCiphertext::triv(pos, &pc.pub_keys.encoder)?;
+                //~ slx.append(&mut x[pos..].to_vec());
+                // now:
+            let slx = ParmArithmetics::shift(pc, &x[pos..].to_vec(), pos);
 
             Ok(ParmArithmetics::add(pc, &slx, &r))
         }

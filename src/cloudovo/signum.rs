@@ -55,7 +55,7 @@ pub fn sgn_recursion_raw(
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
     // special case: empty ciphertext
     if x.len() == 0 {
-        return Ok(ParmCiphertext::triv(1, &pub_keys.encoder)?);
+        return Ok(ParmArithmetics::zero());
     }
 
     // end of recursion

@@ -65,27 +65,25 @@ pub fn mul_impl(
         }
     }
 
-    let p = match x_in.len() {
-        l if l == 0 => ParmCiphertext::triv(1, &pc.pub_keys.encoder)?,
+    match x_in.len() {
+        l if l == 0 => Ok(ParmArithmetics::zero()),
         l if l == 1 => mul_1word(
             pc,
             &x_in,
             &y_in,
-        )?,
+        ),
         l if l < 14 || l == 15 => mul_schoolbook(
             pc,
             &x_in,
             &y_in,
-        )?,
+        ),
         l if l <= 32 => mul_karatsuba(
             pc,
             &x_in,
             &y_in,
-        )?,
-        _ => return Err(format!("Multiplication for {}-word integers not implemented.", x_in.len()).into()),
-    };
-
-    Ok(p)
+        ),
+        _ => Err(format!("Multiplication for {}-word integers not implemented.", x_in.len()).into()),
+    }
 }
 
 /// Karatsuba multiplication
@@ -128,7 +126,7 @@ fn mul_karatsuba(
             // init tmp variables in this scope, only references can be passed to threads
             let mut a       = ParmCiphertext::empty();
             let mut b       = ParmCiphertext::empty();
-            let mut na_nb   = ParmCiphertext::triv(len0, &pc.pub_keys.encoder)?;   //TODO consider using ParmArithmetics::shift
+            let mut na_nb   = ParmCiphertext::triv(len0, &pc.pub_keys.encoder)?;
             let mut c       = ParmCiphertext::triv(len0, &pc.pub_keys.encoder)?;
 
             let ar      = &mut a;
@@ -204,8 +202,11 @@ fn mul_karatsuba(
                 let b_cnanb = ParmArithmetics::add(pc, &b, &c_nanb);
                 //  second, add |c-a-b|0|+|b| to a|0|0|
                 //  n.b., this way, the resulting ciphertext grows the least (1 bit only) and it also uses least BS inside additions
-                let mut a_sh  = ParmCiphertext::triv(2*len0, &pc.pub_keys.encoder)?;
-                a_sh.append(&mut a);
+                    // was:
+                    //~ let mut a_sh  = ParmCiphertext::triv(2*len0, &pc.pub_keys.encoder)?;
+                    //~ a_sh.append(&mut a);
+                    // now:
+                let a_sh = ParmArithmetics::shift(pc, &a, 2*len0);
                 ParmArithmetics::add(pc, &a_sh, &b_cnanb)
             };
         ]

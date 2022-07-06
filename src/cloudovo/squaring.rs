@@ -31,15 +31,13 @@ pub fn squ_impl(
     x:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
-    let s = match x.len() {
-        l if l == 0 => ParmCiphertext::triv(1, &pc.pub_keys.encoder)?,
-        l if l == 1 => squ_1word(pc, x)?,
-        l if l <  4 => squ_schoolbook(pc, x)?,
-        l if l <=32 => squ_dnq(pc, x)?,
+    match x.len() {
+        l if l == 0 => Ok(ParmArithmetics::zero()),
+        l if l == 1 => squ_1word(pc, x),
+        l if l <  4 => squ_schoolbook(pc, x),
+        l if l <=32 => squ_dnq(pc, x),
         _ => return Err(format!("Squaring for {}-word integer not implemented.", x.len()).into()),
-    };
-
-    Ok(s)
+    }
 }
 
 /// Divide'n'Conquer squaring
@@ -96,13 +94,16 @@ fn squ_dnq(
                 });
                 abc_scope.spawn(|_| {
                     //  C = x_0 * x_1                   .. len0- x len1-bit multiplication (to be shifted len0 + 1 bits where 1 bit is for 2x AB)
-                    *cr = ParmCiphertext::triv(len0 + 1, &pc.pub_keys.encoder).expect("ParmCiphertext::triv failed.");
-                    let mut c_plain = multiplication::mul_impl(
+                    let c_plain = multiplication::mul_impl(
                         pc,
                         &x0,
                         &x1,
                     ).expect("mul_impl failed.");
-                    cr.append(&mut c_plain);
+                        // was:
+                        //~ *cr = ParmCiphertext::triv(len0 + 1, &pc.pub_keys.encoder).expect("ParmCiphertext::triv failed.");
+                        //~ cr.append(&mut c_plain);
+                        // now:
+                    *cr = ParmArithmetics::shift(pc, &c_plain, len0 + 1);
                 });
             }).expect("thread::scope abc_scope failed.");
 
@@ -117,8 +118,11 @@ fn squ_dnq(
                 //  first, add | C |0| to | B |
                 let b_c = ParmArithmetics::add(pc, &b, &c);
                 //  second, add | C |0|+| B | to | A |0|0|
-                let mut a_sh  = ParmCiphertext::triv(2*len0, &pc.pub_keys.encoder)?;
-                a_sh.append(&mut a);
+                    // was:
+                    //~ let mut a_sh  = ParmCiphertext::triv(2*len0, &pc.pub_keys.encoder)?;
+                    //~ a_sh.append(&mut a);
+                    // now:
+                let a_sh = ParmArithmetics::shift(pc, &a, 2*len0);
                 ParmArithmetics::add(pc, &a_sh, &b_c)
             };
         ]
