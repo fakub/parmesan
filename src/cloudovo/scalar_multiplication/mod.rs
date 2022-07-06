@@ -51,19 +51,32 @@ pub fn scalar_mul_impl(
     // sliding window
     let ws = naf::wind_shifts(k_abs, ASC_BITLEN);  // pairs (window value, shift), built-up from certain NAF (or other repre)
 
+    // pre-compute products: window_val * x
+    // do not calculate twice -> store in map
+    let mut wiabs_wix_map: BTreeMap<u32, ParmCiphertext> = BTreeMap::new();
+    // init keys
+    for (wi, _shi) in &ws {
+        if !wiabs_wix_map.contains_key(&(wi.abs() as u32)) {
+            // prepare with empty ciphertexts that will be filled later
+            wiabs_wix_map.insert(wi.abs() as u32, ParmCiphertext::empty());
+        }
+    }
+    // calc values (wi * x) in parallel
+    wiabs_wix_map.par_iter_mut().for_each(|(wiabs, wi_x)| {
+        let wi_asc = &ASC_12[&(*wiabs as usize)];
+        println!("(i) Evaluating ASC for {wiabs} ...", );
+        *wi_x = wi_asc.eval(pc, &x_pos).expect("Asc::eval failed.");   // due to wi.abs, x_pos must be taken
+    });
+
+    // init mulary
     let mut mulary: Vec<ParmCiphertext> = vec![ParmCiphertext::empty(); ws.len()];
-
-    // in parallel, fill mulary
-    mulary.par_iter_mut().zip(ws.par_iter()).for_each(|(wi_x, (wi, shi))| {
-        //TODO resolve repeating wi's .. don't calculate twice .. put into Map and check if entry exists
-        let wi_asc = &ASC_12[&(wi.abs() as usize)];
-        let wi_x_plain = wi_asc.eval(pc, &x_pos).expect("Asc::eval failed.");   // due to wi.abs, x_pos must be taken
-
-        *wi_x = if *wi < 0 {
-            let neg_wi_x_plain = ParmArithmetics::opp(&wi_x_plain);
-            ParmArithmetics::shift(pc, &neg_wi_x_plain, *shi)
+    // fill with pre-computed values from wiabs_wix_map, shift & negate accordingly
+    mulary.iter_mut().zip(ws.iter()).for_each( |(mi, (wi, shi))| {
+        *mi = if *wi < 0 {
+            let neg_wi_x = ParmArithmetics::opp(&wiabs_wix_map[&(wi.abs() as u32)]);
+            ParmArithmetics::shift(pc, &neg_wi_x, *shi)
         } else {
-            ParmArithmetics::shift(pc, &wi_x_plain, *shi)
+            ParmArithmetics::shift(pc, &wiabs_wix_map[&(wi.abs() as u32)], *shi)
         };
     });
 
