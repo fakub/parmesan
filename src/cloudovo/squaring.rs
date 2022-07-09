@@ -206,5 +206,6 @@ pub fn squ_lwe(
     pub_keys: &PubKeySet,
     x: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
-    Ok(pbs::a_1__pi_5(pub_keys, x)?)
+    //TODO FIXME resolve triv cases
+    pbs::a_1__pi_5(pub_keys, x)
 }

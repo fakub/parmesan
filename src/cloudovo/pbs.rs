@@ -173,6 +173,28 @@ pub fn a_1__pi_5(
 }
 
 //
+//  Multiplication table serialized for 3X + Y
+//
+//  X·Y | -1 |  0 |  1 |
+//  --------------------
+//    1 | -1 |  0 |  1 |
+//    0 |  0 |  0 |  0 |
+//   -1 |  1 |  0 | -1 |
+//  --------------------
+//
+#[allow(non_snake_case)]
+pub fn mul_bit__pi_5(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    eval_LUT_5(
+        pub_keys,
+        c,
+        [0.,0.,31.,0.,1.,0.,0.,0.,0.,0.,0.,0.,31.,0.,1.,0.]
+    )
+}
+
+//
 //  ReLU+:
 //
 //      0   (X < 0)

@@ -280,8 +280,6 @@ pub fn mul_lwe(
     y: &LWE,
 ) -> Result<LWE, Box<dyn Error>> {
 
-    let mut z: LWE;
-
     // resolve trivial cases
     //WISH check correctness
     let pi = x.encoder.nb_bit_precision;
@@ -297,47 +295,72 @@ pub fn mul_lwe(
         return Ok(x.mul_uint_constant(my)?);
     }
 
-    //~ measure_duration!(
-        //~ "Multiplication LWE × LWE",
-        //~ [
+    //  X | -1 |  0 |  1 |
+    //--------------------
+    //  1 | -1 |  0 |  1 |
+    //  0 |  0 |  0 |  0 |
+    // -1 |  1 |  0 | -1 |
+    //--------------------
+    // => serialize this table (fits 32 cleartext size)
 
-            // x + y
-            let mut pxpy: LWE = x.clone();
-            pxpy.add_uint_inplace(y)?;
-            // x - y
-            let mut pxny: LWE = x.clone();
-            pxny.sub_uint_inplace(y)?;
+    // 3x + y
+    let mut p3xpy = x.mul_uint_constant(3)?;
+    p3xpy.add_uint_inplace(y)?;
 
-            // pos, neg (in parallel)
-            // init tmp variables in this scope, only references can be passed to threads
-            let mut pos = LWE::encrypt_uint_triv(0, &pub_keys.encoder).expect("LWE::encrypt_uint_triv failed.");
-            let mut neg = LWE::encrypt_uint_triv(0, &pub_keys.encoder).expect("LWE::encrypt_uint_triv failed.");
-            let posr = &mut pos;
-            let negr = &mut neg;
+    // LUT serialized table
+    pbs::mul_bit__pi_5(pub_keys, &p3xpy)
+}
 
-            // parallel pool: pos, neg
-            thread::scope(|pn_scope| {
-                pn_scope.spawn(|_| {
-                    // pos = ...
-                    *posr  = pbs::a_2__pi_5(pub_keys, &pxpy).expect("pbs::a_2__pi_5 failed.");
-                });
-                pn_scope.spawn(|_| {
-                    // neg = ...
-                    *negr  = pbs::a_2__pi_5(pub_keys, &pxny).expect("pbs::a_2__pi_5 failed.");
-                });
-            }).expect("thread::scope pn_scope failed.");
+// for archiving purposes (also presenting author's stupidity)
+#[allow(non_snake_case)]
+pub fn deprecated__mul_lwe(
+    pub_keys: &PubKeySet,
+    x: &LWE,
+    y: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    let mut z: LWE;
+    let pi = x.encoder.nb_bit_precision;
+    if x.dimension == 0 {
+        let mut mx: i32 = x.decrypt_uint_triv()? as i32;
+        // convert to signed domain
+        if mx > 1 << (pi - 1) {mx -= 1 << pi}
+        return Ok(y.mul_uint_constant(mx)?);
+    } else if y.dimension == 0 {
+        let mut my: i32 = y.decrypt_uint_triv()? as i32;
+        // convert to signed domain
+        if my > 1 << (pi - 1) {my -= 1 << pi}
+        return Ok(x.mul_uint_constant(my)?);
+    }
 
-            // z = pos - neg
-            z = pos.clone();
-            z.sub_uint_inplace(&neg)?;
+    // x + y
+    let mut pxpy: LWE = x.clone();
+    pxpy.add_uint_inplace(y)?;
+    // x - y
+    let mut pxny: LWE = x.clone();
+    pxny.sub_uint_inplace(y)?;
 
-            //TODO additional identity bootstrapping .. needed?
-            //~ z = pbs::id__pi_5(
-                //~ pub_keys,
-                //~ &tmp,   // pos - neg
-            //~ )?;
-        //~ ]
-    //~ );
+    // pos, neg (in parallel)
+    // init tmp variables in this scope, only references can be passed to threads
+    let mut pos = LWE::encrypt_uint_triv(0, &pub_keys.encoder).expect("LWE::encrypt_uint_triv failed.");
+    let mut neg = LWE::encrypt_uint_triv(0, &pub_keys.encoder).expect("LWE::encrypt_uint_triv failed.");
+    let posr = &mut pos;
+    let negr = &mut neg;
+
+    // parallel pool: pos, neg
+    thread::scope(|pn_scope| {
+        pn_scope.spawn(|_| {
+            // pos = ...
+            *posr  = pbs::a_2__pi_5(pub_keys, &pxpy).expect("pbs::a_2__pi_5 failed.");
+        });
+        pn_scope.spawn(|_| {
+            // neg = ...
+            *negr  = pbs::a_2__pi_5(pub_keys, &pxny).expect("pbs::a_2__pi_5 failed.");
+        });
+    }).expect("thread::scope pn_scope failed.");
+
+    // z = pos - neg
+    z = pos.clone();
+    z.sub_uint_inplace(&neg)?;
 
     Ok(z)
 }
