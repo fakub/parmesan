@@ -60,7 +60,7 @@ pub fn sgn_recursion_raw(
     // special case: empty ciphertext
     if x.len() == 0 {
         // must not be empty (i.e., no ParmArithmetics::zero())
-        return Ok(ParmCiphertext::triv(1, &pub_keys.encoder)?);
+        return ParmCiphertext::triv(1, &pub_keys.encoder);
     }
 
     // end of recursion

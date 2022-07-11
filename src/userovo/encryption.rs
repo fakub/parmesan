@@ -105,7 +105,7 @@ pub fn parm_decrypt(
         *pti = parm_decr_word(params, priv_keys, cti).expect("parm_decr_word failed.");
     });
     // convert vec to i64
-    Ok(convert(&pt)?)
+    convert(&pt)
 }
 
 fn parm_decr_word(
