@@ -106,7 +106,7 @@ impl ParmesanUserovo<'_> {
         m: i64,
         words: usize,
     ) -> Result<ParmCiphertext, Box<dyn Error>> {   //WISH change to a template for other integer types/lengths, too
-        Ok(encryption::parm_encrypt(self.params, &self.priv_keys, m, words)?)
+        encryption::parm_encrypt(self.params, &self.priv_keys, m, words)
     }
 
     /// Encrypt a vector of words from alphabet `{-1,0,1}`
@@ -114,12 +114,12 @@ impl ParmesanUserovo<'_> {
         &self,
         mv: &Vec<i32>,
     ) -> Result<ParmCiphertext, Box<dyn Error>> {   //WISH change to a template for other integer types/lengths, too
-        Ok(encryption::parm_encrypt_vec(self.params, &self.priv_keys, mv)?)
+        encryption::parm_encrypt_vec(self.params, &self.priv_keys, mv)
     }
 
     /// Decrypt ciphertext into a 64-bit signed integer
     pub fn decrypt(&self, c: &ParmCiphertext) -> Result<i64, Box<dyn Error>> {   //WISH change to a template for other integer types/lengths, too
-        Ok(encryption::parm_decrypt(self.params, &self.priv_keys, c)?)
+        encryption::parm_decrypt(self.params, &self.priv_keys, c)
     }
 }
 
@@ -172,6 +172,15 @@ pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = Asc::map_from_yaml(ASC_B
 // =============================================================================
 //
 //  TODO / Wishlist
+//
+//  - New Concrete v0.2.0
+//      - ParmCiphertext = Vec<LWE>
+//      - params & keys structs, initialization, serialization
+//      - ParmCiphertextExt::triv, single, to_str
+//      - LWE::encrypt_uint_triv in addition
+//      - mul_lwe, squ_lwe
+//      - PBS all
+//      - parm_encr_word, parm_decr_word (LWE::encrypt_uint, decrypt_uint)
 //
 //  - WISH: track quadratic weight within Parmesan Ciphertext (Vec<(LWE, usize)> ??)
 //      - identity-bootstrapped only if needed
