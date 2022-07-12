@@ -45,7 +45,7 @@ pub fn round_at_impl(
             // calc 2y
             let mut yy_s = x[pos-1].mul_uint_constant(2)?;
             // 2y + s
-            yy_s.add_uint_inplace(&s[0])?;
+            if s.len() > 0 {yy_s.add_uint_inplace(&s[0])?;}
 
             // factor that is to be added
             let mut r = ParmCiphertext::triv(pos, &pc.pub_keys.encoder)?;
