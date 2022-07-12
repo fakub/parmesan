@@ -640,8 +640,18 @@ fn eval_LUT_5(
         let fm = if m < (1 << (5-1)) { lut[m as usize] }
             else if m < (1 << 5) { -lut[(m as i32 - (1 << (5-1))) as usize] }
             else {return Err(format!("Word m = {} does not fit 5-bit LUT.", m).into())};
-        let fm_u = ((fm as i32) & ((1 << 5) - 1)) as u32;
-        Ok(LWE::encrypt_uint_triv(fm_u, &pub_keys.encoder)?)
+        // check if LUT value is "half-ish"
+        let fm_half = (2.0 * fm) as i32 & 1 == 1;
+                              // remove half
+        let fm_u = ((if fm_half {fm - 0.5} else {fm} as i32) & ((1 << 5) - 1)) as u32;
+        if fm_half {
+            let mut res = LWE::encrypt_uint_triv(fm_u, &pub_keys.encoder)?;
+            // add half back
+            res.add_half_to_uint_inplace()?;
+            Ok(res)
+        } else {
+            Ok(LWE::encrypt_uint_triv(fm_u, &pub_keys.encoder)?)
+        }
     } else {
         Ok(c.bootstrap_with_function(pub_keys.bsk, |x| lut[x as usize], pub_keys.encoder)?
             .keyswitch(pub_keys.ksk)?)
