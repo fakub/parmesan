@@ -197,7 +197,7 @@ pub fn mul_bit__pi_5(
 //
 //  ReLU+:
 //
-//      0   (X < 0)
+//      0   (X ≤ 0)
 //  X - 2   (X > 0)
 //
 #[allow(non_snake_case)]
@@ -228,6 +228,42 @@ pub fn round_2y_s__pi_5(
         pub_keys,
         c,
         [0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,0.,0.]
+    )
+}
+
+//
+//  Non-negative
+//
+//   0   (X < 0)
+//   1   (X ≥ 0)
+//
+#[allow(non_snake_case)]
+pub fn nonneg__pi_5(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    let mut h = eval_LUT_5(
+        pub_keys,
+        c,
+        [0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,]      // [1/2, ..., 1/2, -1/2, ..., -1/2]
+    )?;
+    h.add_half_to_uint_inplace()?;                                              // [  1, ...,   1,    0, ...,    0]
+    Ok(h)
+}
+
+//
+//  Selector for max
+//
+#[allow(non_snake_case)]
+pub fn max_s_2x_6y__pi_5(
+    pub_keys: &PubKeySet,
+    c: &LWE,
+) -> Result<LWE, Box<dyn Error>> {
+    eval_LUT_5(
+        pub_keys,
+        c,
+        //           1            |ovrlap|
+        [0.,0.,0.,1.,1.,31.,1.,0., 1.,1., 1.,0.,1.,31.,0.,1.,]
     )
 }
 
