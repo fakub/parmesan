@@ -36,9 +36,9 @@ pub fn sgn_impl(
             //WISH however, this is worth investigation as signum is a popular NN activation function
 
             let s_raw: ParmCiphertext = sgn_recursion_raw(
-                pc.params.bit_precision - 1,
                 &pc.pub_keys,
                 x,
+                true,
             )?;
 
             let s_lwe = pbs::f_1__pi_5__with_val(
@@ -53,17 +53,20 @@ pub fn sgn_impl(
 }
 
 pub fn sgn_recursion_raw(
-    gamma: usize,
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
+    first_round: bool,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
+    const GAMMA: usize = 4;
+
     // special case: empty ciphertext
     if x.len() == 0 {
         // must not be empty (i.e., no ParmArithmetics::zero())
         return ParmCiphertext::triv(1, &pub_keys.encoder);
     }
 
-    // end of recursion
+    // end of recursion, may return {-15 .. 15} as a sum of four values
+    // (that's why pbs::f_1__pi_5__with_val follows sgn_recursion_raw in sgn_impl)
     if x.len() == 1 {
         return Ok(x.clone());
     }
@@ -71,35 +74,56 @@ pub fn sgn_recursion_raw(
     let s: ParmCiphertext;
 
     measure_duration!(
-        ["Signum recursion in parallel ({}-bit, groups by {})", x.len(), gamma],
+        ["Signum recursion in parallel ({}-bit, groups by {})", x.len(), GAMMA],
         [
-            let mut b = ParmCiphertext::triv((x.len() - 1) / gamma + 1, &pub_keys.encoder)?;
+            let mut b = ParmCiphertext::triv((x.len() - 1) / GAMMA + 1, &pub_keys.encoder)?;
 
             // the thread needs to know the index j so that it can check against x.len()
             b.par_iter_mut().enumerate().for_each(| (j, bj) | {
 
-                let mut sj = ParmCiphertext::triv(gamma, &pub_keys.encoder).expect("ParmCiphertext::triv failed.");
-
-                sj.par_iter_mut().enumerate().for_each(| (i, sji) | {
-                    if gamma * j + i < x.len() {
-                        *sji = pbs::f_1__pi_5__with_val(
+                // first-round input is fresh and in {-1, 0, 1}
+                if first_round {
+                    // calc bootstrapped 8-multiple of local MSB
+                    if GAMMA * j + 3 < x.len() {
+                        let sj3 = pbs::f_1__pi_5__with_val(
                             pub_keys,
-                            &x[gamma * j + i],
-                            1 << i,
+                            &x[GAMMA * j + 3],
+                            1 << 3,
                         ).expect("pbs::f_1__pi_5__with_val failed.");
+                        bj.add_uint_inplace(&sj3).expect("add_uint_inplace failed.");
                     }
-                });
+                    // add others multiplied by 1 << i
+                    for i in 0..=2 {
+                        if GAMMA * j + i < x.len() {
+                            let xi = if i == 0 {x[GAMMA * j + i].clone()} else {x[GAMMA * j + i].mul_uint_constant(1 << i).expect("mul_uint_constant failed.")};
+                            bj.add_uint_inplace(&xi).expect("add_uint_inplace failed.");
+                        }
+                    }
+                // otherwise input ranges in {-15 .. 15} and not bootstrapped
+                } else {
+                    let mut sj = ParmCiphertext::triv(GAMMA, &pub_keys.encoder).expect("ParmCiphertext::triv failed.");
 
-                // possibly exchange for parallel reduction (negligible effect expected)
-                for sji in sj {
-                    bj.add_uint_inplace(&sji).expect("add_uint_inplace failed.");
+                    sj.par_iter_mut().enumerate().for_each(| (i, sji) | {
+                        if GAMMA * j + i < x.len() {
+                            *sji = pbs::f_1__pi_5__with_val(
+                                pub_keys,
+                                &x[GAMMA * j + i],
+                                1 << i,
+                            ).expect("pbs::f_1__pi_5__with_val failed.");
+                        }
+                    });
+
+                    // possibly exchange for parallel reduction (negligible effect expected)
+                    for sji in sj {
+                        bj.add_uint_inplace(&sji).expect("add_uint_inplace failed.");
+                    }
                 }
             });
 
             s = sgn_recursion_raw(
-                gamma,
                 pub_keys,
                 &b,
+                false,
             )?;
         ]
     );
