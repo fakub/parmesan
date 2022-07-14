@@ -31,10 +31,12 @@ pub fn squ_impl(
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     match x.len() {
-        l if l == 0 => Ok(ParmArithmetics::zero()),
-        l if l == 1 => squ_1word(pc, x),
-        l if l <  4 => squ_schoolbook(pc, x),
-        l if l <=32 => squ_dnq(pc, x),
+        l if l == 0     => Ok(ParmArithmetics::zero()),
+        l if l == 1     => squ_1word(pc, x),
+        l if l <  4 ||
+             l == 5 ||
+             l == 7     => squ_schoolbook(pc, x),
+        l if l <=32     => squ_dnq(pc, x),
         _ => return Err(format!("Squaring for {}-word integer not implemented.", x.len()).into()),
     }
 }

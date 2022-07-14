@@ -12,16 +12,17 @@ class String
     end
 end
 
-#   BS complexity of single addition
+#   BS complexity of addition (per bit)
 A = 2                                       # 1 + 1, but needed
 
 #   BS complexity of single-bit multiplication & single-bit square
-M = 2                                       # 2 (+ 1), possibly not needed
+M = 1
 S = 1
 
 # ------------------------------------------------------------------------------
 
 #   BS complexity of schoolbook multiplication wrt parallel addition within resulting table (must be done manually or by some smart recursion / dynamic programming)
+#TODO why this?? why not m(n)?
 MP = {}
 MP[0] = Float::NAN
 MP[1] = 2
@@ -38,27 +39,29 @@ MP[8] = 8**2 * MP[1] + 4 * (8 * A) + 2 * (10 * A) + 13 * A                      
 # ------------------------------------------------------------------------------
 
 #   BS complexity of schoolbook multiplication  (~4n^2)
+#TODO why was A*n*(n-1)? why not A*(n+1)*(n-1)?
 def m(n)
-    M*n**2 + A*n*(n-1)                          # 2n(2n-1)
+    M*n**2 + A*(n+1)*(n-1)                      #TODO shish: 2n(2n-1)
 end
 #   BS complexity of schoolbook squaring        (~3n^2)
+#TODO why was A*n*(n-1)? why not A*(n+1)*(n-1)?
 def s(n)
-    M*n*(n-1)/2 + S*n + A*n*(n-1)               # n(3n-2)
+    M*n*(n-1)/2 + S*n + A*(n+1)*(n-1)           #TODO shish: n(3n-2)
 end
 
-#   hash table for optimal BS complexity of multiplication
+#   hash table for optimal BS complexity of multiplication (Karatsuba for 4 gives a very large number)
 jm = {}
 jm[0] = Float::NAN
-jm[1] =  M
-jm[2] = 12
-jm[3] = 30
-jm[4] = 56
-#   hash table for optimal BS complexity of squaring
+jm[1] = m(1)    # =  M = 1
+jm[2] = m(2)    # = 10    #TODO why was 12?
+jm[3] = m(3)    # = 25    #TODO why was 30?
+jm[4] = m(4)    # = 46    #TODO why was 56?
+#   hash table for optimal BS complexity of squaring (Div'n'Conq for 3 gives shish)
 js = {}
 js[0] = Float::NAN
-js[1] =  S
-js[2] =  8
-js[3] = 21
+js[1] = s(1)    # =  S = 1
+js[2] = s(2)    # =  9    #TODO why was  8?
+js[3] = s(3)    # = 22    #TODO why was 21?
 
 #   calc the optimal BS complexity of multiplication
 (2..16).each do |n|
@@ -73,8 +76,8 @@ js[3] = 21
     jm[2*n] = [k0, m0].min
     jm[2*n+1] = [k1, m1].min
     # print out
-    puts "Jm[#{2*n}] = #{jm[2*n]} #{k0 < m0 ? "by " + "Karatsuba".bold + ": [#{n} | #{n} ; #{n+1}] (scb =" : "by schoolbook#{n <= 4 ? " /#{MP[2*n]} prl/" : ""} (Kar ="} #{[k0, m0].max})"
-    puts "Jm[#{2*n+1}] = #{jm[2*n+1]} #{k1 < m1 ? "by " + "Karatsuba".bold + ": [#{n} | #{n+1} ; #{n+2}] (scb =" : "by schoolbook#{n <= 3 ? " /#{MP[2*n+1]} prl/" : ""} (Kar ="} #{[k1, m1].max})"
+    puts "Jm[#{2*n}] = #{jm[2*n]} #{k0 < m0 ? "by " + "Karatsuba".bold + ": [#{n} | #{n} ; #{n+1}] (scb =" : "by schoolbook#{n <= 4 ? " /??#{MP[2*n]} prl/" : ""} (Kar ="} #{[k0, m0].max})"
+    puts "Jm[#{2*n+1}] = #{jm[2*n+1]} #{k1 < m1 ? "by " + "Karatsuba".bold + ": [#{n} | #{n+1} ; #{n+2}] (scb =" : "by schoolbook#{n <= 3 ? " /??#{MP[2*n+1]} prl/" : ""} (Kar ="} #{[k1, m1].max})"
 end
 
 puts "-" * 80
