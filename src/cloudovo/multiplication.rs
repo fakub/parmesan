@@ -69,12 +69,14 @@ pub fn mul_impl(
             &x_in,
             &y_in,
         ),
-        l if l < 14 || l == 15  => mul_schoolbook(
+        l if l < 16 || l == 17  => mul_schoolbook(
             pc,
             &x_in,
             &y_in,
         ),
-        l if l <= 32            => mul_karatsuba(
+        //DBG
+        //~ l if l <= 32            => mul_karatsuba(
+        l if l <= 34            => mul_karatsuba(
             pc,
             &x_in,
             &y_in,
@@ -95,7 +97,14 @@ fn mul_karatsuba(
     assert_eq!(x.len(), y.len());
 
     // not needed: let len1 = x.len() / 2;
-    let len0 = (x.len() + 1) / 2;
+    //WISH see NOTES in lib.rs .. possible optimization for smart splitting
+    //  31 -> (16|15) ; 32 -> (17|15)? ; 33 -> (16|17) ; 34 -> (17|17) ; 35 -> (18|17) ; 36 -> (19|17)?
+    //  => so apparently there would be another threshold .. from when it is not worth splitting n -> (n-17|17) (or even calling schoolbook on purpose to get rid of that addition?)
+    let len0 = if x.len() == 19 {
+        9
+    } else {
+        (x.len() + 1) / 2
+    };
 
     //       len1  len0
     //  x = | x_1 | x_0 |
@@ -131,44 +140,49 @@ fn mul_karatsuba(
             let na_nbr  = &mut na_nb;
             let cr      = &mut c;
 
+            //DBG
             // parallel pool: A, B, C
-            thread::scope(|abc_scope| {
+            //~ thread::scope(|abc_scope| {
                 // calc A, B, and -A - B
-                abc_scope.spawn(|_| {
+                //~ abc_scope.spawn(|_| {
                     // parallel pool: A, B
-                    thread::scope(|ab_scope| {
-                        ab_scope.spawn(|_| {
+                    //~ thread::scope(|ab_scope| {
+                        //~ ab_scope.spawn(|_| {
                             // A = x_1 * y_1                   .. len1-bit multiplication
                             *ar  = ParmArithmetics::mul(pc, &x1, &y1);
-                        });
-                        ab_scope.spawn(|_| {
+                        //~ });
+                        //~ ab_scope.spawn(|_| {
                             // B = x_0 * y_0                   .. len0-bit multiplication
                             *br  = ParmArithmetics::mul(pc, &x0, &y0);
-                        });
-                    }).expect("thread::scope ab_scope failed.");
+                        //~ });
+                    //~ }).expect("thread::scope ab_scope failed.");
                     //  A + B .. -A - B
                     let pa_pb = ParmArithmetics::add(pc, ar, br);
                     for abi in pa_pb {
                         na_nbr.push(abi.opposite_uint().expect("opposite_uint failed."));
                     }
-                });
+                //~ });
 
                 // calc C
-                abc_scope.spawn(|_| {
+                //~ abc_scope.spawn(|_| {
                     let mut x01 = ParmCiphertext::empty();
                     let mut y01 = ParmCiphertext::empty();
                     let x01r = &mut x01;
                     let y01r = &mut y01;
                     // parallel pool: (x_0 + x_1), (y_0 + y_1)
-                    thread::scope(|c_scope| {
-                        c_scope.spawn(|_| { *x01r = ParmArithmetics::add(pc, &x0, &x1); });
-                        c_scope.spawn(|_| { *y01r = ParmArithmetics::add(pc, &y0, &y1); });
-                    }).expect("thread::scope c_scope failed.");
+                    //~ thread::scope(|c_scope| {
+                        //~ c_scope.spawn(|_| {
+                            *x01r = ParmArithmetics::add(pc, &x0, &x1);
+                        //~ });
+                        //~ c_scope.spawn(|_| {
+                            *y01r = ParmArithmetics::add(pc, &y0, &y1);
+                        //~ });
+                    //~ }).expect("thread::scope c_scope failed.");
                     // C = (x_0 + x_1) * (y_0 + y_1)   .. (len0 + 1)-bit multiplication
                     let mut c_plain = ParmArithmetics::mul(pc, &x01, &y01);
                     cr.append(&mut c_plain);
-                });
-            }).expect("thread::scope abc_scope failed.");
+                //~ });
+            //~ }).expect("thread::scope abc_scope failed.");
 
             //  |   A   |   B   |   TBD based on overlap
             //     |    C   | 0 |   in c
@@ -179,10 +193,14 @@ fn mul_karatsuba(
 
             //  add everything together
             let res = if b.len() == 2*len0 {
+                //DBG
+                println!(" >  concat A | B");
                 //  | A | B |   simply concat
                 b.append(&mut a);
                 ParmArithmetics::add(pc, &b, &c_nanb)
             } else {
+                //DBG
+                println!(" >  cnanb + b -> + a");
                 //  first, add |c-a-b|0| to |b|
                 let b_cnanb = ParmArithmetics::add(pc, &b, &c_nanb);
                 //  second, add |c-a-b|0|+|b| to a|0|0|
@@ -196,6 +214,9 @@ fn mul_karatsuba(
             };
         ]
     );
+    //DBG
+    unsafe { println!("(after Krts {}-bit)    #BS = {}", x.len(), NBS); }
+
 
     Ok(res)
 }
@@ -216,10 +237,14 @@ fn mul_schoolbook(
                 x,
                 y,
             )?;
+            //DBG
+            unsafe { println!("(after fill mulary {}-bit)    #BS = {}", x.len(), NBS); }
 
             let res = reduce_mulsquary(pc, &mulary);
         ]
     );
+    //DBG
+    unsafe { println!("(after rdc mulary {}-bit)    #BS = {}", x.len(), NBS); }
 
     Ok(res)
 }
@@ -263,8 +288,12 @@ fn fill_mulary(
     let mut mulary = vec![ParmCiphertext::triv(2*len, &pub_keys.encoder)?; len];
 
     // nested parallel iterators work as expected: they indeed create nested pools
-    mulary.par_iter_mut().zip(y.par_iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
-        x_yj[j..j+len].par_iter_mut().zip(x.par_iter()).for_each(| (xi_yj, xi) | {
+
+    //DBG
+    //~ mulary.par_iter_mut().zip(y.par_iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
+        //~ x_yj[j..j+len].par_iter_mut().zip(x.par_iter()).for_each(| (xi_yj, xi) | {
+    mulary.iter_mut().zip(y.iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
+        x_yj[j..j+len].iter_mut().zip(x.iter()).for_each(| (xi_yj, xi) | {
             *xi_yj = mul_lwe(pub_keys, &xi, &yj).expect("mul_lwe failed.");
         });
     });

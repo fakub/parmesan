@@ -120,7 +120,9 @@ pub fn add_sub_impl(
                 return Err("Unexpected fatal error!".into());
             }
 
-            q[r_triv..].par_iter_mut().zip(w[r_triv..].par_iter().enumerate()).for_each(| (qi, (i0, wi)) | {
+            //DBG
+            //~ q[r_triv..].par_iter_mut().zip(w[r_triv..].par_iter().enumerate()).for_each(| (qi, (i0, wi)) | {
+            q[r_triv..].iter_mut().zip(w[r_triv..].iter().enumerate()).for_each(| (qi, (i0, wi)) | {
                 let i = i0 + r_triv;
                 // calc   3 w_i + w_i-1
                 let mut wi_3 = wi.mul_uint_constant(3).expect("mul_uint_constant failed.");
@@ -141,7 +143,9 @@ pub fn add_sub_impl(
             z = ParmCiphertext::triv(wlen, &pc.pub_keys.encoder)?;
             // MSB part of z is bootstrapped (if requested) ...
             if refresh {
-                z[r_triv..].par_iter_mut().zip(w[r_triv..].par_iter()).for_each(| (zi, wi) | {
+                //DBG
+                //~ z[r_triv..].par_iter_mut().zip(w[r_triv..].par_iter()).for_each(| (zi, wi) | {
+                z[r_triv..].iter_mut().zip(w[r_triv..].iter()).for_each(| (zi, wi) | {
                     *zi = pbs::id__pi_5(&pc.pub_keys, wi).expect("pbs::id__pi_5 failed.");
                 });
             } else {
@@ -157,6 +161,9 @@ pub fn add_sub_impl(
             z.push(q.last().unwrap().clone());
         ]
     );
+
+    //DBG
+    unsafe { println!("(after add {}-bit actv)    #BS = {}", wlen - r_triv, NBS); }
 
     Ok(z)
 }

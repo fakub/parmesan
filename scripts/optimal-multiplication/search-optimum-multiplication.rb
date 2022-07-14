@@ -69,9 +69,12 @@ js[3] = s(3)    # = 18
 #   calc the optimal BS complexity of multiplication
 (2..16).each do |n|
     # Karatsuba
+    #   n.b.! holds only for single call, no recursion!
+    #   i.e., up to 28 which splits into 14 & 14 & 15 .. faster with schoolbook, which generates concantenable A|B
     #FIXME the values will be different after keeping the extra bit that comes from recursion
-    k0 = 2*jm[n] + jm[n+1] +           A*(2*n     + 2*(n+1) + 3*n  )            # K_2n:     3 mul's, 3 add's
-    k1 =   jm[n] + jm[n+1] + jm[n+2] + A*(2*(n+1) + 2*(n+2) + 3*n+1)            # K_2n+1:   3 mul's, 3 add's
+    #    r_i*s_i   (r_0+r_1)*...          r_0+r_1/s.. A+B      -(A+B)+C   A|B + (C+..)
+    k0 = 2*jm[n] + jm[n+1] +           A*(2*n       + 2*n     + 2*(n+1) + 3*n  )            # K_2n:     3 mul's, 3 add's
+    k1 =   jm[n] + jm[n+1] + jm[n+2] + A*(2*(n+1)   + 2*(n+1) + 2*(n+2) + 3*n+1)            # K_2n+1:   3 mul's, 3 add's
     # schoolbook mult
     m0 = m(2*n)
     m1 = m(2*n + 1)
@@ -88,6 +91,7 @@ puts "-" * 80
 #   calc the optimal BS complexity of squaring
 (2..16).each do |n|
     # divide-and-conquer
+    #TODO FIXME starting from Js[7] = 108 .. incorrect, shall be 104 (btw for Js[5] = 55 schoolbook, but DnQ is 49, not 58)
     d0 = 2*js[n] + jm[n] + A*(3*n-1)                # 3n-1 .. 2AB is shifted one bit (hence there occurs triv zero)
     d1 =   js[n] + js[n+1] + jm[n+1] + A*(3*n)
     # schoolbook square
