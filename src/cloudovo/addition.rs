@@ -106,7 +106,7 @@ pub fn add_sub_impl(
             //~ ]);
             // -----------------------------------------------------------------
 
-            let mut q = ParmCiphertext::triv(w.len(), &pc.pub_keys.encoder)?;
+            let mut q = ParmCiphertext::triv(wlen, &pc.pub_keys.encoder)?;
 
             // this shall not happen
             if r_triv >= q.len() {
@@ -127,9 +127,6 @@ pub fn add_sub_impl(
                 if i0 > 0 { wi_3.add_uint_inplace(&w[i-1]).expect("add_uint_inplace failed."); }
                 *qi = pbs::f_4__pi_5(&pc.pub_keys, &wi_3).expect("f_4__pi_5 failed.");
             });
-            // w must be 1 sample longer, align also q
-            w.push(LWE::encrypt_uint_triv(0, &pc.pub_keys.encoder)?);
-            q.push(LWE::encrypt_uint_triv(0, &pc.pub_keys.encoder)?);
 
             // w_i += -2 q_i + q_i-1
             //WISH also check this, if parallel is better? (there's no BS)
@@ -140,8 +137,8 @@ pub fn add_sub_impl(
                 if i > 0 { wi.add_uint_inplace(&q[i-1]).expect("add_uint_inplace failed."); }
             });
 
-            // init z of zeros of correct length
-            z = ParmCiphertext::triv(q.len(), &pc.pub_keys.encoder)?;
+            // init z of zeros of wlen length, then clone / bootstrap ID from w, finally push carry q_i-1
+            z = ParmCiphertext::triv(wlen, &pc.pub_keys.encoder)?;
             // MSB part of z is bootstrapped (if requested) ...
             if refresh {
                 z[r_triv..].par_iter_mut().zip(w[r_triv..].par_iter()).for_each(| (zi, wi) | {
@@ -156,6 +153,8 @@ pub fn add_sub_impl(
             z[..r_triv].iter_mut().zip(w[..r_triv].iter()).for_each(| (zi, wi) | {
                 *zi = wi.clone();
             });
+            // add finally carry is added: z_n = 0 + 2*0 + q_n-1
+            z.push(q.last().unwrap().clone());
         ]
     );
 
