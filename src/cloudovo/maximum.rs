@@ -7,6 +7,7 @@ use crate::*;
 
 // parallelization tools
 use rayon::prelude::*;
+use crossbeam_utils::thread;    // n.b., only for deprecated__sgn_recursion_raw
 
 #[allow(unused_imports)]
 use colored::Colorize;
@@ -98,7 +99,7 @@ pub fn deprecated__max_impl(
 
             // s = 2 * sgn^+(r)
             // returns one sample, not bootstrapped (to be bootstrapped with val = 2)
-            let s_raw: ParmCiphertext = signum::sgn_recursion_raw(
+            let s_raw: ParmCiphertext = signum::deprecated__sgn_recursion_raw(
                 pc.params.bit_precision - 1,
                 &pc.pub_keys,
                 &r,

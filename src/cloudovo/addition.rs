@@ -17,35 +17,13 @@ use concrete::LWE;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use super::pbs;
 
-/// Parallel addition/subtraction followed by noise refreshal
+/// Implementation of parallel addition/subtraction
 pub fn add_sub_impl(
     is_add: bool,
     pc: &ParmesanCloudovo,
     x:  &ParmCiphertext,
     y:  &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
-    let z_noisy = add_sub_noisy(
-        is_add,
-        pc,
-        x,
-        y,
-    )?;
-
-    let mut z = ParmCiphertext::triv(z_noisy.len(), &pc.pub_keys.encoder)?;
-
-    z_noisy.par_iter().zip(z.par_iter_mut()).for_each(| (zni, zi) | {
-        *zi = pbs::id__pi_5(&pc.pub_keys, zni).expect("pbs::id__pi_5 failed.");
-    });
-
-    Ok(z)
-}
-
-/// Implementation of parallel addition/subtraction
-pub fn add_sub_noisy(
-    is_add: bool,
-    pc: &ParmesanCloudovo,
-    x:  &ParmCiphertext,
-    y:  &ParmCiphertext,
+    refresh: bool,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     // calculate right overlap of trivial zero samples (any)
@@ -129,9 +107,6 @@ pub fn add_sub_noisy(
             // -----------------------------------------------------------------
 
             let mut q = ParmCiphertext::triv(w.len(), &pc.pub_keys.encoder)?;
-            z = w.clone();
-            // one more word for "carry"
-            z.push(LWE::encrypt_uint_triv(0, &pc.pub_keys.encoder)?);
 
             // this shall not happen
             if r_triv >= q.len() {
@@ -152,14 +127,34 @@ pub fn add_sub_noisy(
                 if i0 > 0 { wi_3.add_uint_inplace(&w[i-1]).expect("add_uint_inplace failed."); }
                 *qi = pbs::f_4__pi_5(&pc.pub_keys, &wi_3).expect("f_4__pi_5 failed.");
             });
-            // q must have the same length as z
+            // w must be 1 sample longer, align also q
+            w.push(LWE::encrypt_uint_triv(0, &pc.pub_keys.encoder)?);
             q.push(LWE::encrypt_uint_triv(0, &pc.pub_keys.encoder)?);
 
-            z.par_iter_mut().zip(q.par_iter().enumerate()).for_each(| (zi, (i, qi)) | {
+            // w_i += -2 q_i + q_i-1
+            //WISH also check this, if parallel is better? (there's no BS)
+            w.iter_mut().zip(q.iter().enumerate()).for_each(| (wi, (i, qi)) | {
                 // calc   2 q_i
                 let qi_2 = qi.mul_uint_constant(2).expect("mul_uint_constant failed.");
-                zi.sub_uint_inplace(&qi_2).expect("sub_uint_inplace failed.");
-                if i > 0 { zi.add_uint_inplace(&q[i-1]).expect("add_uint_inplace failed."); }
+                wi.sub_uint_inplace(&qi_2).expect("sub_uint_inplace failed.");
+                if i > 0 { wi.add_uint_inplace(&q[i-1]).expect("add_uint_inplace failed."); }
+            });
+
+            // init z of zeros of correct length
+            z = ParmCiphertext::triv(q.len(), &pc.pub_keys.encoder)?;
+            // MSB part of z is bootstrapped (if requested) ...
+            if refresh {
+                z[r_triv..].par_iter_mut().zip(w[r_triv..].par_iter()).for_each(| (zi, wi) | {
+                    *zi = pbs::id__pi_5(&pc.pub_keys, wi).expect("pbs::id__pi_5 failed.");
+                });
+            } else {
+                z[r_triv..].iter_mut().zip(w[r_triv..].iter()).for_each(| (zi, wi) | {
+                    *zi = wi.clone();
+                });
+            }
+            // ... LSB part is simply copied
+            z[..r_triv].iter_mut().zip(w[..r_triv].iter()).for_each(| (zi, wi) | {
+                *zi = wi.clone();
             });
         ]
     );

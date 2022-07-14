@@ -238,6 +238,7 @@ impl ParmArithmetics for ParmCiphertext {
             pc,
             x,
             y,
+            true,
         ).expect("ParmArithmetics::add failed.")
     }
 
@@ -251,6 +252,7 @@ impl ParmArithmetics for ParmCiphertext {
             pc,
             x,
             y,
+            true,
         ).expect("ParmArithmetics::sub failed.")
     }
 
@@ -259,11 +261,12 @@ impl ParmArithmetics for ParmCiphertext {
         x: &ParmCiphertext,
         y: &ParmCiphertext,
     ) -> ParmCiphertext {
-        addition::add_sub_noisy(
+        addition::add_sub_impl(
             true,
             pc,
             x,
             y,
+            false,
         ).expect("ParmArithmetics::add failed.")
     }
 
@@ -272,11 +275,12 @@ impl ParmArithmetics for ParmCiphertext {
         x: &ParmCiphertext,
         y: &ParmCiphertext,
     ) -> ParmCiphertext {
-        addition::add_sub_noisy(
+        addition::add_sub_impl(
             false,
             pc,
             x,
             y,
+            false,
         ).expect("ParmArithmetics::sub failed.")
     }
 

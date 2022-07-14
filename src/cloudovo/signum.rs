@@ -183,7 +183,7 @@ pub fn deprecated__sgn_recursion_raw(
                 }
             });
 
-            s = sgn_recursion_raw(
+            s = deprecated__sgn_recursion_raw(
                 gamma,
                 pub_keys,
                 &b,
