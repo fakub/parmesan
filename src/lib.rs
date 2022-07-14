@@ -172,6 +172,9 @@ lazy_static::lazy_static! {
 pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = Asc::map_from_yaml(ASC_BITLEN, ASC_12_FILE).expect("Asc::map_from_yaml failed.");
 }
 
+//DBG
+pub static mut NBS: usize = 0;
+
 
 // =============================================================================
 //
@@ -179,8 +182,6 @@ pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = Asc::map_from_yaml(ASC_B
 //
 //  - merge with TODOs file
 //  - mul_lwe .. for more than 1x1 bit? let say 1x2 bit? what about squaring?
-//  - after addition-noisy: only bootstrap from r_triv on
-//  - recalc bounds for schoolbook mul as mul_lwe has changed
 //  - parallel mulary reduction
 //
 //  - New Concrete v0.2.0
@@ -193,6 +194,12 @@ pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = Asc::map_from_yaml(ASC_B
 //      - parm_encr_word, parm_decr_word (LWE::encrypt_uint, decrypt_uint)
 //
 //  - WISH: track quadratic weight within Parmesan Ciphertext (Vec<(LWE, usize)> ??)
-//      - identity-bootstrapped only if needed
-//      => keeps track of sample freshness (e.g., in signum recursion that's mess)
-//      - warn if a fresh sample gets bootstraped -- that could be done a step in advance
+//      - keep track of sample freshness (e.g., in signum recursion that's mess)
+//          - identity-bootstrapped only if needed
+//          - warn if a fresh sample gets bootstraped -- that could be done a step in advance
+//      - for analytics purposes, introduce a "sequential" feature, which calls iter() instead of par_iter() etc. (tricky for thread/scope/spawn)
+//
+//  - NOTES:
+//      - very peculiar optimization: Karatsuba splits odd numbers into "halves" .. 31 and 33 worth splitting differently due to 15(s) 16(K) 17(s)
+//          - for B = r_0 * s_0 it is worth calling schoolbook, which keeps its length without overlap to A
+//          => simple concat, no addition needed
