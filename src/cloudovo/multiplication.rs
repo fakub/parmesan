@@ -62,20 +62,19 @@ pub fn mul_impl(
         }
     }
 
-    //TODO FIXME recalc bounds for schoolbook as mul_lwe has changed (improved)
     match x_in.len() {
-        l if l == 0 => Ok(ParmArithmetics::zero()),
-        l if l == 1 => mul_1word(
+        l if l == 0             => Ok(ParmArithmetics::zero()),
+        l if l == 1             => mul_1word(
             pc,
             &x_in,
             &y_in,
         ),
-        l if l < 14 || l == 15 => mul_schoolbook(
+        l if l < 14 || l == 15  => mul_schoolbook(
             pc,
             &x_in,
             &y_in,
         ),
-        l if l <= 32 => mul_karatsuba(
+        l if l <= 32            => mul_karatsuba(
             pc,
             &x_in,
             &y_in,
@@ -312,6 +311,7 @@ pub fn mul_lwe(
     pbs::mul_bit__pi_5(pub_keys, &p3xpy)
 }
 
+/// Reduce mul/squ-ary with addition
 pub fn reduce_mulsquary (
     pc: &ParmesanCloudovo,
     mulary: &Vec<ParmCiphertext>,
