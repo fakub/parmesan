@@ -52,6 +52,10 @@ pub fn sgn_impl(
     Ok(ParmCiphertext::single(s_lwe))
 }
 
+/// Internal recursive function:
+///  - in 1st round, inputs fresh {-1,0,1}
+///  - in subseq rounds, inputs {-15..15} of qw = 22
+///      - this is also its output
 pub fn sgn_recursion_raw(
     pub_keys: &PubKeySet,
     x: &ParmCiphertext,
@@ -124,6 +128,65 @@ pub fn sgn_recursion_raw(
                 pub_keys,
                 &b,
                 false,
+            )?;
+        ]
+    );
+
+    Ok(s)
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// for archiving purposes (includes non-necessary BS in 1st round)
+#[allow(non_snake_case)]
+pub fn deprecated__sgn_recursion_raw(
+    gamma: usize,
+    pub_keys: &PubKeySet,
+    x: &ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
+    // special case: empty ciphertext
+    if x.len() == 0 {
+        // must not be empty (i.e., no ParmArithmetics::zero())
+        return ParmCiphertext::triv(1, &pub_keys.encoder);
+    }
+
+    // end of recursion
+    if x.len() == 1 {
+        return Ok(x.clone());
+    }
+
+    let s: ParmCiphertext;
+
+    measure_duration!(
+        ["Signum recursion in parallel ({}-bit, groups by {})", x.len(), gamma],
+        [
+            let mut b = ParmCiphertext::triv((x.len() - 1) / gamma + 1, &pub_keys.encoder)?;
+
+            // the thread needs to know the index j so that it can check against x.len()
+            b.par_iter_mut().enumerate().for_each(| (j, bj) | {
+
+                let mut sj = ParmCiphertext::triv(gamma, &pub_keys.encoder).expect("ParmCiphertext::triv failed.");
+
+                sj.par_iter_mut().enumerate().for_each(| (i, sji) | {
+                    if gamma * j + i < x.len() {
+                        *sji = pbs::f_1__pi_5__with_val(
+                            pub_keys,
+                            &x[gamma * j + i],
+                            1 << i,
+                        ).expect("pbs::f_1__pi_5__with_val failed.");
+                    }
+                });
+
+                // possibly exchange for parallel reduction (negligible effect expected)
+                for sji in sj {
+                    bj.add_uint_inplace(&sji).expect("add_uint_inplace failed.");
+                }
+            });
+
+            s = sgn_recursion_raw(
+                gamma,
+                pub_keys,
+                &b,
             )?;
         ]
     );

@@ -312,6 +312,25 @@ pub fn mul_lwe(
     pbs::mul_bit__pi_5(pub_keys, &p3xpy)
 }
 
+pub fn reduce_mulsquary (
+    pc: &ParmesanCloudovo,
+    mulary: &Vec<ParmCiphertext>,
+) -> ParmCiphertext {
+    let mut intmd = vec![ParmCiphertext::empty(); 2];
+    let mut idx = 0usize;
+    intmd[idx] = ParmArithmetics::add(pc, &mulary[0], &mulary[1]);
+
+    //TODO add parallelism except for the longest number (so that the result is as short as possible)
+    for i in 2..mulary.len() {
+        idx ^= 1;
+        intmd[idx] = ParmArithmetics::add(pc, &intmd[idx ^ 1], &mulary[i]);
+    }
+
+    intmd[idx].clone()
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // for archiving purposes (also presenting author's stupidity)
 #[allow(non_snake_case)]
 pub fn deprecated__mul_lwe(
@@ -364,21 +383,4 @@ pub fn deprecated__mul_lwe(
     z.sub_uint_inplace(&neg)?;
 
     Ok(z)
-}
-
-pub fn reduce_mulsquary (
-    pc: &ParmesanCloudovo,
-    mulary: &Vec<ParmCiphertext>,
-) -> ParmCiphertext {
-    let mut intmd = vec![ParmCiphertext::empty(); 2];
-    let mut idx = 0usize;
-    intmd[idx] = ParmArithmetics::add(pc, &mulary[0], &mulary[1]);
-
-    //TODO add parallelism except for the longest number (so that the result is as short as possible)
-    for i in 2..mulary.len() {
-        idx ^= 1;
-        intmd[idx] = ParmArithmetics::add(pc, &intmd[idx ^ 1], &mulary[i]);
-    }
-
-    intmd[idx].clone()
 }
