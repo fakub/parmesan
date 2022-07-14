@@ -174,6 +174,8 @@ pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = Asc::map_from_yaml(ASC_B
 //  TODO / Wishlist
 //
 //  - gen. params for 2^2Delta = 22 .. negligible slowdown and x + 2y + 4z + a possible in 1st round of signum .. saves 3/4 bootstraps in 1st round, which is the most expensive
+//  - recalc bounds for schoolbook mul as mul_lwe has changed
+//  - parallel mulary reduction
 //
 //  - New Concrete v0.2.0
 //      - ParmCiphertext = Vec<LWE>

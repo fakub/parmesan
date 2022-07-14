@@ -62,6 +62,7 @@ pub fn mul_impl(
         }
     }
 
+    //TODO FIXME recalc bounds for schoolbook as mul_lwe has changed (improved)
     match x_in.len() {
         l if l == 0 => Ok(ParmArithmetics::zero()),
         l if l == 1 => mul_1word(
@@ -373,6 +374,7 @@ pub fn reduce_mulsquary (
     let mut idx = 0usize;
     intmd[idx] = ParmArithmetics::add(pc, &mulary[0], &mulary[1]);
 
+    //TODO add parallelism except for the longest number (so that the result is as short as possible)
     for i in 2..mulary.len() {
         idx ^= 1;
         intmd[idx] = ParmArithmetics::add(pc, &intmd[idx ^ 1], &mulary[i]);

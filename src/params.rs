@@ -63,12 +63,81 @@ pub const PARMXX__TRIVIAL: Params = Params {
 
 // =============================================================================
 //
-//  NEW 80, 112 & 128-bit security
+//  NEW 80, 112 & 128-bit security, (pi, qw) = (5, 22)
+//
+
+/// TFHE Parameter Set (80.9-bit)
+#[allow(dead_code)]
+pub const PARM80__PI_5__D_22: Params = Params {
+           maxlen: 0,
+    bit_precision: 5,
+      quad_weight: 22,
+       lwe_params: LWEParams {
+        dimension: 473,
+     log2_std_dev: -18,
+    },
+    rlwe_params: RLWEParams {
+        polynomial_size: 1024,
+              dimension: 1,
+           log2_std_dev: -39,
+    },
+    bs_base_log: 19,
+       bs_level: 1,
+    ks_base_log: 3,
+       ks_level: 5,
+};
+
+/// TFHE Parameter Set (111.7-bit)
+#[allow(dead_code)]
+pub const PARM112__PI_5__D_22: Params = Params {
+           maxlen: 0,
+    bit_precision: 5,
+      quad_weight: 22,
+       lwe_params: LWEParams {
+        dimension: 655,
+     log2_std_dev: -18,
+    },
+    rlwe_params: RLWEParams {
+        polynomial_size: 1024,
+              dimension: 1,
+           log2_std_dev: -28,
+    },
+    bs_base_log: 7,
+       bs_level: 3,
+    ks_base_log: 3,
+       ks_level: 5,
+};
+
+/// TFHE Parameter Set (129.1-bit)
+#[allow(dead_code)]
+pub const PARM128__PI_5__D_22: Params = Params {
+           maxlen: 0,
+    bit_precision: 5,
+      quad_weight: 22,
+       lwe_params: LWEParams {
+        dimension: 754,
+     log2_std_dev: -18,
+    },
+    rlwe_params: RLWEParams {
+        polynomial_size: 2048,
+              dimension: 1,
+           log2_std_dev: -48,
+    },
+    bs_base_log: 24,
+       bs_level: 1,
+    ks_base_log: 3,
+       ks_level: 5,
+};
+
+
+// =============================================================================
+//
+//  !! UNUSED / DEPRECATED !! NEW 80, 112 & 128-bit security, (pi, qw) = (5, 20)
 //
 
 /// TFHE Parameter Set (81.2-bit)
-#[allow(dead_code)]
-pub const PARM80__PI_5__D_20: Params = Params {
+#[allow(dead_code, non_upper_case_globals)]
+pub const __deprecated__PARM80__PI_5__D_20: Params = Params {
            maxlen: 0,
     bit_precision: 5,
       quad_weight: 20,
@@ -88,8 +157,8 @@ pub const PARM80__PI_5__D_20: Params = Params {
 };
 
 /// TFHE Parameter Set (112.0-bit)
-#[allow(dead_code)]
-pub const PARM112__PI_5__D_20: Params = Params {
+#[allow(dead_code, non_upper_case_globals)]
+pub const __deprecated__PARM112__PI_5__D_20: Params = Params {
            maxlen: 0,
     bit_precision: 5,
       quad_weight: 20,
@@ -109,8 +178,8 @@ pub const PARM112__PI_5__D_20: Params = Params {
 };
 
 /// TFHE Parameter Set (128-bit)
-#[allow(dead_code)]
-pub const PARM128__PI_5__D_20: Params = Params {
+#[allow(dead_code, non_upper_case_globals)]
+pub const __deprecated__PARM128__PI_5__D_20: Params = Params {
            maxlen: 0,
     bit_precision: 5,
       quad_weight: 20,

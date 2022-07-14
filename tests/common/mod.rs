@@ -15,7 +15,7 @@ use parmesan::ParmesanCloudovo;
 //
 // to evaluate code in static declaration, lazy_static must be used
 // cf. https://stackoverflow.com/questions/46378637/how-to-make-a-variable-with-a-scope-lifecycle-for-all-test-functions-in-a-rust-t
-pub static TEST_PARAMS: &Params = &params::PARM90__PI_5__D_20__F;   //     PARM90__PI_5__D_20__F      PARMXX__TRIVIAL
+pub static TEST_PARAMS: &Params = &params::PARM80__PI_5__D_22;   //     PARMXX__TRIVIAL
 lazy_static! {
     pub static ref TEST_PRIV_KEYS: PrivKeySet = PrivKeySet::new(TEST_PARAMS).expect("PrivKeySet::new failed.");
 }
