@@ -71,7 +71,10 @@ puts "\n>>> #PBS Complexity of multiplication: schoolbook vs. Karatsuba"
 puts "    (n.b., correct values only for Karatsuba directly followed by schoolbook"
 puts "    due to ciphertext length growth .. A cannot be concat with B)\n\n"
 (2..16).each do |n|
-    # Karatsuba (no recursion, directly followed by schoolbook, otherwise incorrect results)
+    # Karatsuba
+    #   n.b.! holds only for single call, no recursion!
+    #   i.e., up to 28 which splits into 14 & 14 & 15 .. faster with schoolbook, which generates concantenable A|B
+    #FIXME the values will be different after keeping the extra bit that comes from recursion
     #    r_i*s_i   (r_0+r_1)*...          r_0+r_1/s.. A+B      -(A+B)+C   A|B + (C+..)
     k0 = 2*jm[n] + jm[n+1] +           A*(2*n       + 2*n     + 2*(n+1) + 3*n  )            # K_2n:     3 mul's, 3 add's
     k1 =   jm[n] + jm[n+1] + jm[n+2] + A*(2*(n+1)   + 2*(n+1) + 2*(n+2) + 3*n+1)            # K_2n+1:   3 mul's, 3 add's
