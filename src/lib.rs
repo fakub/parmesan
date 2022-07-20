@@ -177,6 +177,7 @@ pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = Asc::map_from_yaml(ASC_B
 //
 //  TODO / Wishlist
 //
+//  - merge with TODOs file
 //  - mul_lwe .. for more than 1x1 bit? let say 1x2 bit? what about squaring?
 //  - after addition-noisy: only bootstrap from r_triv on
 //  - recalc bounds for schoolbook mul as mul_lwe has changed

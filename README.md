@@ -1,3 +1,4 @@
+
 # Parmesan
 
 *Parallel ARithMEticS on tfhe ENcrypted data*
@@ -9,29 +10,39 @@ Parmesan implements selected parallel algorithms for multi-digit arithmetics ove
 - multiplication,
 - squaring,
 - signum,
-- maximum of two numbers, and
+- maximum of two numbers,
+- rounding, and
 - evaluation of a simple neural network.
+
 
 ## The Short Story
 
-In the standard integer representation, parallel addition is not possible due to the carry, which can propagate all the way from the LSB to the MSB. However, using, e.g., an alphabet `{-1,0,1}` for base-2 integer representation, a parallel addition algorithm does exist.
+In the standard integer representation, parallel addition is not possible due to the carry, which can propagate all the way from the LSB to the MSB.
+However, using, e.g., an alphabet `{-1,0,1}` for base-2 integer representation, a parallel addition algorithm does exist.
+Other operations like (scalar) multiplication and squaring benefit from fast addition, too.
+
 
 ## The Long Story
 
 See our [full paper](https://eprint.iacr.org/2022/067).
 
+
 ## Use `parmesan`
 
-Add a dependency to your `Cargo.toml` file in your Rust project. (Currently only from git or locally.)
+Add a dependency to your `Cargo.toml` file in your Rust project.
+(Currently only from git or locally.)
 
 ```toml
 [dependencies]
 parmesan = { git = "https://gitlab.fit.cvut.cz/klemsjak/parmesan" }
+colored = "^2.0.0"
 # or:
 parmesan = { path = "../parmesan" }
+colored = "^2.0.0"
 ```
 
-For the best performance, we recommend to compile & run with the `RUSTFLAGS="-C target-cpu=native" cargo run --release` command.
+For the best performance, we recommend to compile with the `RUSTFLAGS="-C target-cpu=native" cargo build --release` command.
+
 
 ## Example
 
@@ -98,6 +109,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 ```
+
 
 ## License
 
