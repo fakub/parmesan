@@ -111,6 +111,7 @@ macro_rules! parm_log_plain {
     ($($msg_args:tt)*) => {{
         let __msg = format!($($msg_args)*);
         let mut __logfile;
+        #[allow(unused_unsafe)]
         unsafe {
             __logfile = if LOG_INITED {
                 OpenOptions::new().write(true).append(true).open(LOGFILE).unwrap()
