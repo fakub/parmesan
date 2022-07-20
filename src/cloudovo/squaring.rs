@@ -34,8 +34,6 @@ pub fn squ_impl(
         l if l == 0     => Ok(ParmArithmetics::zero()),
         l if l == 1     => squ_1word(pc, x),
         l if l <  4     => squ_schoolbook(pc, x),
-        //~ l if l <  4 ||
-             //~ l == 5     => squ_schoolbook(pc, x),
         //DBG
         //~ l if l <=32     => squ_dnq(pc, x),
         l if l <=34     => squ_dnq(pc, x),

@@ -31,6 +31,8 @@ pub fn add_sub_impl(
     //  001001███010000
     //     0010█████100
     //
+    //WISH calc as in paper: i.e., whenever x_i + y_i is known to be in {-1,0,1} .. i.e., not only triv zeros
+    //
     let mut x_rzero = 0usize;
     let mut y_rzero = 0usize;
     for xi in x {
