@@ -63,6 +63,10 @@ pub use cloudovo::*;
 pub use cloudovo::neural_network::{Perceptron, PercType, NeuralNetwork};
 pub use cloudovo::scalar_multiplication::asc::*;
 
+// Cloudovo modules
+pub mod demos;
+pub use demos::*;
+
 
 // =============================================================================
 //
