@@ -63,7 +63,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     //  Initialization
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM80__PI_5__D_22;
+    let par = &params::PARM80__PI_5__D_22;   // or params from Concrete v0.2: CONCR__M_2__C_3
     // ---------------------------------
     //  Userovo Scope
     let pu = ParmesanUserovo::new(par)?;

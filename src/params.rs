@@ -63,6 +63,35 @@ pub const PARMXX__TRIVIAL: Params = Params {
 
 // =============================================================================
 //
+//  Concrete's Parameters (taken from v0.2)
+//
+
+/// TFHE Parameter Set `concrete_shortint::parameters::PARAM_MESSAGE_2_CARRY_3`
+// max value of 2 bits is 3 => before the overflow of 3+2 bits ~ value 31, scalar mul by 10 must be supported ~ quadratic weight of 100
+// which prefectly fine for Parmesan, which needs 22
+#[allow(dead_code)]
+pub const CONCR__M_2__C_3: Params = Params {
+           maxlen: 0,
+    bit_precision: 5,
+      quad_weight: 100,
+       lwe_params: LWEParams {
+        dimension: 776,
+     log2_std_dev: -19, // 0.00000278330461375383057442 ~ -18.45
+    },
+    rlwe_params: RLWEParams {
+        polynomial_size: 2048,
+              dimension: 1,
+           log2_std_dev: -52, // 0.00000000000000022148688116005568513645324585951 ~ -52.00
+    },
+    bs_base_log: 23,
+       bs_level: 1,
+    ks_base_log: 4,
+       ks_level: 5,
+};
+
+
+// =============================================================================
+//
 //  NEW 80, 112 & 128-bit security, (pi, qw) = (5, 22)
 //
 
@@ -202,7 +231,7 @@ pub const __deprecated__PARM128__PI_5__D_20: Params = Params {
 
 // #############################################################################
 //
-//  DEPRECATED Parameters
+//  Parameters for comparison of different addition algorithms
 //
 
 
