@@ -653,8 +653,7 @@ fn eval_LUT_5(
             Ok(LWE::encrypt_uint_triv(fm_u, &pub_keys.encoder)?)
         }
     } else {
-        //DBG
-        unsafe { crate::NBS += 1; }
+        //PBS unsafe { crate::NBS += 1; }
 
         Ok(c.bootstrap_with_function(pub_keys.bsk, |x| lut[x as usize], pub_keys.encoder)?
             .keyswitch(pub_keys.ksk)?)

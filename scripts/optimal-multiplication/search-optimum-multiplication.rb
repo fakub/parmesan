@@ -67,7 +67,9 @@ js[2] = s(2)    # =  7
 js[3] = s(3)    # = 18
 
 #   calc the optimal BS complexity of multiplication
-puts "\n>>> Complexity of multiplication: schoolbook vs. Karatsuba\n    (n.b., correct values only for Karatsuba directly followed by schoolbook\n    due to ciphertext length growth .. A cannot be concat with B)\n\n"
+puts "\n>>> #PBS Complexity of multiplication: schoolbook vs. Karatsuba"
+puts "    (n.b., correct values only for Karatsuba directly followed by schoolbook"
+puts "    due to ciphertext length growth .. A cannot be concat with B)\n\n"
 (2..16).each do |n|
     # Karatsuba (no recursion, directly followed by schoolbook, otherwise incorrect results)
     #    r_i*s_i   (r_0+r_1)*...          r_0+r_1/s.. A+B      -(A+B)+C   A|B + (C+..)
@@ -87,7 +89,10 @@ end
 puts "-" * 80
 
 #   calc the optimal BS complexity of squaring
-puts "\n>>> Complexity of squaring: schoolbook vs. Divide'n'Conquer\n    (n.b., correct values quite tricky to find, in particular for odd values,\n    which multiply int's of different lengths -- starting from as short as 5-bit int's:\n    2-bit x 3-bit .. appended triv zero .. less BS than in Jm[3])\n\n"
+puts "\n>>> #PBS Complexity of squaring: schoolbook vs. Divide'n'Conquer"
+puts "    (n.b., correct values quite tricky to find, in particular for odd values,"
+puts "    which multiply int's of different lengths -- starting from as short as 5-bit int's:"
+puts "    2-bit x 3-bit .. appended triv zero .. less BS than in Jm[3])\n\n"
 (2..16).each do |n|
     # divide-and-conquer
     #TODO FIXME starting from Js[7] = 108 .. incorrect, shall be 104 (btw for Js[5] = 55 schoolbook, but DnQ is 49, not 58)

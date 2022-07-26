@@ -172,8 +172,7 @@ lazy_static::lazy_static! {
 pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = Asc::map_from_yaml(ASC_BITLEN, ASC_12_FILE).expect("Asc::map_from_yaml failed.");
 }
 
-//DBG
-pub static mut NBS: usize = 0;
+//PBS pub static mut NBS: usize = 0;
 
 
 // =============================================================================
