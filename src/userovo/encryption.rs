@@ -76,13 +76,18 @@ fn parm_encr_word(
     // little hack, how to bring mi into positive interval [0, 2^pi)
     mi &= params.plaintext_mask();
 
-    Ok(
-        //FIXME
-        //~ engine.encrypt_lwe_ciphertext(&lwe_secret_key, &pi, var_lwe)?
-        encrypt_uint(
-            &priv_keys.sk,
-            mi as u32,
-            &priv_keys.encoder,
+    // create Concrete's engine
+    let mut engine = CoreEngine::new(())?;
+
+    // encode message & create Concrete's plaintext
+    let enc_mi = mi * params.delta_concrete();
+    let pi = engine.create_plaintext(&enc_mi)?;
+
+    // encrypt & return
+    Ok(engine.encrypt_lwe_ciphertext(
+        &PrivKeySet.lwe_secret_key,
+        &pi,
+        params.var_lwe
     )?)
 }
 
@@ -114,11 +119,17 @@ pub fn parm_decrypt(
 fn parm_decr_word(
     params: &Params,
     priv_keys: &PrivKeySet,
-    ct: &LWE,
+    ci: &LweCiphertext64,
 ) -> Result<i32, Box<dyn Error>> {
-    //FIXME
-    //~ engine.decrypt_lwe_ciphertext(&lwe_secret_key, &ci)?
-    let mi = ct.decrypt_uint(&priv_keys.sk)? as i32;   // rounding included in Encoder
+    // create Concrete's engine
+    let mut engine = CoreEngine::new(())?;
+
+    let pi = engine.decrypt_lwe_ciphertext(&priv_keys.sk, &ci)?;
+    let mut enc_mi = 0_u64;
+    engine.discard_retrieve_plaintext(&mut enc_mi, &pi)?;
+    //TODO FIXME rounding (was in decrypt_uint)
+    let mi = enc_mi / params.delta_concrete;
+
     if mi >= params.plaintext_pos_max() {Ok(mi - params.plaintext_space_size())} else {Ok(mi)}
 }
 

@@ -3,7 +3,7 @@ use std::error::Error;
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use concrete::LWE;
+use concrete_core::prelude::*;
 
 use crate::userovo::keys::PubKeySet;
 
@@ -12,8 +12,8 @@ use crate::userovo::keys::PubKeySet;
 //
 pub fn pos_id(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
@@ -37,8 +37,8 @@ pub fn pos_id(
 #[allow(non_snake_case)]
 pub fn id__pi_5(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     eval_LUT_5(
         pub_keys,
         c,
@@ -52,8 +52,8 @@ pub fn id__pi_5(
 #[allow(non_snake_case)]
 pub fn f_3__pi_5(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     eval_LUT_5(
         pub_keys,
         c,
@@ -67,8 +67,8 @@ pub fn f_3__pi_5(
 #[allow(non_snake_case)]
 pub fn f_4__pi_5(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     eval_LUT_5(
         pub_keys,
         c,
@@ -82,8 +82,8 @@ pub fn f_4__pi_5(
 #[allow(non_snake_case)]
 pub fn f_5__pi_5(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     eval_LUT_5(
         pub_keys,
         c,
@@ -97,9 +97,9 @@ pub fn f_5__pi_5(
 #[allow(non_snake_case)]
 pub fn g_2__pi_5__with_val(
     pub_keys: &PubKeySet,
-    c: &LWE,
+    c: &LweCiphertext64,
     val: u32,
-) -> Result<LWE, Box<dyn Error>> {
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     let vf = val as f64;
     eval_LUT_5(
         pub_keys,
@@ -114,9 +114,9 @@ pub fn g_2__pi_5__with_val(
 #[allow(non_snake_case)]
 pub fn f_1__pi_5__with_val(
     pub_keys: &PubKeySet,
-    c: &LWE,
+    c: &LweCiphertext64,
     val: u32,
-) -> Result<LWE, Box<dyn Error>> {
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     let vf = val as f64;
     eval_LUT_5(
         pub_keys,
@@ -131,9 +131,9 @@ pub fn f_1__pi_5__with_val(
 #[allow(non_snake_case)]
 pub fn f_0__pi_5__with_val(
     pub_keys: &PubKeySet,
-    c: &LWE,
+    c: &LweCiphertext64,
     val: u32,
-) -> Result<LWE, Box<dyn Error>> {
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     let vf = val as f64;
     eval_LUT_5(
         pub_keys,
@@ -148,8 +148,8 @@ pub fn f_0__pi_5__with_val(
 #[allow(non_snake_case)]
 pub fn a_2__pi_5(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     eval_LUT_5(
         pub_keys,
         c,
@@ -163,8 +163,8 @@ pub fn a_2__pi_5(
 #[allow(non_snake_case)]
 pub fn a_1__pi_5(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     eval_LUT_5(
         pub_keys,
         c,
@@ -185,8 +185,8 @@ pub fn a_1__pi_5(
 #[allow(non_snake_case)]
 pub fn mul_bit__pi_5(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     eval_LUT_5(
         pub_keys,
         c,
@@ -203,8 +203,8 @@ pub fn mul_bit__pi_5(
 #[allow(non_snake_case)]
 pub fn relu_plus__pi_5(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     eval_LUT_5(
         pub_keys,
         c,
@@ -222,8 +222,8 @@ pub fn relu_plus__pi_5(
 #[allow(non_snake_case)]
 pub fn round_2y_s__pi_5(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     eval_LUT_5(
         pub_keys,
         c,
@@ -240,8 +240,8 @@ pub fn round_2y_s__pi_5(
 #[allow(non_snake_case)]
 pub fn nonneg__pi_5(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     let mut h = eval_LUT_5(
         pub_keys,
         c,
@@ -257,8 +257,8 @@ pub fn nonneg__pi_5(
 #[allow(non_snake_case)]
 pub fn max_s_2x_6y__pi_5(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     eval_LUT_5(
         pub_keys,
         c,
@@ -279,9 +279,9 @@ pub fn max_s_2x_6y__pi_5(
 #[allow(non_snake_case)]
 pub fn XOR(
     pub_keys: &PubKeySet,
-    x: &LWE,
-    y: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    x: &LweCiphertext64,
+    y: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     // t = 2x + 2y
     let mut t = x.mul_uint_constant(2)?;
     t.add_uint_inplace(y)?; t.add_uint_inplace(y)?;
@@ -299,9 +299,9 @@ pub fn XOR(
 #[allow(non_snake_case)]
 pub fn AND(
     pub_keys: &PubKeySet,
-    x: &LWE,
-    y: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    x: &LweCiphertext64,
+    y: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     // t = x + y
     let t = x.add_uint(y)?;
     // bootstrap
@@ -318,10 +318,10 @@ pub fn AND(
 #[allow(non_snake_case)]
 pub fn XOR_THREE(
     pub_keys: &PubKeySet,
-    x: &LWE,
-    y: &LWE,
-    z: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    x: &LweCiphertext64,
+    y: &LweCiphertext64,
+    z: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     // t = 2(x + y + z)
     let mut t = x.mul_uint_constant(2)?;
     t.add_uint_inplace(y)?; t.add_uint_inplace(y)?;
@@ -340,10 +340,10 @@ pub fn XOR_THREE(
 #[allow(non_snake_case)]
 pub fn TWO_OF_THREE(
     pub_keys: &PubKeySet,
-    x: &LWE,
-    y: &LWE,
-    z: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    x: &LweCiphertext64,
+    y: &LweCiphertext64,
+    z: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     // t = x + y + z
     let mut t = x.add_uint(y)?;
     t.add_uint_inplace(z)?;
@@ -367,8 +367,8 @@ pub fn TWO_OF_THREE(
 #[allow(non_snake_case)]
 pub fn c_4__pi_2x4(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
@@ -392,8 +392,8 @@ pub fn c_4__pi_2x4(
 #[allow(non_snake_case)]
 pub fn id__pi_3(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
@@ -411,8 +411,8 @@ pub fn id__pi_3(
 #[allow(non_snake_case)]
 pub fn f_1__pi_3(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
@@ -430,8 +430,8 @@ pub fn f_1__pi_3(
 #[allow(non_snake_case)]
 pub fn f_2__pi_3(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
@@ -449,8 +449,8 @@ pub fn f_2__pi_3(
 #[allow(non_snake_case)]
 pub fn g_1__pi_3(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
@@ -468,8 +468,8 @@ pub fn g_1__pi_3(
 #[allow(non_snake_case)]
 pub fn g_2__pi_3(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     // for π = 3 .. equivalent to X ⋛ ±2
     f_2__pi_3(pub_keys, c)
 }
@@ -486,8 +486,8 @@ pub fn g_2__pi_3(
 #[allow(non_snake_case)]
 pub fn id__pi_4(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
@@ -505,8 +505,8 @@ pub fn id__pi_4(
 #[allow(non_snake_case)]
 pub fn f_2__pi_4(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
@@ -524,8 +524,8 @@ pub fn f_2__pi_4(
 #[allow(non_snake_case)]
 pub fn f_3__pi_4(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
@@ -543,8 +543,8 @@ pub fn f_3__pi_4(
 #[allow(non_snake_case)]
 pub fn g_2__pi_4(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
@@ -562,9 +562,9 @@ pub fn g_2__pi_4(
 #[allow(non_snake_case)]
 pub fn g_1__pi_4__with_val(
     pub_keys: &PubKeySet,
-    c: &LWE,
+    c: &LweCiphertext64,
     val: u32,
-) -> Result<LWE, Box<dyn Error>> {
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
@@ -590,8 +590,8 @@ pub fn g_1__pi_4__with_val(
 #[allow(non_snake_case)]
 pub fn id__pi_7(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
@@ -609,8 +609,8 @@ pub fn id__pi_7(
 #[allow(non_snake_case)]
 pub fn f_14__pi_7(
     pub_keys: &PubKeySet,
-    c: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    c: &LweCiphertext64,
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     //TODO resolve trivial case
     if c.dimension == 0 {
         return Ok(c.clone());
@@ -631,12 +631,12 @@ pub fn f_14__pi_7(
 #[allow(non_snake_case)]
 fn eval_LUT_5(
     pub_keys: &PubKeySet,
-    c: &LWE,
+    ci: &LweCiphertext64,
     lut: [f64; 1 << (5-1)],
-) -> Result<LWE, Box<dyn Error>> {
+) -> Result<LweCiphertext64, Box<dyn Error>> {
     // resolve trivial case
-    if c.dimension == 0 {
-        let  m = c.decrypt_uint_triv()?;
+    if ci.dimension == 0 {
+        let  m = ci.decrypt_uint_triv()?;
         let fm = if m < (1 << (5-1)) { lut[m as usize] }
             else if m < (1 << 5) { -lut[(m as i32 - (1 << (5-1))) as usize] }
             else {return Err(format!("Word m = {} does not fit 5-bit LUT.", m).into())};
@@ -645,20 +645,81 @@ fn eval_LUT_5(
                               // remove half
         let fm_u = ((if fm_half {fm - 0.5} else {fm} as i32) & ((1 << 5) - 1)) as u32;
         if fm_half {
-            let mut res = LWE::encrypt_uint_triv(fm_u, &pub_keys.encoder)?;
+            let mut res = LweCiphertext64::encrypt_uint_triv(fm_u, &pub_keys.encoder)?;
             // add half back
             res.add_half_to_uint_inplace()?;
             Ok(res)
         } else {
-            Ok(LWE::encrypt_uint_triv(fm_u, &pub_keys.encoder)?)
+            Ok(LweCiphertext64::encrypt_uint_triv(fm_u, &pub_keys.encoder)?)
         }
     } else {
         //PBS unsafe { crate::NBS += 1; }
 
-        Ok(c.bootstrap_with_function(pub_keys.bsk, |x| lut[x as usize], pub_keys.encoder)?
-            .keyswitch(pub_keys.ksk)?)
+        //FIXME
+        let accumulator = create_accum(func, &bootstrapping_key, bit_precision, &mut engine)?;
+
+        let mut engine = CoreEngine::new(())?;
+        let zero_plaintext = engine.create_plaintext(&0_u64)?;
+        let mut buffer_lwe_after_pbs = engine.trivially_encrypt_lwe_ciphertext(
+            key_switching_key.output_lwe_dimension().to_lwe_size(),
+            &zero_plaintext,
+        )?;
+        // Compute a key switch
+        engine.discard_keyswitch_lwe_ciphertext(
+            &mut buffer_lwe_after_pbs,
+            ci,
+            &key_switching_key,
+        )?;
+        // Compute a bootstrap
+        engine.discard_bootstrap_lwe_ciphertext(
+            ci,
+            &buffer_lwe_after_pbs,
+            &accumulator,
+            &bootstrapping_key,
+        )?;
+
+        //~ Ok(c.bootstrap_with_function(pub_keys.bsk, |x| lut[x as usize], pub_keys.encoder)?
+            //~ .keyswitch(pub_keys.ksk)?)
     }
 }
+
+// create accumulator
+fn create_accum<F>(
+    func: F,
+    bootstrapping_key: &FourierLweBootstrapKey64,
+    bit_precision: usize,
+) -> Result<GlweCiphertext64, Box<dyn std::error::Error>>
+where F: Fn(u64) -> u64 {
+    let mut engine = CoreEngine::new(())?;
+    let delta = 1 << (64 - bit_precision);
+    let mut accumulator_u64 = vec![0_u64; bootstrapping_key.polynomial_size().0];
+    let modulus_sup = 1 << (bit_precision - 1);   // half of values is to be set .. 16
+    let box_size = bootstrapping_key.polynomial_size().0 / modulus_sup;
+    let half_box_size = box_size / 2;
+    // fill accumulator
+    for i in 0..modulus_sup {
+        let index = i as usize * box_size;
+        accumulator_u64[index..index + box_size]
+            .iter_mut()
+            .for_each(|a| *a = func(i as u64) * delta);
+    }
+    // Negate the first half_box_size coefficients
+    for a_i in accumulator_u64[0..half_box_size].iter_mut() {
+        *a_i = (*a_i).wrapping_neg();
+    }
+    // Rotate the accumulator
+    accumulator_u64.rotate_left(half_box_size);
+    // init accumulator as GLWE
+    let accumulator_plaintext = engine.create_plaintext_vector(&accumulator_u64)?;
+
+    let accumulator = engine.trivially_encrypt_glwe_ciphertext(
+        bootstrapping_key.glwe_dimension().to_glwe_size(),
+        &accumulator_plaintext,
+    )?;
+
+    Ok(accumulator)
+}
+
 
 
 
@@ -687,8 +748,8 @@ fn eval_LUT_5(
 //~ pub fn with_lut(
     //~ lut: &Lut,
     //~ pub_keys: &PubKeySet,
-    //~ c: &LWE,
-//~ ) -> LWE {
+    //~ c: &LweCiphertext64,
+//~ ) -> LweCiphertext64 {
     //~ measure_duration!(
         //~ ["PBS: Identity"],
         //~ [let res = c.bootstrap_with_function(pub_keys.bsk, |x| x*x, pub_keys.encoder)?

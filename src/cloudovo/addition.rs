@@ -12,7 +12,7 @@ use rayon::prelude::*;
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use concrete::LWE;
+use concrete_core::prelude::*;
 
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use super::pbs;

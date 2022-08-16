@@ -29,14 +29,18 @@ pub trait ParmCiphertextExt {
 impl ParmCiphertextExt for ParmCiphertext {
     fn triv(
         len: usize,
-        encoder: &Encoder,
+        pub_keys: &PubKeySet,
     ) -> Result<ParmCiphertext, Box<dyn Error>> {
-        Ok(vec![LWE::encrypt_uint_triv(0, encoder)?; len])
-        //FIXME
-        //~ engine.trivially_encrypt_lwe_ciphertext(
-            //~ key_switching_key.output_lwe_dimension().to_lwe_size(),
-            //~ &zero_plaintext,
-        //~ )?
+        let mut engine = CoreEngine::new(())?;
+        let zero_plaintext = engine.create_plaintext(&0_u64)?;
+
+        Ok(vec![
+            engine.trivially_encrypt_lwe_ciphertext(
+                pub_keys.ksk.output_lwe_dimension().to_lwe_size(),
+                &zero_plaintext,
+            )?;
+            len
+        ])
     }
 
     fn empty() -> ParmCiphertext {
@@ -47,15 +51,16 @@ impl ParmCiphertextExt for ParmCiphertext {
         vec![c]
     }
 
-    fn to_str(&self) -> String {
-        let mut s = "[[".to_string();
-        for c in self {
-            //FIXME extract from new struct
-            s += &*format!("<{}|{}b>, ", if c.dimension == 0 {format!("{}", c.ciphertext.get_body().0)} else {"#".to_string()}, c.encoder.nb_bit_precision)
-        }
-        s += "]]";
-        s
-    }
+    //TODO
+    //~ fn to_str(&self) -> String {
+        //~ let mut s = "[[".to_string();
+        //~ for c in self {
+            //~ //FIXME extract from new struct
+            //~ s += &*format!("<{}|{}b>, ", if c.dimension == 0 {format!("{}", c.ciphertext.get_body().0)} else {"#".to_string()}, c.encoder.nb_bit_precision)
+        //~ }
+        //~ s += "]]";
+        //~ s
+    //~ }
 }
 
 //WISH this is not possible: error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate

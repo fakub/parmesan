@@ -12,7 +12,7 @@ use crossbeam_utils::thread;    // n.b., only for deprecated__sgn_recursion_raw
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use concrete::LWE;
+use concrete_core::prelude::*;
 
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
 use super::{pbs,signum};

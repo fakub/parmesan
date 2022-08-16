@@ -12,7 +12,7 @@ use crossbeam_utils::thread;
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use concrete::LWE;
+use concrete_core::prelude::*;
 
 use crate::userovo::keys::PubKeySet;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
