@@ -8,7 +8,7 @@ pub use std::fs::{self,File,OpenOptions};
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use concrete::*;
+use concrete_core::prelude::*;
 
 use crate::*;
 use crate::params::Params;
@@ -23,14 +23,13 @@ pub const KEYS_PATH: &str = "./keys/";
 //
 
 //WISH #[derive(Serialize, Deserialize)]
+//FIXME change to new Concrete
 pub struct PrivKeySet {
     // keys
-    pub  sk: LWESecretKey,
-    pub bsk: LWEBSK,
-    pub ksk: LWEKSK,
+    pub  sk: LweSecretKey64,
+    pub bsk: FourierLweBootstrapKey64,
+    pub ksk: LweKeyswitchKey64,
     // rlwe_sk: RLWESecretKey,   // encrypts bsk .. add?
-    // encoders
-    pub encoder: Encoder,
 }
 
 impl PrivKeySet {

@@ -6,7 +6,7 @@ use rayon::prelude::*;
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use concrete::LWE;
+use concrete_core::prelude::*;
 
 use crate::params::Params;
 use crate::userovo::keys::PrivKeySet;
@@ -66,7 +66,7 @@ fn parm_encr_word(
     params: &Params,
     priv_keys: &PrivKeySet,
     mut mi: i32,
-) -> Result<LWE, Box<dyn Error>> {
+) -> Result<LweCiphertext64, Box<dyn Error>> {
 
     // check that mi is in alphabet
     if mi < -1 || mi > 1 {
@@ -76,10 +76,13 @@ fn parm_encr_word(
     // little hack, how to bring mi into positive interval [0, 2^pi)
     mi &= params.plaintext_mask();
 
-    Ok(LWE::encrypt_uint(
-        &priv_keys.sk,
-        mi as u32,
-        &priv_keys.encoder,
+    Ok(
+        //FIXME
+        //~ engine.encrypt_lwe_ciphertext(&lwe_secret_key, &pi, var_lwe)?
+        encrypt_uint(
+            &priv_keys.sk,
+            mi as u32,
+            &priv_keys.encoder,
     )?)
 }
 
@@ -113,6 +116,8 @@ fn parm_decr_word(
     priv_keys: &PrivKeySet,
     ct: &LWE,
 ) -> Result<i32, Box<dyn Error>> {
+    //FIXME
+    //~ engine.decrypt_lwe_ciphertext(&lwe_secret_key, &ci)?
     let mi = ct.decrypt_uint(&priv_keys.sk)? as i32;   // rounding included in Encoder
     if mi >= params.plaintext_pos_max() {Ok(mi - params.plaintext_space_size())} else {Ok(mi)}
 }

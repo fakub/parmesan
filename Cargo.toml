@@ -16,12 +16,9 @@ chrono = "^0.4.0"
 lazy_static = "^1.4.0"
 serde = { version = "^1.0", features = ["derive"] }
 serde_yaml = "^0.8"
-# this will be needed for publishing (dependency must be an actual crate at crates.io):
-# parmesan-concrete-negacyclic = { version = "^0.0.1", features = ["unsafe"] }                        # uses unsafe Rust's PRNG (faster) instead of OpenSSL's one
-# concrete can be built from the following fork / branch:
-# concrete = { git = "https://github.com/fakub/concrete", branch = "negacyclic", features = ["unsafe"] }
-# for local development, clone the repo & checkout to 'negacyclic' branch, and use the following line instead:
-concrete = { path = "../concrete-lib/concrete", features = ["unsafe"] }
+concrete-core = { package = "concrete-core-experimental", version = "^1.0.0-alpha", features = ["multithread", "serde_serialize"]}
+# just for params (consider)
+# concrete-shortint = { version = "^0.1.0-beta" }
 
 [features]
 default = []                # no feature selected by default

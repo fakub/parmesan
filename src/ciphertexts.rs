@@ -1,12 +1,13 @@
 use std::error::Error;
 
-use concrete::{LWE,Encoder};
+use concrete_core::prelude::*;
 
 //WISH  ciphertext should be more standalone type: it should hold a reference to its public keys & params so that operations can be done with only this type parameter
 //      ale je to: zasrane, zamrdane
-pub type ParmCiphertext = Vec<LWE>;   // idea: Vec<(LWE, usize)> .. to hold quadratic weights, bootstrap only when necessary
+pub type ParmCiphertext = Vec<LweCiphertext64>;
+//WISH Vec<(LweCiphertext64, usize)> .. to hold quadratic weights, bootstrap only when necessary (appears to be already implemented in Concrete v0.2)
 //~ pub struct ParmCiphertext {
-    //~ pub ct: Vec<(LWE, usize)>,
+    //~ pub ct: Vec<(LweCiphertext64, usize)>,
     //~ pub pc: &ParmesanCloudovo,
 //~ }
 
@@ -20,7 +21,7 @@ pub trait ParmCiphertextExt {
 
     fn empty() -> ParmCiphertext;
 
-    fn single(c: LWE) -> ParmCiphertext;
+    fn single(c: LweCiphertext64) -> ParmCiphertext;
 
     fn to_str(&self) -> String;
 }
@@ -31,19 +32,25 @@ impl ParmCiphertextExt for ParmCiphertext {
         encoder: &Encoder,
     ) -> Result<ParmCiphertext, Box<dyn Error>> {
         Ok(vec![LWE::encrypt_uint_triv(0, encoder)?; len])
+        //FIXME
+        //~ engine.trivially_encrypt_lwe_ciphertext(
+            //~ key_switching_key.output_lwe_dimension().to_lwe_size(),
+            //~ &zero_plaintext,
+        //~ )?
     }
 
     fn empty() -> ParmCiphertext {
         Vec::new()
     }
 
-    fn single(c: LWE) -> ParmCiphertext {
+    fn single(c: LweCiphertext64) -> ParmCiphertext {
         vec![c]
     }
 
     fn to_str(&self) -> String {
         let mut s = "[[".to_string();
         for c in self {
+            //FIXME extract from new struct
             s += &*format!("<{}|{}b>, ", if c.dimension == 0 {format!("{}", c.ciphertext.get_body().0)} else {"#".to_string()}, c.encoder.nb_bit_precision)
         }
         s += "]]";
