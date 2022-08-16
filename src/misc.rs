@@ -98,7 +98,7 @@ macro_rules! simple_duration {
 macro_rules! parm_log_ts {
     ($log_lvl:expr, $ts_start:expr, $ts_end:expr, [$($msg_args:tt)*]) => {{
         let __msg = format!($($msg_args)*);
-        parm_log_plain!("{}   {}.{:03}   {}.{:03}   \"{}\"",
+        parm_log_plain!("{:2}  {}.{:03}   {}.{:03}   \"{}\"",
             $log_lvl,
             $ts_start.format("%M %S"), $ts_start.timestamp_subsec_millis(),
             $ts_end  .format("%M %S"), $ts_end  .timestamp_subsec_millis(),
