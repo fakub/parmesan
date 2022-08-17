@@ -184,12 +184,6 @@ pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = Asc::map_from_yaml(ASC_B
 //  - mul_lwe .. for more than 1x1 bit? let say 1x2 bit? what about squaring?
 //  - parallel mulary reduction
 //
-//  - New Concrete v0.2.0
-//      - params & keys structs, initialization, serialization
-//      - ParmCiphertextImpl::triv, single, to_str
-//      - mul_lwe, squ_lwe
-//      - PBS all
-//
 //  - WISH: track quadratic weight within Parmesan Ciphertext (Vec<(LWE, usize)> ??)
 //      - keep track of sample freshness (e.g., in signum recursion that's mess)
 //          - identity-bootstrapped only if needed

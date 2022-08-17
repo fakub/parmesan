@@ -34,10 +34,10 @@ pub fn add_sub_impl(
     let mut x_rzero = 0usize;
     let mut y_rzero = 0usize;
     for xi in x {
-        if xi.is_triv_zero() {x_rzero += 1;} else {break;}
+        if xi.is_triv_zero(&pc.params)? {x_rzero += 1;} else {break;}
     }
     for yi in y {
-        if yi.is_triv_zero() {y_rzero += 1;} else {break;}
+        if yi.is_triv_zero(&pc.params)? {y_rzero += 1;} else {break;}
     }
     // resolve all-triv-zeros cases
     if x_rzero == x.len() { return if is_add {Ok(y.clone())} else {Ok(ParmArithmetics::opp(y))};}
@@ -53,10 +53,10 @@ pub fn add_sub_impl(
     let mut x_lzero  = 0usize;
     let mut y_lzero  = 0usize;
     for xi in x.iter().rev() {
-        if xi.is_triv_zero() {x_lzero += 1;} else {break;}
+        if xi.is_triv_zero(&pc.params)? {x_lzero += 1;} else {break;}
     }
     for yi in y.iter().rev() {
-        if yi.is_triv_zero() {y_lzero += 1;} else {break;}
+        if yi.is_triv_zero(&pc.params)? {y_lzero += 1;} else {break;}
     }
     let wlen = std::cmp::max(x.len() - x_lzero, y.len() - y_lzero);
 
@@ -171,7 +171,7 @@ pub fn opposite_impl(
     let mut nx = ParmCiphertext::empty();
 
     for xi in x {
-        nx.push(xi.opposite()?);
+        nx.push(xi.opp()?);
     }
 
     Ok(nx)

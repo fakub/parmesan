@@ -150,7 +150,7 @@ fn mul_karatsuba(
                     //  A + B .. -A - B
                     let pa_pb = ParmArithmetics::add(pc, ar, br);
                     for abi in pa_pb {
-                        na_nbr.push(abi.opposite().expect("opposite failed."));
+                        na_nbr.push(abi.opp().expect("opposite failed."));
                     }
                 });
 

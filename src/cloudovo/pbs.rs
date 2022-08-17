@@ -85,7 +85,7 @@ fn eval_LUT_5_float(
 
         let zero_plaintext = engine.create_plaintext(&0_u64)?;   //TODO : Plaintext64 needed?
         let mut buffer_lwe_after_pbs = engine.trivially_encrypt_lwe_ciphertext(
-            pc.pub_keys.ksk.output_lwe_dimension().to_lwe_size(),
+            pc.pub_keys.ksk.output_lwe_dimension().to_lwe_size(), // prepare space for the results
             &zero_plaintext,
         )?;
         // Compute a key switch
@@ -136,7 +136,7 @@ where F: Fn(usize) -> f64 {
     let accumulator_plaintext = engine.create_plaintext_vector(&accumulator_u64)?;
 
     let accumulator = engine.trivially_encrypt_glwe_ciphertext(
-        bootstrapping_key.glwe_dimension().to_glwe_size(),
+        bootstrapping_key.glwe_dimension().to_glwe_size(), // prepare space for the results
         &accumulator_plaintext,
     )?;
 

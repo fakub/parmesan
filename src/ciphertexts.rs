@@ -43,7 +43,7 @@ impl ParmEncrWord {
                 )?,
             None =>
                 engine.trivially_encrypt_lwe_ciphertext(
-                    params.concrete_pars.lwe_dimension.to_lwe_size(),
+                    LweDimension(0usize).to_lwe_size(),
                     &pi,
                 )?,
         };
@@ -82,6 +82,9 @@ impl ParmEncrWord {
         Ok(mi)
     }
 
+    // -------------------------------------------------------------------------
+    //  Basic operations with encrypted words
+
     pub fn add_inplace(&mut self, other: &Self) -> Result<(), Box<dyn Error>> {
         let mut engine = CoreEngine::new(())?;
         engine.fuse_add_lwe_ciphertext(&mut self.0, &other.0)?;
@@ -98,11 +101,7 @@ impl ParmEncrWord {
         let mut engine = CoreEngine::new(())?;
         let enc_half: u64 = 1u64 << (64 - params.bit_precision - 1);
         let p_half = engine.create_plaintext(&enc_half)?;
-        let encr_half = engine.trivially_encrypt_lwe_ciphertext(
-            params.concrete_pars.lwe_dimension.to_lwe_size(),
-            &p_half,
-        )?;
-        engine.fuse_add_lwe_ciphertext(&mut self.0, &encr_half)?;
+        engine.fuse_add_lwe_ciphertext_plaintext(&mut self.0, &p_half)?;
         Ok(())
     }
 
@@ -118,24 +117,39 @@ impl ParmEncrWord {
         Ok(res)
     }
 
-    pub fn opposite(&self) -> Result<Self, Box<dyn Error>> {
-        //FIXME
-        Ok(self.clone())
+    pub fn opp_inplace(&mut self) -> Result<(), Box<dyn Error>> {
+        let mut engine = CoreEngine::new(())?;
+        engine.fuse_opp_lwe_ciphertext(&mut self.0)?;
+        Ok(())
+    }
+
+    pub fn opp(&self) -> Result<Self, Box<dyn Error>> {
+        let mut res = self.clone();
+        res.opp_inplace()?;
+        Ok(res)
+    }
+
+    pub fn mul_const_inplace(&mut self, k: i32) -> Result<(), Box<dyn Error>> {
+        let mut engine = CoreEngine::new(())?;
+        let k_abs: u64 = k.abs() as u64;
+        let k_abs_ct64: Cleartext64 = engine.create_cleartext(&k_abs)?;
+        engine.fuse_mul_lwe_ciphertext_cleartext(&mut self.0, &k_abs_ct64)?;
+        if k < 0 {self.opp_inplace()?;}
+        Ok(())
     }
 
     pub fn mul_const(&self, k: i32) -> Result<Self, Box<dyn Error>> {
-        //FIXME
-        if k > 0 {Ok(self.clone())} else {Ok(self.clone())}
+        let mut res = self.clone();
+        res.mul_const_inplace(k)?;
+        Ok(res)
     }
 
     pub fn is_triv(&self) -> bool {
-        //FIXME implement this shit
-        true
+        self.0.lwe_dimension().0 == 0
     }
 
-    pub fn is_triv_zero(&self) -> bool {
-        //FIXME implement this shit
-        true
+    pub fn is_triv_zero(&self, params: &Params) -> Result<bool, Box<dyn Error>> {
+        Ok(self.is_triv() && (self.decrypt_word_pos(params, None)? == 0u32))
     }
 }
 
