@@ -24,7 +24,7 @@ impl ParmEncrWord {
     ) -> Result<Self, Box<dyn Error>> {
 
         // little hack, how to bring mi into positive interval [0, 2^pi)
-        mi &= params.plaintext_mask();
+        mi &= params.plaintext_mask() as i32;
 
         // create Concrete's engine
         let mut engine = CoreEngine::new(())?;
@@ -53,16 +53,16 @@ impl ParmEncrWord {
 
     pub fn encrypt_word_triv(
         params: &Params,
-        mut mi: i32,
+        mi: i32,
     ) -> Result<Self, Box<dyn Error>> {
         Self::encrypt_word(params, None, mi)
     }
 
-    pub fn decrypt_word(
+    pub fn decrypt_word_pos(
         &self,
         params: &Params,
         priv_keys_opt: Option<&PrivKeySet>,
-    ) -> Result<i32, Box<dyn Error>> {
+    ) -> Result<u32, Box<dyn Error>> {
         // create Concrete's engine
         let mut engine = CoreEngine::new(())?;
 
@@ -77,10 +77,9 @@ impl ParmEncrWord {
         engine.discard_retrieve_plaintext(&mut enc_mi, &pi)?;
 
         let pre_round_mi = (enc_mi >> (64 - params.bit_precision - 1)) as u32;  // take one extra bit for rounding
-        let mi = ((pre_round_mi >> 1) + (pre_round_mi & 1u32)) as i32;          // rounding: if the last bit is 1, add 1 to the shifted result
+        let mi = ((pre_round_mi >> 1) + (pre_round_mi & 1u32)) & params.plaintext_mask(); // rounding: if the last bit is 1, add 1 to the shifted result
 
-        // subtraction of plaintext space size resolves rounding of 11111.1 to 1'00000 (becomes zero as expected)
-        if mi >= params.plaintext_pos_max() {Ok(mi - params.plaintext_space_size())} else {Ok(mi)}
+        Ok(mi)
     }
 
     pub fn add_inplace(&mut self, other: &Self) -> Result<(), Box<dyn Error>> {
@@ -119,14 +118,14 @@ impl ParmEncrWord {
         Ok(res)
     }
 
-    pub fn opposite(&mut self) -> Result<Self, Box<dyn Error>> {
+    pub fn opposite(&self) -> Result<Self, Box<dyn Error>> {
         //FIXME
         Ok(self.clone())
     }
 
-    pub fn mul_const(&mut self, k: i32) -> Result<Self, Box<dyn Error>> {
+    pub fn mul_const(&self, k: i32) -> Result<Self, Box<dyn Error>> {
         //FIXME
-        Ok(self.clone())
+        if k > 0 {Ok(self.clone())} else {Ok(self.clone())}
     }
 
     pub fn is_triv(&self) -> bool {

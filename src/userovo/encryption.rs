@@ -76,7 +76,9 @@ pub fn parm_decrypt_to_vec(
 ) -> Result<Vec<i32>, Box<dyn Error>> {
     let mut mv: Vec<i32> = Vec::new();
     for ci in c {
-        mv.push(ci.decrypt_word(params, Some(priv_keys))?);
+        let mi_pos = ci.decrypt_word_pos(params, Some(priv_keys))?;
+        // wrap upper half to negative
+        mv.push(if mi_pos >= params.plaintext_pos_max() {mi_pos as i32 - params.plaintext_space_size()} else {mi_pos as i32});
     }
     Ok(mv)
 }

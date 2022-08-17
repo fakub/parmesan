@@ -38,7 +38,7 @@ fn eval_LUT_5_uint(
     ci: &ParmEncrWord,
     lut: [u64; 1 << (5-1)],
 ) -> Result<ParmEncrWord, Box<dyn Error>> {
-    let mut lut_f: [f64; 1 << (5-1)];
+    let mut lut_f = [0f64; 1 << (5-1)];
     for (lu, lf) in lut.iter().zip(lut_f.iter_mut()) {
         *lf = *lu as f64;
     }
@@ -58,8 +58,8 @@ fn eval_LUT_5_float(
 ) -> Result<ParmEncrWord, Box<dyn Error>> {
     // resolve trivial case
     //FIXME
-    if ci.dimension == 0 {
-        let  m = ci.decrypt_uint_triv()?;
+    if ci.is_triv() {
+        let  m = ci.decrypt_word_pos(&pc.params, None)?;
         let fm = if m < (1 << (5-1)) { lut[m as usize] }
             else if m < (1 << 5) { -lut[(m as i32 - (1 << (5-1))) as usize] }
             else {return Err(format!("Word m = {} does not fit 5-bit LUT.", m).into())};
@@ -362,7 +362,7 @@ pub fn nonneg__pi_5(
         c,
         [0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,]      // [1/2, ..., 1/2, -1/2, ..., -1/2]
     )?;
-    h.add_half_inplace(&pc.params);                                             // [  1, ...,   1,    0, ...,    0]
+    h.add_half_inplace(&pc.params)?;                                            // [  1, ...,   1,    0, ...,    0]
     Ok(h)
 }
 

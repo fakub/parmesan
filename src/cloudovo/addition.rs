@@ -201,7 +201,7 @@ pub fn add_const_impl(
         let ki = if ((k_abs >> i) & 1) == 0 {
             0u32
         } else {
-            if k_pos {1u32} else {pc.params.plaintext_mask() as u32}
+            if k_pos {1u32} else {pc.params.plaintext_mask()}
         };
 
         // encrypt as trivial sample

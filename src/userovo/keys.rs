@@ -36,8 +36,9 @@ impl PrivKeySet {
 
         // -------------------------------------------------------------------------
         //  Generate / load params & keys
-        let path = Path::new(&Self::filename_from_params(params));   // ? PrivKeySet::filename_from_params
-        let (lwe_secret_key_after_ks, glwe_secret_key, lwe_secret_key, key_switching_key, bootstrapping_key):
+        let filename = Self::filename_from_params(params);
+        let path = Path::new(&filename);
+        let (_lwe_secret_key_after_ks, _glwe_secret_key, lwe_secret_key, key_switching_key, bootstrapping_key):
             (LweSecretKey64, GlweSecretKey64, LweSecretKey64, LweKeyswitchKey64, FourierLweBootstrapKey64);
 
         if !path.is_file() {
@@ -50,9 +51,9 @@ impl PrivKeySet {
                     measure_duration!(
                         ["Generating secret keys (n = {}, N = {})", params.lwe_dimension, params.polynomial_size],
                         [
-                            lwe_secret_key_after_ks = engine.create_lwe_secret_key(params.concrete_pars.lwe_dimension)?;
-                            glwe_secret_key = engine.create_glwe_secret_key(params.concrete_pars.glwe_dimension, params.concrete_pars.polynomial_size)?;
-                            lwe_secret_key = engine.transmute_glwe_secret_key_to_lwe_secret_key(glwe_secret_key.clone())?;
+                            _lwe_secret_key_after_ks = engine.create_lwe_secret_key(params.concrete_pars.lwe_dimension)?;
+                            _glwe_secret_key = engine.create_glwe_secret_key(params.concrete_pars.glwe_dimension, params.concrete_pars.polynomial_size)?;
+                            lwe_secret_key = engine.transmute_glwe_secret_key_to_lwe_secret_key(_glwe_secret_key.clone())?;
                         ]
                     );
 
@@ -62,7 +63,7 @@ impl PrivKeySet {
                         [
                             key_switching_key = engine.create_lwe_keyswitch_key(
                                 &lwe_secret_key,
-                                &lwe_secret_key_after_ks,
+                                &_lwe_secret_key_after_ks,
                                 params.concrete_pars.ks_level,
                                 params.concrete_pars.ks_base_log,
                                 Variance(params.lwe_var_f64()),
@@ -73,8 +74,8 @@ impl PrivKeySet {
                         ["Calculating public bootstrapping keys"],
                         [
                             bootstrapping_key = engine.create_lwe_bootstrap_key(
-                                &lwe_secret_key_after_ks,
-                                &glwe_secret_key,
+                                &_lwe_secret_key_after_ks,
+                                &_glwe_secret_key,
                                 params.concrete_pars.pbs_base_log,
                                 params.concrete_pars.pbs_level,
                                 Variance(params.glwe_var_f64()),
@@ -88,7 +89,7 @@ impl PrivKeySet {
                 ["Exporting new keys"],
                 [
                     let keys_file = File::create(path).map(BufWriter::new)?;
-                    bincode::serialize_into(keys_file, &(&lwe_secret_key_after_ks, &glwe_secret_key, &lwe_secret_key, &key_switching_key, &bootstrapping_key))?;
+                    bincode::serialize_into(keys_file, &(&_lwe_secret_key_after_ks, &_glwe_secret_key, &lwe_secret_key, &key_switching_key, &bootstrapping_key))?;
                 ]
             );
         } else {
@@ -99,7 +100,7 @@ impl PrivKeySet {
                 ["Loading saved keys"],
                 [
                     let keys_file = File::open(path).map(BufReader::new)?;
-                    (lwe_secret_key_after_ks, glwe_secret_key, lwe_secret_key, key_switching_key, bootstrapping_key) = bincode::deserialize_from(keys_file)?;
+                    (_lwe_secret_key_after_ks, _glwe_secret_key, lwe_secret_key, key_switching_key, bootstrapping_key) = bincode::deserialize_from(keys_file)?;
                 ]
             );
         }

@@ -284,12 +284,12 @@ pub fn mul_lwe(
     //WISH check correctness
     let pi = pc.params.bit_precision;
     if x.is_triv() {
-        let mut mx: i32 = x.decrypt_word(&pc.params, None)? as i32;
+        let mut mx: i32 = x.decrypt_word_pos(&pc.params, None)? as i32;
         // convert to signed domain
         if mx > 1 << (pi - 1) {mx -= 1 << pi}
         return Ok(y.mul_const(mx)?);
     } else if y.is_triv() {
-        let mut my: i32 = y.decrypt_word(&pc.params, None)? as i32;
+        let mut my: i32 = y.decrypt_word_pos(&pc.params, None)? as i32;
         // convert to signed domain
         if my > 1 << (pi - 1) {my -= 1 << pi}
         return Ok(x.mul_const(my)?);
@@ -341,12 +341,12 @@ pub fn deprecated__mul_lwe(
     let mut z: ParmEncrWord;
     let pi = pc.params.bit_precision;
     if x.is_triv() {
-        let mut mx: i32 = x.decrypt_word(&pc.params, None)? as i32;
+        let mut mx: i32 = x.decrypt_word_pos(&pc.params, None)? as i32;
         // convert to signed domain
         if mx > 1 << (pi - 1) {mx -= 1 << pi}
         return Ok(y.mul_const(mx)?);
     } else if y.is_triv() {
-        let mut my: i32 = y.decrypt_word(&pc.params, None)? as i32;
+        let mut my: i32 = y.decrypt_word_pos(&pc.params, None)? as i32;
         // convert to signed domain
         if my > 1 << (pi - 1) {my -= 1 << pi}
         return Ok(x.mul_const(my)?);

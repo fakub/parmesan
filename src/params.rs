@@ -20,14 +20,14 @@ impl Params {
 
     /// Get mask of plaintext length, e.g., `0001'1111` for `pi = 5`
     /// * corresponds with -1 in plaintext space
-    pub fn plaintext_mask(&self) -> i32 {
-        (1i32 << self.bit_precision) - 1
+    pub fn plaintext_mask(&self) -> u32 {
+        (1u32 << self.bit_precision) - 1
     }
 
     /// Get upper (positive) bound on plaintext space, e.g., `0001'0000` for `pi = 5`
     /// * corresponds with +- maximum (unused value)
-    pub fn plaintext_pos_max(&self) -> i32 {
-        1i32 << (self.bit_precision - 1)
+    pub fn plaintext_pos_max(&self) -> u32 {
+        1u32 << (self.bit_precision - 1)
     }
 
     /// Get size of plaintext space, e.g., `0010'0000` for `pi = 5`
