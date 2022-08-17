@@ -48,7 +48,7 @@ fn t_impl_squ_with_mode(mode: EncrVsTriv) {
         // generate random vector(s)
         let m1_vec = gen_rand_vec(bl);
         // convert to integer(s)
-        let m1 = encryption::convert(&m1_vec).expect("convert failed.");
+        let m1 = encryption::convert_from_vec(&m1_vec).expect("convert failed.");
 
         println!("  m1 = {} ({}-bit)", m1, bl);
 

@@ -32,9 +32,9 @@ pub fn scalar_mul_impl(
     for xi in x {
         if k >= 0 {
             x_pos.push(xi.clone());
-            x_neg.push(xi.opposite_uint()?);
+            x_neg.push(xi.opposite()?);
         } else {
-            x_pos.push(xi.opposite_uint()?);
+            x_pos.push(xi.opposite()?);
             x_neg.push(xi.clone());
         }
     }

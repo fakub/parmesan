@@ -54,7 +54,7 @@ fn t_koy_tsu() {
         // calc Koyama-Tsuruoka representation
         let kt_vec = naf::koyama_tsuruoka_vec(k.abs() as u32);
         // eval it
-        let k_val = convert(&kt_vec).expect("convert failed.");
+        let k_val = convert_from_vec(&kt_vec).expect("convert failed.");
 
         println!("  kt_vec = {:?} ~ {}", kt_vec, k_val);
 
@@ -91,7 +91,7 @@ fn t_impl_scm_with_mode(mode: EncrVsTriv) {
         // generate random vector(s)
         let m1_vec = gen_rand_vec(common::TESTS_BITLEN_SCM);
         // convert to integer(s)
-        let m1 = encryption::convert(&m1_vec).expect("convert failed.");
+        let m1 = encryption::convert_from_vec(&m1_vec).expect("convert failed.");
         // generate random scalar
         let k: i32 = rng.gen_range(-(1 << common::TESTS_BITLEN_SCALAR)..=(1 << common::TESTS_BITLEN_SCALAR));
 

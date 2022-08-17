@@ -1,17 +1,12 @@
 use std::error::Error;
 //~ use std::option::*;
 
-// parallelization tools
-use rayon::prelude::*;
-
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use concrete_core::prelude::*;
-
 use crate::params::Params;
 use crate::userovo::keys::PrivKeySet;
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
+use crate::ciphertexts::{ParmCiphertext,ParmCiphertextImpl,ParmEncrWord};
 
 pub const PARM_CT_MAXLEN: usize = 63;
 
@@ -24,89 +19,34 @@ pub const PARM_CT_MAXLEN: usize = 63;
 
 /// Parmesan encryption of a 64-bit signed integer
 /// * splits signed integer into words
-/// * encrypt one-by-one
+/// * encrypts one-by-one
 pub fn parm_encrypt(
     params: &Params,
     priv_keys: &PrivKeySet,
     m: i64,
     words: usize,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
-    let mut res = ParmCiphertext::empty();
-    let m_abs = m.abs();
-    let m_pos = m >= 0;
-
-    for i in 0..words {
-        // calculate i-th word with sign
-        let mi = if ((m_abs >> i) & 1) == 0 {
-            0i32
-        } else {
-            if m_pos {1i32} else {-1i32}
-        };
-        res.push(parm_encr_word(params, Some(priv_keys), mi)?);
-    }
-
-    Ok(res)
+    let mv = convert_to_vec(m, words);
+    parm_encrypt_from_vec(params, priv_keys, &mv)
 }
 
 /// Parmesan encryption of a vector of words from alphabet `{-1,0,1}`
-pub fn parm_encrypt_vec(
+pub fn parm_encrypt_from_vec(
     params: &Params,
     priv_keys: &PrivKeySet,
     mv: &Vec<i32>,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
-    let mut res = ParmCiphertext::triv(mv.len(), &priv_keys.encoder)?;
+    let mut c = ParmCiphertext::empty();
+    for mi in mv {
 
-    res.iter_mut().zip(mv.iter()).for_each(| (ri, mi) | {
-        *ri = parm_encr_word(params, Some(priv_keys), *mi).expect("parm_encr_word failed.");
-    });
+        // check that mi is in alphabet
+        if *mi < -1 || *mi > 1 {
+            return Err(format!("{}", "Word to be encrypted outside the alphabet {-1,0,1}.").into());
+        }
 
-    Ok(res)
-}
-
-fn parm_encr_word(
-    params: &Params,
-    priv_keys_opt: Option<&PrivKeySet>,
-    mut mi: i32,
-) -> Result<ParmEncrWord, Box<dyn Error>> {
-
-    // check that mi is in alphabet
-    if mi < -1 || mi > 1 {
-        return Err(format!("{}", "Word to be encrypted outside the alphabet {-1,0,1}.").into());
+        c.push(ParmEncrWord::encrypt_word(params, Some(priv_keys), *mi)?);
     }
-
-    // little hack, how to bring mi into positive interval [0, 2^pi)
-    mi &= params.plaintext_mask();
-
-    // create Concrete's engine
-    let mut engine = CoreEngine::new(())?;
-
-    // encode message & create Concrete's plaintext
-    let enc_mi = mi * params.delta_concrete();
-    let pi = engine.create_plaintext(&enc_mi)?;
-
-    // encrypt
-    let encr_word = match priv_keys_opt {
-        Some(priv_keys) =>
-            engine.encrypt_lwe_ciphertext(
-                &priv_keys.sk,
-                &pi,
-                params.var_lwe,
-            )?
-        None =>
-            engine.trivially_encrypt_lwe_ciphertext(
-                params.lwe_dimension.to_lwe_size(),
-                &pi,
-            )?
-    }
-
-    Ok(ParmEncrWord(encr_word))
-}
-
-pub fn parm_encr_word_triv(
-    params: &Params,
-    mut mi: i32,
-) -> Result<ParmEncrWord, Box<dyn Error>> {
-    parm_encr_word(params, None, mi)
+    Ok(c)
 }
 
 
@@ -122,33 +62,23 @@ pub fn parm_encr_word_triv(
 pub fn parm_decrypt(
     params: &Params,
     priv_keys: &PrivKeySet,
-    ct: &ParmCiphertext,
+    c: &ParmCiphertext,
 ) -> Result<i64, Box<dyn Error>> {
-    // init plain vector
-    let mut pt: Vec<i32> = vec![0; ct.len()];
-    // decrypt ct into pt (in parallel)
-    ct.par_iter().zip(pt.par_iter_mut()).for_each(| (cti, pti) | {
-        *pti = parm_decr_word(params, priv_keys, cti).expect("parm_decr_word failed.");
-    });
-    // convert vec to i64
-    convert(&pt)
+    let mv = parm_decrypt_to_vec(params, priv_keys, c)?;
+    convert_from_vec(&mv)
 }
 
-fn parm_decr_word(
+/// Parmesan encryption of a vector of words from alphabet `{-1,0,1}`
+pub fn parm_decrypt_to_vec(
     params: &Params,
     priv_keys: &PrivKeySet,
-    ci: &ParmEncrWord,
-) -> Result<i32, Box<dyn Error>> {
-    // create Concrete's engine
-    let mut engine = CoreEngine::new(())?;
-
-    let pi = engine.decrypt_lwe_ciphertext(&priv_keys.sk, &ci.0)?;
-    let mut enc_mi = 0_u64;
-    engine.discard_retrieve_plaintext(&mut enc_mi, &pi)?;
-    //TODO FIXME rounding (was in decrypt_uint)
-    let mi = enc_mi / params.delta_concrete;
-
-    if mi >= params.plaintext_pos_max() {Ok(mi - params.plaintext_space_size())} else {Ok(mi)}
+    c: &ParmCiphertext,
+) -> Result<Vec<i32>, Box<dyn Error>> {
+    let mut mv: Vec<i32> = Vec::new();
+    for ci in c {
+        mv.push(ci.decrypt_word(params, Some(priv_keys))?);
+    }
+    Ok(mv)
 }
 
 
@@ -158,8 +88,30 @@ fn parm_decr_word(
 //  Conversion, Hamming Weight, ...
 //
 
-/// Conversion from redundant
-pub fn convert(mv: &Vec<i32>) -> Result<i64, Box<dyn Error>> {
+/// Conversion to signed binary
+pub fn convert_to_vec(
+    m: i64,
+    words: usize,
+) -> Vec<i32> {
+    let mut mv: Vec<i32> = Vec::new();
+    let m_abs = m.abs();
+    let m_pos = m >= 0;
+
+    for i in 0..words {
+        // calculate i-th word with sign
+        let mi = if ((m_abs >> i) & 1) == 0 {
+            0i32
+        } else {
+            if m_pos {1i32} else {-1i32}
+        };
+        mv.push(mi);
+    }
+
+    mv
+}
+
+/// Conversion from signed binary
+pub fn convert_from_vec(mv: &Vec<i32>) -> Result<i64, Box<dyn Error>> {
     if mv.len() > PARM_CT_MAXLEN {return Err(format!("ParmCiphertext longer than {}.", PARM_CT_MAXLEN).into());}
     let mut m = 0i64;
     for (i, mi) in mv.iter().enumerate() {

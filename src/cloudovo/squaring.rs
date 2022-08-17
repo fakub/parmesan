@@ -12,10 +12,7 @@ use crossbeam_utils::thread;
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use concrete_core::prelude::*;
-
-use crate::userovo::keys::PubKeySet;
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
+use crate::ciphertexts::{ParmCiphertext,ParmCiphertextImpl,ParmEncrWord};
 use super::{pbs, multiplication};
 
 
@@ -125,10 +122,7 @@ fn squ_schoolbook(
         ["Squaring schoolbook ({}-bit)", x.len()],
         [
             // calc multiplication array
-            let squary = fill_squary(
-                &pc.pub_keys,
-                x,
-            )?;
+            let squary = fill_squary(pc, x)?;
             //PBS unsafe { println!("(after fill squary {}-bit)    #BS = {}", x.len(), NBS); }
 
             let res = multiplication::reduce_mulsquary(pc, &squary);
@@ -149,10 +143,7 @@ fn squ_1word(
         ["Squaring 1-word"],
         [
             // calc squaring array
-            let squary = fill_squary(
-                &pc.pub_keys,
-                x,
-            )?;
+            let squary = fill_squary(pc, x)?;
         ]
     );
 
@@ -161,7 +152,7 @@ fn squ_1word(
 
 /// Fill squaring array (for schoolbook squaring)
 fn fill_squary(
-    pub_keys: &PubKeySet,
+    pc: &ParmesanCloudovo,
     x: &ParmCiphertext,
 ) -> Result<Vec<ParmCiphertext>, Box<dyn Error>> {
 
@@ -169,8 +160,8 @@ fn fill_squary(
     let x2 = x.clone();   //WISH needed? intended for parallel addition to avoid concurrent memory access
 
     // fill temp squaring array
-    let mut squary_tmp  = vec![ParmCiphertext::triv(2*len, &pub_keys.encoder)?; len];
-    let mut squary      = vec![ParmCiphertext::triv(2*len, &pub_keys.encoder)?; len];
+    let mut squary_tmp  = vec![ParmCiphertext::triv(2*len, &pc.params)?; len];
+    let mut squary      = vec![ParmCiphertext::triv(2*len, &pc.params)?; len];
 
     //WISH prepare designated arrays (one for diagonal, another for upper-diagonal; reorder them after calculations; would it help at all?)
     //PBS   squary_tmp.iter_mut().zip(x.iter().enumerate()).for_each(| (sqi, (i, xi)) | {
@@ -178,9 +169,9 @@ fn fill_squary(
     squary_tmp.par_iter_mut().zip(x.par_iter().enumerate()).for_each(| (sqi, (i, xi)) | {
         sqi[i..].par_iter_mut().zip(x2.par_iter().enumerate()).for_each(| (sqij, (j, x2j)) | {
             if j < i {
-                *sqij = multiplication::mul_lwe(pub_keys, &xi, &x2j).expect("mul_lwe failed.");
+                *sqij = multiplication::mul_lwe(pc, &xi, &x2j).expect("mul_lwe failed.");
             } else if j == i {
-                *sqij = squ_lwe(pub_keys, &xi).expect("squ_lwe failed.");
+                *sqij = squ_lwe(pc, &xi).expect("squ_lwe failed.");
             }
         });
     });
@@ -202,8 +193,8 @@ fn fill_squary(
 /// Implementation of LWE sample squaring, where `x` encrypts a plaintext
 /// in `{-1, 0, 1}`
 pub fn squ_lwe(
-    pub_keys: &PubKeySet,
+    pc: &ParmesanCloudovo,
     x: &ParmEncrWord,
 ) -> Result<ParmEncrWord, Box<dyn Error>> {
-    pbs::a_1__pi_5(pub_keys, x)
+    pbs::a_1__pi_5(pc, x)
 }

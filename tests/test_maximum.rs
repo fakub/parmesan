@@ -86,8 +86,8 @@ fn t_max_empty_nonempty() {
     let m1_vec: Vec<i32>  = Vec::new();
     let m2_vec = gen_rand_vec(common::TESTS_BITLEN_MAX);
     // convert to integer(s)
-    let m1 = encryption::convert(&m1_vec).expect("convert failed.");
-    let m2 = encryption::convert(&m2_vec).expect("convert failed.");
+    let m1 = encryption::convert_from_vec(&m1_vec).expect("convert failed.");
+    let m2 = encryption::convert_from_vec(&m2_vec).expect("convert failed.");
 
     println!("  m1 = {} ({}-bit: {:?})\n  m2 = {} ({}-bit: {:?})", m1, 0, m1_vec, m2, common::TESTS_BITLEN_MAX, m2_vec);
 
@@ -127,8 +127,8 @@ fn t_impl_max_with_mode(
         let m1_vec = gen_rand_vec(bl1);
         let m2_vec = gen_rand_vec(bl2);
         // convert to integer(s)
-        let m1 = encryption::convert(&m1_vec).expect("convert failed.");
-        let m2 = encryption::convert(&m2_vec).expect("convert failed.");
+        let m1 = encryption::convert_from_vec(&m1_vec).expect("convert failed.");
+        let m2 = encryption::convert_from_vec(&m2_vec).expect("convert failed.");
 
         println!("  m1 = {} ({}-bit: {:?})\n  m2 = {} ({}-bit: {:?})", m1, bl1, m1_vec, m2, bl2, m2_vec);
 

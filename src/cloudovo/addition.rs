@@ -5,7 +5,6 @@ pub use std::path::Path;
 pub use std::io::Write;
 
 use crate::*;
-use crate::userovo::*;
 
 // parallelization tools
 use rayon::prelude::*;
@@ -13,9 +12,7 @@ use rayon::prelude::*;
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use concrete_core::prelude::*;
-
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
+use crate::ciphertexts::{ParmCiphertext,ParmCiphertextImpl,ParmEncrWord};
 use super::pbs;
 
 /// Implementation of parallel addition/subtraction
@@ -37,10 +34,10 @@ pub fn add_sub_impl(
     let mut x_rzero = 0usize;
     let mut y_rzero = 0usize;
     for xi in x {
-        if xi.dimension == 0 && xi.ciphertext.get_body().0 == 0 {x_rzero += 1;} else {break;}
+        if xi.is_triv_zero() {x_rzero += 1;} else {break;}
     }
     for yi in y {
-        if yi.dimension == 0 && yi.ciphertext.get_body().0 == 0 {y_rzero += 1;} else {break;}
+        if yi.is_triv_zero() {y_rzero += 1;} else {break;}
     }
     // resolve all-triv-zeros cases
     if x_rzero == x.len() { return if is_add {Ok(y.clone())} else {Ok(ParmArithmetics::opp(y))};}
@@ -56,10 +53,10 @@ pub fn add_sub_impl(
     let mut x_lzero  = 0usize;
     let mut y_lzero  = 0usize;
     for xi in x.iter().rev() {
-        if xi.dimension == 0 && xi.ciphertext.get_body().0 == 0 {x_lzero += 1;} else {break;}
+        if xi.is_triv_zero() {x_lzero += 1;} else {break;}
     }
     for yi in y.iter().rev() {
-        if yi.dimension == 0 && yi.ciphertext.get_body().0 == 0 {y_lzero += 1;} else {break;}
+        if yi.is_triv_zero() {y_lzero += 1;} else {break;}
     }
     let wlen = std::cmp::max(x.len() - x_lzero, y.len() - y_lzero);
 
@@ -77,7 +74,7 @@ pub fn add_sub_impl(
             }
             // if x is shorter than wlen, fill the rest with zeros
             for _ in 0..((wlen as i64) - (x.len() as i64)) {
-                w.push(encryption::parm_encr_word_triv(&pc.params, 0)?);
+                w.push(ParmEncrWord::encrypt_word(&pc.params, None, 0)?);
             }
             // now w has the correct length!
 
@@ -89,11 +86,11 @@ pub fn add_sub_impl(
             //~ [
                 if is_add {
                     for (wi, yi) in w.iter_mut().zip(y.iter()) {
-                        wi.add_uint_inplace(&yi)?;
+                        wi.add_inplace(&yi)?;
                     }
                 } else {
                     for (wi, yi) in w.iter_mut().zip(y.iter()) {
-                        wi.sub_uint_inplace(&yi)?;
+                        wi.sub_inplace(&yi)?;
                     }
                 }
             //~ ]);
@@ -109,7 +106,7 @@ pub fn add_sub_impl(
             //~ ]);
             // -----------------------------------------------------------------
 
-            let mut q = ParmCiphertext::triv(wlen, &pc.pub_keys.encoder)?;
+            let mut q = ParmCiphertext::triv(wlen, &pc.params)?;
 
             // this shall not happen
             if r_triv >= q.len() {
@@ -127,27 +124,27 @@ pub fn add_sub_impl(
             q[r_triv..].par_iter_mut().zip(w[r_triv..].par_iter().enumerate()).for_each(| (qi, (i0, wi)) | {
                 let i = i0 + r_triv;
                 // calc   3 w_i + w_i-1
-                let mut wi_3 = wi.mul_uint_constant(3).expect("mul_uint_constant failed.");
-                if i0 > 0 { wi_3.add_uint_inplace(&w[i-1]).expect("add_uint_inplace failed."); }
-                *qi = pbs::f_4__pi_5(&pc.pub_keys, &wi_3).expect("f_4__pi_5 failed.");
+                let mut wi_3 = wi.mul_const(3).expect("mul_const failed.");
+                if i0 > 0 { wi_3.add_inplace(&w[i-1]).expect("add_inplace failed."); }
+                *qi = pbs::f_4__pi_5(pc, &wi_3).expect("f_4__pi_5 failed.");
             });
 
             // w_i += -2 q_i + q_i-1
             //WISH also check this, if parallel is better? (there's no BS)
             w.iter_mut().zip(q.iter().enumerate()).for_each(| (wi, (i, qi)) | {
                 // calc   2 q_i
-                let qi_2 = qi.mul_uint_constant(2).expect("mul_uint_constant failed.");
-                wi.sub_uint_inplace(&qi_2).expect("sub_uint_inplace failed.");
-                if i > 0 { wi.add_uint_inplace(&q[i-1]).expect("add_uint_inplace failed."); }
+                let qi_2 = qi.mul_const(2).expect("mul_const failed.");
+                wi.sub_inplace(&qi_2).expect("sub_inplace failed.");
+                if i > 0 { wi.add_inplace(&q[i-1]).expect("add_inplace failed."); }
             });
 
             // init z of zeros of wlen length, then clone / bootstrap ID from w, finally push carry q_i-1
-            z = ParmCiphertext::triv(wlen, &pc.pub_keys.encoder)?;
+            z = ParmCiphertext::triv(wlen, &pc.params)?;
             // MSB part of z is bootstrapped (if requested) ...
             if refresh {
                 //PBS z[r_triv..].iter_mut().zip(w[r_triv..].iter()).for_each(| (zi, wi) | {
                 z[r_triv..].par_iter_mut().zip(w[r_triv..].par_iter()).for_each(| (zi, wi) | {
-                    *zi = pbs::id__pi_5(&pc.pub_keys, wi).expect("pbs::id__pi_5 failed.");
+                    *zi = pbs::id__pi_5(pc, wi).expect("pbs::id__pi_5 failed.");
                 });
             } else {
                 z[r_triv..].iter_mut().zip(w[r_triv..].iter()).for_each(| (zi, wi) | {
@@ -174,7 +171,7 @@ pub fn opposite_impl(
     let mut nx = ParmCiphertext::empty();
 
     for xi in x {
-        nx.push(xi.opposite_uint()?);
+        nx.push(xi.opposite()?);
     }
 
     Ok(nx)
@@ -208,7 +205,7 @@ pub fn add_const_impl(
         };
 
         // encrypt as trivial sample
-        let cti = encryption::parm_encr_word_triv(&pc.params, ki)?;
+        let cti = ParmEncrWord::encrypt_word(&pc.params, None, ki as i32)?;
 
         ck.push(cti);
     }

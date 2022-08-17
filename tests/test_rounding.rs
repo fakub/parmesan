@@ -70,7 +70,7 @@ fn t_impl_round_with_mode(mode: EncrVsTriv) {
         // generate random vector(s)
         let m1_vec = gen_rand_vec(common::TESTS_BITLEN_ROUND);
         // convert to integer(s)
-        let m1 = encryption::convert(&m1_vec).expect("convert failed.");
+        let m1 = encryption::convert_from_vec(&m1_vec).expect("convert failed.");
         // generate random position
         let pos: usize = rng.gen_range(0..=TESTS_POS_ROUND);
 

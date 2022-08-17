@@ -223,7 +223,7 @@ impl ParmArithmetics for ParmCiphertext {
         k: usize,
     ) -> ParmCiphertext {
         if k == 0 {return x.clone();}
-        let mut x_shifted = ParmCiphertext::triv(k, &pc.pub_keys.encoder).expect("ParmCiphertext::triv failed.");
+        let mut x_shifted = ParmCiphertext::triv(k, &pc.params).expect("ParmCiphertext::triv failed.");
         x_shifted.append(&mut x.clone());
         x_shifted
     }

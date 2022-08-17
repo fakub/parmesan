@@ -117,7 +117,7 @@ impl ParmesanUserovo<'_> {
         &self,
         mv: &Vec<i32>,
     ) -> Result<ParmCiphertext, Box<dyn Error>> {   //WISH change to a template for other integer types/lengths, too
-        encryption::parm_encrypt_vec(self.params, &self.priv_keys, mv)
+        encryption::parm_encrypt_from_vec(self.params, &self.priv_keys, mv)
     }
 
     /// Decrypt ciphertext into a 64-bit signed integer

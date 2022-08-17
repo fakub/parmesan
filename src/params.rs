@@ -1,4 +1,5 @@
 use concrete_core::prelude::*;
+use concrete_shortint::Parameters;
 
 /// # Parmesan Parameters
 /// Contains
@@ -59,7 +60,7 @@ impl Params {
     }
 
     /// Access LWE variance
-    pub fn lwe_var(&self) -> f64 {
+    pub fn lwe_var_f64(&self) -> f64 {
         self.concrete_pars.lwe_modular_std_dev.get_variance()
     }
 
@@ -69,17 +70,17 @@ impl Params {
     }
 
     /// Access GLWE variance
-    pub fn glwe_var(&self) -> f64 {
+    pub fn glwe_var_f64(&self) -> f64 {
         self.concrete_pars.glwe_modular_std_dev.get_variance()
     }
 
     /// Access PBS base log (aka. gamma)
-    pub fn bs_base_log(&self) -> usize {
+    pub fn pbs_base_log(&self) -> usize {
         self.concrete_pars.pbs_base_log.0
     }
 
     /// Access PBS level (aka. l)
-    pub fn bs_level(&self) -> usize {
+    pub fn pbs_level(&self) -> usize {
         self.concrete_pars.pbs_level.0
     }
 
@@ -93,16 +94,10 @@ impl Params {
         self.concrete_pars.ks_level.0
     }
 
-    /// Calc variance
-    pub fn var_lwe(&self) -> Variance {
-        Variance(self.concrete_pars.lwe_modular_std_dev.get_variance())
-    }
-
-    /// Calc Concrete's delta
-    pub fn delta_concrete(&self) -> usize {
-        //FIXME replace 64
-        1 << (64 - self.bit_precision)
-    }
+    //~ /// Calc Concrete's delta
+    //~ pub fn delta_concrete(&self) -> usize {
+        //~ 1 << (64 - self.bit_precision)
+    //~ }
 }
 
 #[allow(dead_code)]

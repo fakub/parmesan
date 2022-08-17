@@ -12,10 +12,7 @@ use crossbeam_utils::thread;
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use concrete_core::prelude::*;
-
-use crate::userovo::keys::PubKeySet;
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
+use crate::ciphertexts::{ParmCiphertext,ParmCiphertextImpl,ParmEncrWord};
 use super::pbs;
 
 
@@ -55,9 +52,9 @@ pub fn mul_impl(
 
         for _i in 0..len_diff {
             if x_in.len() < y_in.len() {
-                x_in.push(encryption::parm_encr_word_triv(&pc.params, 0)?);
+                x_in.push(ParmEncrWord::encrypt_word(&pc.params, None, 0)?);
             } else {
-                y_in.push(encryption::parm_encr_word_triv(&pc.params, 0)?);
+                y_in.push(ParmEncrWord::encrypt_word(&pc.params, None, 0)?);
             }
         }
     }
@@ -126,8 +123,8 @@ fn mul_karatsuba(
             // init tmp variables in this scope, only references can be passed to threads
             let mut a       = ParmCiphertext::empty();
             let mut b       = ParmCiphertext::empty();
-            let mut na_nb   = ParmCiphertext::triv(len0, &pc.pub_keys.encoder)?;
-            let mut c       = ParmCiphertext::triv(len0, &pc.pub_keys.encoder)?;
+            let mut na_nb   = ParmCiphertext::triv(len0, &pc.params)?;
+            let mut c       = ParmCiphertext::triv(len0, &pc.params)?;
 
             let ar      = &mut a;
             let br      = &mut b;
@@ -153,7 +150,7 @@ fn mul_karatsuba(
                     //  A + B .. -A - B
                     let pa_pb = ParmArithmetics::add(pc, ar, br);
                     for abi in pa_pb {
-                        na_nbr.push(abi.opposite_uint().expect("opposite_uint failed."));
+                        na_nbr.push(abi.opposite().expect("opposite failed."));
                     }
                 });
 
@@ -217,11 +214,7 @@ fn mul_schoolbook(
         ["Multiplication schoolbook ({}-bit)", x.len()],
         [
             // calc multiplication array
-            let mulary = fill_mulary(
-                &pc.pub_keys,
-                x,
-                y,
-            )?;
+            let mulary = fill_mulary(pc, x, y)?;
             //PBS unsafe { println!("(after fill mulary {}-bit)    #BS = {}", x.len(), NBS); }
 
             let res = reduce_mulsquary(pc, &mulary);
@@ -243,11 +236,7 @@ fn mul_1word(
         ["Multiplication 1-word"],
         [
             // calc multiplication array
-            let mulary = fill_mulary(
-                &pc.pub_keys,
-                x,
-                y,
-            )?;
+            let mulary = fill_mulary(pc, x, y)?;
         ]
     );
 
@@ -256,7 +245,7 @@ fn mul_1word(
 
 /// Fill multiplication array (for schoolbook multiplication)
 fn fill_mulary(
-    pub_keys: &PubKeySet,
+    pc: &ParmesanCloudovo,
     x: &ParmCiphertext,
     y: &ParmCiphertext,
 ) -> Result<Vec<ParmCiphertext>, Box<dyn Error>> {
@@ -268,7 +257,7 @@ fn fill_mulary(
     // fill multiplication array
     //TODO check the size, it might grow outsite due to redundant representation
     //WISH try different approaches and compare
-    let mut mulary = vec![ParmCiphertext::triv(2*len, &pub_keys.encoder)?; len];
+    let mut mulary = vec![ParmCiphertext::triv(2*len, &pc.params)?; len];
 
     // nested parallel iterators work as expected: they indeed create nested pools
 
@@ -276,7 +265,7 @@ fn fill_mulary(
     //PBS       x_yj[j..j+len].iter_mut().zip(x.iter()).for_each(| (xi_yj, xi) | {
     mulary.par_iter_mut().zip(y.par_iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
         x_yj[j..j+len].par_iter_mut().zip(x.par_iter()).for_each(| (xi_yj, xi) | {
-            *xi_yj = mul_lwe(pub_keys, &xi, &yj).expect("mul_lwe failed.");
+            *xi_yj = mul_lwe(pc, &xi, &yj).expect("mul_lwe failed.");
         });
     });
 
@@ -286,24 +275,24 @@ fn fill_mulary(
 /// Implementation of LWE sample multiplication, where `x` and `y` encrypt
 /// a plaintext in `{-1, 0, 1}`
 pub fn mul_lwe(
-    pub_keys: &PubKeySet,
+    pc: &ParmesanCloudovo,
     x: &ParmEncrWord,
     y: &ParmEncrWord,
 ) -> Result<ParmEncrWord, Box<dyn Error>> {
 
     // resolve trivial cases
     //WISH check correctness
-    let pi = x.encoder.nb_bit_precision;
-    if x.dimension == 0 {
-        let mut mx: i32 = x.decrypt_uint_triv()? as i32;
+    let pi = pc.params.bit_precision;
+    if x.is_triv() {
+        let mut mx: i32 = x.decrypt_word(&pc.params, None)? as i32;
         // convert to signed domain
         if mx > 1 << (pi - 1) {mx -= 1 << pi}
-        return Ok(y.mul_uint_constant(mx)?);
-    } else if y.dimension == 0 {
-        let mut my: i32 = y.decrypt_uint_triv()? as i32;
+        return Ok(y.mul_const(mx)?);
+    } else if y.is_triv() {
+        let mut my: i32 = y.decrypt_word(&pc.params, None)? as i32;
         // convert to signed domain
         if my > 1 << (pi - 1) {my -= 1 << pi}
-        return Ok(x.mul_uint_constant(my)?);
+        return Ok(x.mul_const(my)?);
     }
 
     //  X | -1 |  0 |  1 |
@@ -315,11 +304,11 @@ pub fn mul_lwe(
     // => serialize this table (fits 32 cleartext size)
 
     // 3x + y
-    let mut p3xpy = x.mul_uint_constant(3)?;
-    p3xpy.add_uint_inplace(y)?;
+    let mut p3xpy = x.mul_const(3)?;
+    p3xpy.add_inplace(y)?;
 
     // LUT serialized table
-    pbs::mul_bit__pi_5(pub_keys, &p3xpy)
+    pbs::mul_bit__pi_5(pc, &p3xpy)
 }
 
 /// Reduce mul/squ-ary with addition
@@ -345,35 +334,35 @@ pub fn reduce_mulsquary (
 // for archiving purposes (also presenting author's stupidity)
 #[allow(non_snake_case)]
 pub fn deprecated__mul_lwe(
-    pub_keys: &PubKeySet,
+    pc: &ParmesanCloudovo,
     x: &ParmEncrWord,
     y: &ParmEncrWord,
 ) -> Result<ParmEncrWord, Box<dyn Error>> {
     let mut z: ParmEncrWord;
-    let pi = x.encoder.nb_bit_precision;
-    if x.dimension == 0 {
-        let mut mx: i32 = x.decrypt_uint_triv()? as i32;
+    let pi = pc.params.bit_precision;
+    if x.is_triv() {
+        let mut mx: i32 = x.decrypt_word(&pc.params, None)? as i32;
         // convert to signed domain
         if mx > 1 << (pi - 1) {mx -= 1 << pi}
-        return Ok(y.mul_uint_constant(mx)?);
-    } else if y.dimension == 0 {
-        let mut my: i32 = y.decrypt_uint_triv()? as i32;
+        return Ok(y.mul_const(mx)?);
+    } else if y.is_triv() {
+        let mut my: i32 = y.decrypt_word(&pc.params, None)? as i32;
         // convert to signed domain
         if my > 1 << (pi - 1) {my -= 1 << pi}
-        return Ok(x.mul_uint_constant(my)?);
+        return Ok(x.mul_const(my)?);
     }
 
     // x + y
     let mut pxpy: ParmEncrWord = x.clone();
-    pxpy.add_uint_inplace(y)?;
+    pxpy.add_inplace(y)?;
     // x - y
     let mut pxny: ParmEncrWord = x.clone();
-    pxny.sub_uint_inplace(y)?;
+    pxny.sub_inplace(y)?;
 
     // pos, neg (in parallel)
     // init tmp variables in this scope, only references can be passed to threads
-    let mut pos = encryption::parm_encr_word_triv(&pc.params, 0).expect("encryption::parm_encr_word_triv failed.");
-    let mut neg = encryption::parm_encr_word_triv(&pc.params, 0).expect("encryption::parm_encr_word_triv failed.");
+    let mut pos = ParmEncrWord::encrypt_word(&pc.params, None, 0).expect("ParmEncrWord::encrypt_word failed.");
+    let mut neg = ParmEncrWord::encrypt_word(&pc.params, None, 0).expect("ParmEncrWord::encrypt_word failed.");
     let posr = &mut pos;
     let negr = &mut neg;
 
@@ -381,17 +370,17 @@ pub fn deprecated__mul_lwe(
     thread::scope(|pn_scope| {
         pn_scope.spawn(|_| {
             // pos = ...
-            *posr  = pbs::a_2__pi_5(pub_keys, &pxpy).expect("pbs::a_2__pi_5 failed.");
+            *posr  = pbs::a_2__pi_5(pc, &pxpy).expect("pbs::a_2__pi_5 failed.");
         });
         pn_scope.spawn(|_| {
             // neg = ...
-            *negr  = pbs::a_2__pi_5(pub_keys, &pxny).expect("pbs::a_2__pi_5 failed.");
+            *negr  = pbs::a_2__pi_5(pc, &pxny).expect("pbs::a_2__pi_5 failed.");
         });
     }).expect("thread::scope pn_scope failed.");
 
     // z = pos - neg
     z = pos.clone();
-    z.sub_uint_inplace(&neg)?;
+    z.sub_inplace(&neg)?;
 
     Ok(z)
 }

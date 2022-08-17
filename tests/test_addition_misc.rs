@@ -85,8 +85,8 @@ fn t_impl_add_const_with_mode(
         let me_vec = gen_rand_vec(bl_e);
         let mc_vec = gen_rand_vec(bl_c);
         // convert to integer(s)
-        let me = encryption::convert(&me_vec).expect("convert failed.");
-        let mc = encryption::convert(&mc_vec).expect("convert failed.");
+        let me = encryption::convert_from_vec(&me_vec).expect("convert failed.");
+        let mc = encryption::convert_from_vec(&mc_vec).expect("convert failed.");
 
         println!("  m = {} ({}-bit: {:?}), const = {} ({}-bit: {:?})", me, bl_e, me_vec, mc, bl_c, mc_vec);
 
@@ -130,8 +130,8 @@ fn t_impl_add_triv_zeros_with_mode(
             mode,
         );
         // convert to integer(s)
-        let m1 = encryption::convert(&m1_vec).expect("convert failed.");
-        let m2 = encryption::convert(&m2_vec).expect("convert failed.");
+        let m1 = encryption::convert_from_vec(&m1_vec).expect("convert failed.");
+        let m2 = encryption::convert_from_vec(&m2_vec).expect("convert failed.");
 
         println!("  m1 = {} ({:?} |{}█{}|), m2 = {} ({:?} |{}█{}|)", m1, m1_vec, ltriv_x, rtriv_x, m2, m2_vec, ltriv_y, rtriv_y);
 

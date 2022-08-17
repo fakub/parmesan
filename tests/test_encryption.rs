@@ -63,7 +63,7 @@ fn t_encrypt_decrypt_vec() {
         let m_vec = gen_rand_vec(common::TESTS_BITLEN_FULL);
 
         // encrypt & decrypt
-        let c = encryption::parm_encrypt_vec(
+        let c = encryption::parm_encrypt_from_vec(
             common::TEST_PARAMS,
             &common::TEST_PRIV_KEYS,
             &m_vec,
@@ -75,7 +75,7 @@ fn t_encrypt_decrypt_vec() {
         ).expect("parm_decrypt failed.");
 
         // decode for reference
-        let md = encryption::convert(&m_vec).expect("convert failed.");
+        let md = encryption::convert_from_vec(&m_vec).expect("convert failed.");
 
         assert_eq!(mp, md);
     }
@@ -109,7 +109,7 @@ fn t_impl_decr_with_mode(mode: EncrVsTriv) {
         // generate random vector(s)
         let m1_vec = gen_rand_vec(common::TESTS_BITLEN_FULL);
         // convert to integer(s)
-        let m1 = encryption::convert(&m1_vec).expect("convert failed.");
+        let m1 = encryption::convert_from_vec(&m1_vec).expect("convert failed.");
 
         // encrypt -> homomorphic eval -> decrypt
         let c1 = encrypt_with_mode(&m1_vec, mode);

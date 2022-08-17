@@ -12,9 +12,7 @@ use crossbeam_utils::thread;    // n.b., only for deprecated__sgn_recursion_raw
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use concrete_core::prelude::*;
-
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
+use crate::ciphertexts::{ParmCiphertext,ParmCiphertextImpl,ParmEncrWord};
 use super::{pbs,signum};
 
 /// Implementation of parallel maximum using signum
@@ -36,14 +34,14 @@ pub fn max_impl(
             // s = nonneg(r)
             // returns one sample, not bootstrapped (to be bootstrapped with nonneg)
             let s_raw: ParmCiphertext = signum::sgn_recursion_raw(
-                &pc.pub_keys,
+                pc,
                 &r,
                 true,
             )?;
             //WISH copy this into vector (and test if this helps: concurrent memory access might be slow)
             // bootstrap whether >= 0 (val =  2)
             let s: ParmEncrWord = pbs::nonneg__pi_5(
-                &pc.pub_keys,
+                pc,
                 &s_raw[0],
             )?;
 
@@ -51,26 +49,26 @@ pub fn max_impl(
             let mut xa = x.clone();
             let mut ya = y.clone();
             for _ in 0..((y.len() as i64) - (x.len() as i64)) {
-                xa.push(encryption::parm_encr_word_triv(&pc.params, 0)?);
+                xa.push(ParmEncrWord::encrypt_word(&pc.params, None, 0)?);
             }
             for _ in 0..((x.len() as i64) - (y.len() as i64)) {
-                ya.push(encryption::parm_encr_word_triv(&pc.params, 0)?);
+                ya.push(ParmEncrWord::encrypt_word(&pc.params, None, 0)?);
             }
 
-            m = ParmCiphertext::triv(xa.len(), &pc.pub_keys.encoder)?;
+            m = ParmCiphertext::triv(xa.len(), &pc.params)?;
 
             // calc x and y selectors
             m.par_iter_mut().zip(xa.par_iter().zip(ya.par_iter())).for_each(| (mi, (xi, yi)) | {
                 // 6 yi
-                let mut s_2xi_6yi = pbs::f_1__pi_5__with_val(&pc.pub_keys, yi, 6).expect("pbs::f_1__pi_5__with_val failed.");
+                let mut s_2xi_6yi = pbs::f_1__pi_5__with_val(pc, yi, 6).expect("pbs::f_1__pi_5__with_val failed.");
                 // 2 xi
-                let xi_2 = xi.mul_uint_constant(2).expect("mul_uint_constant failed.");
-                s_2xi_6yi.add_uint_inplace(&xi_2).expect("add_uint_inplace failed.");
+                let xi_2 = xi.mul_const(2).expect("mul_const failed.");
+                s_2xi_6yi.add_inplace(&xi_2).expect("add_inplace failed.");
                 // s + 2 xi + 6 yi
-                s_2xi_6yi.add_uint_inplace(&s).expect("add_uint_inplace failed.");
+                s_2xi_6yi.add_inplace(&s).expect("add_inplace failed.");
 
                 // mi = ReLU+(xi + 2s)
-                *mi = pbs::max_s_2x_6y__pi_5(&pc.pub_keys, &s_2xi_6yi).expect("pbs::max_s_2x_6y__pi_5 failed.");   // ti
+                *mi = pbs::max_s_2x_6y__pi_5(pc, &s_2xi_6yi).expect("pbs::max_s_2x_6y__pi_5 failed.");   // ti
             });
         ]
     );
@@ -101,13 +99,13 @@ pub fn deprecated__max_impl(
             // returns one sample, not bootstrapped (to be bootstrapped with val = 2)
             let s_raw: ParmCiphertext = signum::deprecated__sgn_recursion_raw(
                 pc.params.bit_precision - 1,
-                &pc.pub_keys,
+                pc,
                 &r,
             )?;
             //WISH copy this into vector (and test if this helps: concurrent memory access might be slow)
             // bootstrap whether >= 0 (val =  2)
             let s_2: ParmEncrWord = pbs::f_0__pi_5__with_val(
-                &pc.pub_keys,
+                pc,
                 &s_raw[0],
                 2,
             )?;
@@ -116,40 +114,40 @@ pub fn deprecated__max_impl(
             let mut xa = x.clone();
             let mut ya = y.clone();
             for _ in 0..((y.len() as i64) - (x.len() as i64)) {
-                xa.push(encryption::parm_encr_word_triv(&pc.params, 0)?);
+                xa.push(ParmEncrWord::encrypt_word(&pc.params, None, 0)?);
             }
             for _ in 0..((x.len() as i64) - (y.len() as i64)) {
-                ya.push(encryption::parm_encr_word_triv(&pc.params, 0)?);
+                ya.push(ParmEncrWord::encrypt_word(&pc.params, None, 0)?);
             }
 
-            m = ParmCiphertext::triv(xa.len(), &pc.pub_keys.encoder)?;
+            m = ParmCiphertext::triv(xa.len(), &pc.params)?;
 
             // calc x and y selectors
             m.par_iter_mut().zip(xa.par_iter().zip(ya.par_iter())).for_each(| (mi, (xi, yi)) | {
+                let xi_p2s: ParmEncrWord = xi.add(&s_2).expect("add failed.");
                 // xi + 2s
-                let xi_p2s: ParmEncrWord = xi.add_uint(&s_2).expect("add_uint failed.");
                 // yi - 2s
-                let yi_n2s: ParmEncrWord = yi.sub_uint(&s_2).expect("sub_uint failed.");
+                let yi_n2s: ParmEncrWord = yi.sub(&s_2).expect("sub failed.");
 
                 // t, u (in parallel)
                 // init tmp variables in this scope, only references can be passed to threads
-                let mut ui = encryption::parm_encr_word_triv(&pc.params, 0).expect("encryption::parm_encr_word_triv failed.");
+                let mut ui = ParmEncrWord::encrypt_word(&pc.params, None, 0).expect("ParmEncrWord::encrypt_word failed.");
                 let uir = &mut ui;
 
                 // parallel pool: mi, ui
                 thread::scope(|miui_scope| {
                     miui_scope.spawn(|_| {
                         // mi = ReLU+(xi + 2s)
-                        *mi    = pbs::relu_plus__pi_5(&pc.pub_keys, &xi_p2s).expect("pbs::relu_plus__pi_5 failed.");   // ti
+                        *mi    = pbs::relu_plus__pi_5(pc, &xi_p2s).expect("pbs::relu_plus__pi_5 failed.");   // ti
                     });
                     miui_scope.spawn(|_| {
                         // ui = ReLU+(yi + 2s)
-                        *uir   = pbs::relu_plus__pi_5(&pc.pub_keys, &yi_n2s).expect("pbs::relu_plus__pi_5 failed.");
+                        *uir   = pbs::relu_plus__pi_5(pc, &yi_n2s).expect("pbs::relu_plus__pi_5 failed.");
                     });
                 }).expect("thread::scope miui_scope failed.");
 
                 // t + u
-                mi.add_uint_inplace(&ui).expect("add_uint_inplace failed.");
+                mi.add_inplace(&ui).expect("add_inplace failed.");
             });
         ]
     );

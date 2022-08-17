@@ -63,7 +63,7 @@ fn t_impl_sgn_with_mode(mode: EncrVsTriv) {
         // generate random vector(s)
         let m1_vec = gen_rand_vec(common::TESTS_BITLEN_SGN);
         // convert to integer(s)
-        let m1 = encryption::convert(&m1_vec).expect("convert failed.");
+        let m1 = encryption::convert_from_vec(&m1_vec).expect("convert failed.");
 
         println!("  m1 = {} ({}-bit: {:?})", m1, common::TESTS_BITLEN_SGN, m1_vec);
 

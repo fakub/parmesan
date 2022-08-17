@@ -2,10 +2,155 @@ use std::error::Error;
 
 use concrete_core::prelude::*;
 
+use crate::params::Params;
+use crate::userovo::keys::PrivKeySet;
+
+
+
+// =============================================================================
+//
+//  Encrypted Word
+//
+
+/// Parmesan's struct to hold single encrypted word
+#[derive(Clone)]
+pub struct ParmEncrWord(pub LweCiphertext64);
+
+impl ParmEncrWord {
+    pub fn encrypt_word(
+        params: &Params,
+        priv_keys_opt: Option<&PrivKeySet>,
+        mut mi: i32,
+    ) -> Result<Self, Box<dyn Error>> {
+
+        // little hack, how to bring mi into positive interval [0, 2^pi)
+        mi &= params.plaintext_mask();
+
+        // create Concrete's engine
+        let mut engine = CoreEngine::new(())?;
+
+        // encode message & create Concrete's plaintext
+        let enc_mi: u64 = (mi as u64) << (64 - params.bit_precision);
+        let pi = engine.create_plaintext(&enc_mi)?;
+
+        // encrypt
+        let encr_word = match priv_keys_opt {
+            Some(priv_keys) =>
+                engine.encrypt_lwe_ciphertext(
+                    &priv_keys.sk,
+                    &pi,
+                    Variance(params.lwe_var_f64()),
+                )?,
+            None =>
+                engine.trivially_encrypt_lwe_ciphertext(
+                    params.concrete_pars.lwe_dimension.to_lwe_size(),
+                    &pi,
+                )?,
+        };
+
+        Ok(Self(encr_word))
+    }
+
+    pub fn encrypt_word_triv(
+        params: &Params,
+        mut mi: i32,
+    ) -> Result<Self, Box<dyn Error>> {
+        Self::encrypt_word(params, None, mi)
+    }
+
+    pub fn decrypt_word(
+        &self,
+        params: &Params,
+        priv_keys_opt: Option<&PrivKeySet>,
+    ) -> Result<i32, Box<dyn Error>> {
+        // create Concrete's engine
+        let mut engine = CoreEngine::new(())?;
+
+        // decrypt
+        let pi = match priv_keys_opt {
+            Some(priv_keys) =>
+                engine.decrypt_lwe_ciphertext(&priv_keys.sk, &self.0)?,
+            None =>
+                engine.trivially_decrypt_lwe_ciphertext(&self.0)?,
+        };
+        let mut enc_mi = 0_u64;
+        engine.discard_retrieve_plaintext(&mut enc_mi, &pi)?;
+
+        let pre_round_mi = (enc_mi >> (64 - params.bit_precision - 1)) as u32;  // take one extra bit for rounding
+        let mi = ((pre_round_mi >> 1) + (pre_round_mi & 1u32)) as i32;          // rounding: if the last bit is 1, add 1 to the shifted result
+
+        // subtraction of plaintext space size resolves rounding of 11111.1 to 1'00000 (becomes zero as expected)
+        if mi >= params.plaintext_pos_max() {Ok(mi - params.plaintext_space_size())} else {Ok(mi)}
+    }
+
+    pub fn add_inplace(&mut self, other: &Self) -> Result<(), Box<dyn Error>> {
+        let mut engine = CoreEngine::new(())?;
+        engine.fuse_add_lwe_ciphertext(&mut self.0, &other.0)?;
+        Ok(())
+    }
+
+    pub fn add(&self, other: &Self) -> Result<Self, Box<dyn Error>> {
+        let mut res = self.clone();
+        res.add_inplace(other)?;
+        Ok(res)
+    }
+
+    pub fn add_half_inplace(&mut self, params: &Params) -> Result<(), Box<dyn Error>> {
+        let mut engine = CoreEngine::new(())?;
+        let enc_half: u64 = 1u64 << (64 - params.bit_precision - 1);
+        let p_half = engine.create_plaintext(&enc_half)?;
+        let encr_half = engine.trivially_encrypt_lwe_ciphertext(
+            params.concrete_pars.lwe_dimension.to_lwe_size(),
+            &p_half,
+        )?;
+        engine.fuse_add_lwe_ciphertext(&mut self.0, &encr_half)?;
+        Ok(())
+    }
+
+    pub fn sub_inplace(&mut self, other: &Self) -> Result<(), Box<dyn Error>> {
+        let mut engine = CoreEngine::new(())?;
+        engine.fuse_sub_lwe_ciphertext(&mut self.0, &other.0)?;
+        Ok(())
+    }
+
+    pub fn sub(&self, other: &Self) -> Result<Self, Box<dyn Error>> {
+        let mut res = self.clone();
+        res.sub_inplace(other)?;
+        Ok(res)
+    }
+
+    pub fn opposite(&mut self) -> Result<Self, Box<dyn Error>> {
+        //FIXME
+        Ok(self.clone())
+    }
+
+    pub fn mul_const(&mut self, k: i32) -> Result<Self, Box<dyn Error>> {
+        //FIXME
+        Ok(self.clone())
+    }
+
+    pub fn is_triv(&self) -> bool {
+        //FIXME implement this shit
+        true
+    }
+
+    pub fn is_triv_zero(&self) -> bool {
+        //FIXME implement this shit
+        true
+    }
+}
+
+
+
+// =============================================================================
+//
+//  Parmesan Ciphertext
+//
+
+/// Parmesan's ciphertext holds individual encrypted words
+pub type ParmCiphertext = Vec<ParmEncrWord>;
 //WISH  ciphertext should be more standalone type: it should hold a reference to its public keys & params so that operations can be done with only this type parameter
 //      ale je to: zasrane, zamrdane
-pub struct ParmEncrWord(pub LweCiphertext64);
-pub type ParmCiphertext = Vec<ParmEncrWord>;
 //WISH Vec<(ParmEncrWord, usize)> .. to hold quadratic weights, bootstrap only when necessary (appears to be already implemented in Concrete v0.2)
 //~ pub struct ParmCiphertext {
     //~ pub ct: Vec<(ParmEncrWord, usize)>,
@@ -15,14 +160,15 @@ pub type ParmCiphertext = Vec<ParmEncrWord>;
 pub trait ParmCiphertextImpl {
     fn triv(
         len: usize,
-        encoder: &Encoder,
+        params: &Params,
     ) -> Result<ParmCiphertext, Box<dyn Error>>;
 
     //TODO add triv_const (from vec?), the above is triv_zero, used internally (there is ParmArithmetics::zero)
 
     fn empty() -> ParmCiphertext;
 
-    fn single(c: ParmEncrWord) -> ParmCiphertext;
+    //TODO keep this?
+    //~ fn single(c: ParmEncrWord) -> ParmCiphertext;
 
     fn to_str(&self) -> String;
 }
@@ -30,27 +176,18 @@ pub trait ParmCiphertextImpl {
 impl ParmCiphertextImpl for ParmCiphertext {
     fn triv(
         len: usize,
-        pub_keys: &PubKeySet,
+        params: &Params,
     ) -> Result<ParmCiphertext, Box<dyn Error>> {
-        let mut engine = CoreEngine::new(())?;
-        let zero_plaintext = engine.create_plaintext(&0_u64)?;
-
-        Ok(vec![
-            engine.trivially_encrypt_lwe_ciphertext(
-                pub_keys.ksk.output_lwe_dimension().to_lwe_size(),
-                &zero_plaintext,
-            )?;
-            len
-        ])
+        Ok(vec![ParmEncrWord::encrypt_word_triv(params, 0)?; len])
     }
 
     fn empty() -> ParmCiphertext {
         Vec::new()
     }
 
-    fn single(c: ParmEncrWord) -> ParmCiphertext {
-        vec![c]
-    }
+    //~ fn single(c: ParmEncrWord) -> ParmCiphertext {
+        //~ vec![c]
+    //~ }
 
     fn to_str(&self) -> String {
         let mut s = "[[".to_string();

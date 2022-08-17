@@ -18,7 +18,7 @@ pub fn wind_shifts(
 
         // take window of size bitlen -> convert to scalar -> push to result (n.b.! Rust's ranges!)
         let w = k_vec[sh..=(if sh + bitlen - 1 >= k_vec.len() {k_vec.len()-1} else {sh + bitlen-1})].to_vec();
-        let wi = encryption::convert(&w).expect("encryption::convert failed.");
+        let wi = encryption::convert_from_vec(&w).expect("encryption::convert failed.");
         ws.push((wi as i32,sh));
 
         // increment shift/index

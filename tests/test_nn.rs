@@ -53,7 +53,7 @@ fn t_impl_nn_eval_with_mode(mode: EncrVsTriv) {
             // generate random input
             let m_vec = gen_rand_vec(common::TESTS_BITLEN_NNE);
             // convert to integer
-            let m = encryption::convert(&m_vec).expect("convert failed.");
+            let m = encryption::convert_from_vec(&m_vec).expect("convert failed.");
 
             println!("  m[{}] = {} ({}-bit: {:?})", i, m, common::TESTS_BITLEN_NNE, m_vec);
 

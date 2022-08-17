@@ -26,7 +26,7 @@ pub fn avg_adds_in_scalar_mul() {
         // get window of size ASC_BITLEN
         let w = ktv[0..if ktv.len() < ASC_BITLEN {ktv.len()} else {ASC_BITLEN}].to_vec();
         // get its value
-        let w_val = encryption::convert(&w).expect("convert failed.").abs() as usize;
+        let w_val = encryption::convert_from_vec(&w).expect("convert failed.").abs() as usize;
 
         // HW-1 .. standard NAF approach ; ASC's length .. window-Koy-Tsu
         if !val_ads.contains_key(&w_val) {
