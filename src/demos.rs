@@ -21,7 +21,8 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM80__PI_5__D_22;   //  80    112    128    CONCR__M_2__C_3
+    //~ let par = &params::PARM80__PI_5__D_22;   //  80    112    128    CONCR__M_2__C_3
+    let par = &params::PAR_CNCR_V0_2__M3_C2;   //  80    112    128    CONCR__M_2__C_3
 
     // ---------------------------------
     //  Userovo Scope
@@ -124,7 +125,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
     //~ // testing PBS
     //~ for m_triv in 0 .. ((1 << 5) + 1) {
-        //~ let c_triv = LWE::encrypt_uint_triv(m_triv, pc.pub_keys.encoder)?;
+        //~ let c_triv = encryption::parm_encr_word_triv(&pc.params, m_triv)?;
         //~ let c_triv_sq1 = pbs::a_2__pi_5(pc.pub_keys, &c_triv)?;
         //~ let m_triv_sq1 = c_triv_sq1.decrypt_uint_triv()?;
         //~ println!("|X| ≥ 2\n\t  X = {}\n\tres = {}", m_triv, m_triv_sq1);

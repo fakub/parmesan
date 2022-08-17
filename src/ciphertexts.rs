@@ -4,14 +4,15 @@ use concrete_core::prelude::*;
 
 //WISH  ciphertext should be more standalone type: it should hold a reference to its public keys & params so that operations can be done with only this type parameter
 //      ale je to: zasrane, zamrdane
-pub type ParmCiphertext = Vec<LweCiphertext64>;
-//WISH Vec<(LweCiphertext64, usize)> .. to hold quadratic weights, bootstrap only when necessary (appears to be already implemented in Concrete v0.2)
+pub struct ParmEncrWord(pub LweCiphertext64);
+pub type ParmCiphertext = Vec<ParmEncrWord>;
+//WISH Vec<(ParmEncrWord, usize)> .. to hold quadratic weights, bootstrap only when necessary (appears to be already implemented in Concrete v0.2)
 //~ pub struct ParmCiphertext {
-    //~ pub ct: Vec<(LweCiphertext64, usize)>,
+    //~ pub ct: Vec<(ParmEncrWord, usize)>,
     //~ pub pc: &ParmesanCloudovo,
 //~ }
 
-pub trait ParmCiphertextExt {
+pub trait ParmCiphertextImpl {
     fn triv(
         len: usize,
         encoder: &Encoder,
@@ -21,12 +22,12 @@ pub trait ParmCiphertextExt {
 
     fn empty() -> ParmCiphertext;
 
-    fn single(c: LweCiphertext64) -> ParmCiphertext;
+    fn single(c: ParmEncrWord) -> ParmCiphertext;
 
     fn to_str(&self) -> String;
 }
 
-impl ParmCiphertextExt for ParmCiphertext {
+impl ParmCiphertextImpl for ParmCiphertext {
     fn triv(
         len: usize,
         pub_keys: &PubKeySet,
@@ -47,20 +48,19 @@ impl ParmCiphertextExt for ParmCiphertext {
         Vec::new()
     }
 
-    fn single(c: LweCiphertext64) -> ParmCiphertext {
+    fn single(c: ParmEncrWord) -> ParmCiphertext {
         vec![c]
     }
 
-    //TODO
-    //~ fn to_str(&self) -> String {
-        //~ let mut s = "[[".to_string();
+    fn to_str(&self) -> String {
+        let mut s = "[[".to_string();
         //~ for c in self {
-            //~ //FIXME extract from new struct
+            //~ //TODO extract from new struct
             //~ s += &*format!("<{}|{}b>, ", if c.dimension == 0 {format!("{}", c.ciphertext.get_body().0)} else {"#".to_string()}, c.encoder.nb_bit_precision)
         //~ }
-        //~ s += "]]";
-        //~ s
-    //~ }
+        s += "]]";
+        s
+    }
 }
 
 //WISH this is not possible: error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate

@@ -12,7 +12,7 @@ use rayon::prelude::*;
 use colored::Colorize;
 
 use crate::userovo::keys::PubKeySet;
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
 use super::pbs;
 
 /// Implementation of signum via parallel reduction

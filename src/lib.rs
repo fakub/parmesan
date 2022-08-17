@@ -47,7 +47,7 @@ pub mod misc;
 pub mod params;
 pub use params::Params;
 pub mod ciphertexts;
-pub use ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+pub use ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
 pub mod arithmetics;
 pub use arithmetics::ParmArithmetics;
 pub mod experiments;
@@ -98,7 +98,6 @@ impl ParmesanUserovo<'_> {
         PubKeySet {
             bsk:     &self.priv_keys.bsk,
             ksk:     &self.priv_keys.ksk,
-            encoder: &self.priv_keys.encoder,
         }
     }
 
@@ -179,18 +178,17 @@ pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = Asc::map_from_yaml(ASC_B
 //
 //  TODO / Wishlist
 //
+//  - cleanup Cargo.toml !!!
+//
 //  - merge with TODOs file
 //  - mul_lwe .. for more than 1x1 bit? let say 1x2 bit? what about squaring?
 //  - parallel mulary reduction
 //
 //  - New Concrete v0.2.0
-//      - ParmCiphertext = Vec<LWE>
 //      - params & keys structs, initialization, serialization
-//      - ParmCiphertextExt::triv, single, to_str
-//      - LWE::encrypt_uint_triv in addition
+//      - ParmCiphertextImpl::triv, single, to_str
 //      - mul_lwe, squ_lwe
 //      - PBS all
-//      - parm_encr_word, parm_decr_word (LWE::encrypt_uint, decrypt_uint)
 //
 //  - WISH: track quadratic weight within Parmesan Ciphertext (Vec<(LWE, usize)> ??)
 //      - keep track of sample freshness (e.g., in signum recursion that's mess)

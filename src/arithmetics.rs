@@ -1,4 +1,4 @@
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
 use crate::ParmesanCloudovo;
 use crate::cloudovo::*;
 

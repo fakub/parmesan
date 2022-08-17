@@ -15,7 +15,7 @@ use colored::Colorize;
 use concrete_core::prelude::*;
 
 use crate::userovo::keys::PubKeySet;
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
 use super::{pbs, multiplication};
 
 
@@ -203,7 +203,7 @@ fn fill_squary(
 /// in `{-1, 0, 1}`
 pub fn squ_lwe(
     pub_keys: &PubKeySet,
-    x: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    x: &ParmEncrWord,
+) -> Result<ParmEncrWord, Box<dyn Error>> {
     pbs::a_1__pi_5(pub_keys, x)
 }

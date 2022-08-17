@@ -3,7 +3,7 @@ extern crate lazy_static;
 
 use parmesan::userovo::encryption;
 use parmesan::arithmetics::ParmArithmetics;
-use parmesan::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+use parmesan::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
 
 #[allow(dead_code)]
 mod common;

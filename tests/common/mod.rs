@@ -1,9 +1,7 @@
 use rand::Rng;
 
-use concrete::LWE;
-
 use parmesan::params::{self,Params};
-use parmesan::ciphertexts::{ParmCiphertext,ParmCiphertextExt};
+use parmesan::ciphertexts::{ParmCiphertext,ParmCiphertextImpl};
 use parmesan::userovo::keys::{PrivKeySet,PubKeySet};
 use parmesan::ParmesanUserovo;
 use parmesan::ParmesanCloudovo;

@@ -15,7 +15,7 @@ use colored::Colorize;
 use concrete_core::prelude::*;
 
 use crate::userovo::keys::PubKeySet;
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
 use super::pbs;
 
 
@@ -55,9 +55,9 @@ pub fn mul_impl(
 
         for _i in 0..len_diff {
             if x_in.len() < y_in.len() {
-                x_in.push(LWE::encrypt_uint_triv(0, &pc.pub_keys.encoder)?);
+                x_in.push(encryption::parm_encr_word_triv(&pc.params, 0)?);
             } else {
-                y_in.push(LWE::encrypt_uint_triv(0, &pc.pub_keys.encoder)?);
+                y_in.push(encryption::parm_encr_word_triv(&pc.params, 0)?);
             }
         }
     }
@@ -287,9 +287,9 @@ fn fill_mulary(
 /// a plaintext in `{-1, 0, 1}`
 pub fn mul_lwe(
     pub_keys: &PubKeySet,
-    x: &LWE,
-    y: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
+    x: &ParmEncrWord,
+    y: &ParmEncrWord,
+) -> Result<ParmEncrWord, Box<dyn Error>> {
 
     // resolve trivial cases
     //WISH check correctness
@@ -346,10 +346,10 @@ pub fn reduce_mulsquary (
 #[allow(non_snake_case)]
 pub fn deprecated__mul_lwe(
     pub_keys: &PubKeySet,
-    x: &LWE,
-    y: &LWE,
-) -> Result<LWE, Box<dyn Error>> {
-    let mut z: LWE;
+    x: &ParmEncrWord,
+    y: &ParmEncrWord,
+) -> Result<ParmEncrWord, Box<dyn Error>> {
+    let mut z: ParmEncrWord;
     let pi = x.encoder.nb_bit_precision;
     if x.dimension == 0 {
         let mut mx: i32 = x.decrypt_uint_triv()? as i32;
@@ -364,16 +364,16 @@ pub fn deprecated__mul_lwe(
     }
 
     // x + y
-    let mut pxpy: LWE = x.clone();
+    let mut pxpy: ParmEncrWord = x.clone();
     pxpy.add_uint_inplace(y)?;
     // x - y
-    let mut pxny: LWE = x.clone();
+    let mut pxny: ParmEncrWord = x.clone();
     pxny.sub_uint_inplace(y)?;
 
     // pos, neg (in parallel)
     // init tmp variables in this scope, only references can be passed to threads
-    let mut pos = LWE::encrypt_uint_triv(0, &pub_keys.encoder).expect("LWE::encrypt_uint_triv failed.");
-    let mut neg = LWE::encrypt_uint_triv(0, &pub_keys.encoder).expect("LWE::encrypt_uint_triv failed.");
+    let mut pos = encryption::parm_encr_word_triv(&pc.params, 0).expect("encryption::parm_encr_word_triv failed.");
+    let mut neg = encryption::parm_encr_word_triv(&pc.params, 0).expect("encryption::parm_encr_word_triv failed.");
     let posr = &mut pos;
     let negr = &mut neg;
 

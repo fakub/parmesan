@@ -13,7 +13,7 @@ use rayon::prelude::*;
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
 
 pub mod asc;
 pub use asc::{Asc, AddShift, AscEval, AscValue};

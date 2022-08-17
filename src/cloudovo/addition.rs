@@ -5,6 +5,7 @@ pub use std::path::Path;
 pub use std::io::Write;
 
 use crate::*;
+use crate::userovo::*;
 
 // parallelization tools
 use rayon::prelude::*;
@@ -14,7 +15,7 @@ use colored::Colorize;
 
 use concrete_core::prelude::*;
 
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
 use super::pbs;
 
 /// Implementation of parallel addition/subtraction
@@ -76,7 +77,7 @@ pub fn add_sub_impl(
             }
             // if x is shorter than wlen, fill the rest with zeros
             for _ in 0..((wlen as i64) - (x.len() as i64)) {
-                w.push(LWE::encrypt_uint_triv(0, &pc.pub_keys.encoder)?);
+                w.push(encryption::parm_encr_word_triv(&pc.params, 0)?);
             }
             // now w has the correct length!
 
@@ -207,10 +208,7 @@ pub fn add_const_impl(
         };
 
         // encrypt as trivial sample
-        let cti = LWE::encrypt_uint_triv(
-            ki,
-            &pc.pub_keys.encoder,
-        )?;
+        let cti = encryption::parm_encr_word_triv(&pc.params, ki)?;
 
         ck.push(cti);
     }

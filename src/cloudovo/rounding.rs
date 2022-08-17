@@ -8,7 +8,7 @@ use crate::*;
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
 use super::pbs;
 
 pub fn round_at_impl(

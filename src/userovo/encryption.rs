@@ -1,4 +1,5 @@
 use std::error::Error;
+//~ use std::option::*;
 
 // parallelization tools
 use rayon::prelude::*;
@@ -10,7 +11,7 @@ use concrete_core::prelude::*;
 
 use crate::params::Params;
 use crate::userovo::keys::PrivKeySet;
-use crate::ciphertexts::{ParmCiphertext, ParmCiphertextExt};
+use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
 
 pub const PARM_CT_MAXLEN: usize = 63;
 
@@ -41,7 +42,7 @@ pub fn parm_encrypt(
         } else {
             if m_pos {1i32} else {-1i32}
         };
-        res.push(parm_encr_word(params, priv_keys, mi)?);
+        res.push(parm_encr_word(params, Some(priv_keys), mi)?);
     }
 
     Ok(res)
@@ -56,7 +57,7 @@ pub fn parm_encrypt_vec(
     let mut res = ParmCiphertext::triv(mv.len(), &priv_keys.encoder)?;
 
     res.iter_mut().zip(mv.iter()).for_each(| (ri, mi) | {
-        *ri = parm_encr_word(params, priv_keys, *mi).expect("parm_encr_word failed.");
+        *ri = parm_encr_word(params, Some(priv_keys), *mi).expect("parm_encr_word failed.");
     });
 
     Ok(res)
@@ -64,9 +65,9 @@ pub fn parm_encrypt_vec(
 
 fn parm_encr_word(
     params: &Params,
-    priv_keys: &PrivKeySet,
+    priv_keys_opt: Option<&PrivKeySet>,
     mut mi: i32,
-) -> Result<LweCiphertext64, Box<dyn Error>> {
+) -> Result<ParmEncrWord, Box<dyn Error>> {
 
     // check that mi is in alphabet
     if mi < -1 || mi > 1 {
@@ -83,12 +84,29 @@ fn parm_encr_word(
     let enc_mi = mi * params.delta_concrete();
     let pi = engine.create_plaintext(&enc_mi)?;
 
-    // encrypt & return
-    Ok(engine.encrypt_lwe_ciphertext(
-        &PrivKeySet.lwe_secret_key,
-        &pi,
-        params.var_lwe
-    )?)
+    // encrypt
+    let encr_word = match priv_keys_opt {
+        Some(priv_keys) =>
+            engine.encrypt_lwe_ciphertext(
+                &priv_keys.sk,
+                &pi,
+                params.var_lwe,
+            )?
+        None =>
+            engine.trivially_encrypt_lwe_ciphertext(
+                params.lwe_dimension.to_lwe_size(),
+                &pi,
+            )?
+    }
+
+    Ok(ParmEncrWord(encr_word))
+}
+
+pub fn parm_encr_word_triv(
+    params: &Params,
+    mut mi: i32,
+) -> Result<ParmEncrWord, Box<dyn Error>> {
+    parm_encr_word(params, None, mi)
 }
 
 
@@ -119,12 +137,12 @@ pub fn parm_decrypt(
 fn parm_decr_word(
     params: &Params,
     priv_keys: &PrivKeySet,
-    ci: &LweCiphertext64,
+    ci: &ParmEncrWord,
 ) -> Result<i32, Box<dyn Error>> {
     // create Concrete's engine
     let mut engine = CoreEngine::new(())?;
 
-    let pi = engine.decrypt_lwe_ciphertext(&priv_keys.sk, &ci)?;
+    let pi = engine.decrypt_lwe_ciphertext(&priv_keys.sk, &ci.0)?;
     let mut enc_mi = 0_u64;
     engine.discard_retrieve_plaintext(&mut enc_mi, &pi)?;
     //TODO FIXME rounding (was in decrypt_uint)

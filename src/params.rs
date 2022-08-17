@@ -34,6 +34,45 @@ impl Params {
         1i32 << self.bit_precision
     }
 
+
+    // -------------------------------------------------------------------------
+    //  Accessors
+
+    /// Access LWE dimensoin (aka. n)
+    pub fn lwe_dimension(&self) -> usize {
+        self.concrete_pars.lwe_dimension.0
+    }
+
+    /// Access GLWE dimensoin (aka. k; usually 1)
+    pub fn glwe_dimension(&self) -> usize {
+        self.concrete_pars.glwe_dimension.0
+    }
+
+    /// Access reduction polynomial degree (aka. N)
+    pub fn polynomial_size(&self) -> usize {
+        self.concrete_pars.polynomial_size.0
+    }
+
+    /// Access LWE std. dev.
+    pub fn lwe_modular_std_dev(&self) -> f64 {
+        self.concrete_pars.lwe_modular_std_dev.0
+    }
+
+    /// Access LWE variance
+    pub fn lwe_var(&self) -> f64 {
+        self.concrete_pars.lwe_modular_std_dev.get_variance()
+    }
+
+    /// Access GLWE std. dev.
+    pub fn glwe_modular_std_dev(&self) -> f64 {
+        self.concrete_pars.glwe_modular_std_dev.0
+    }
+
+    /// Access GLWE variance
+    pub fn glwe_var(&self) -> f64 {
+        self.concrete_pars.glwe_modular_std_dev.get_variance()
+    }
+
     /// Access PBS base log (aka. gamma)
     pub fn bs_base_log(&self) -> usize {
         self.concrete_pars.pbs_base_log.0
@@ -65,6 +104,14 @@ impl Params {
         1 << (64 - self.bit_precision)
     }
 }
+
+#[allow(dead_code)]
+pub const PAR_CNCR_V0_2__M3_C2: Params = Params {
+    concrete_pars:  concrete_shortint::parameters::PARAM_MESSAGE_3_CARRY_2,
+    bit_precision:   5,
+    quad_weight:    16,   //TODO will it be used?
+};
+
 
 //~ #[allow(dead_code)]
 //~ pub const PARMXX__TRIVIAL: Params = Params {
