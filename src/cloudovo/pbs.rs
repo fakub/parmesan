@@ -69,7 +69,7 @@ fn eval_LUT_5_float(
         if fm_half {
             let mut res = ParmEncrWord::encrypt_word_triv(&pc.params, fm_u as i32)?;
             // add half back
-            res.add_half_inplace(&pc.params)?;
+            res.add_half_inplace(pc)?;
             Ok(res)
         } else {
             Ok(ParmEncrWord::encrypt_word_triv(&pc.params, fm_u as i32)?)
@@ -361,7 +361,7 @@ pub fn nonneg__pi_5(
         c,
         [0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,]      // [1/2, ..., 1/2, -1/2, ..., -1/2]
     )?;
-    h.add_half_inplace(&pc.params)?;                                            // [  1, ...,   1,    0, ...,    0]
+    h.add_half_inplace(pc)?;                                                    // [  1, ...,   1,    0, ...,    0]
     Ok(h)
 }
 

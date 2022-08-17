@@ -49,10 +49,10 @@ pub fn max_impl(
             let mut xa = x.clone();
             let mut ya = y.clone();
             for _ in 0..((y.len() as i64) - (x.len() as i64)) {
-                xa.push(ParmEncrWord::encrypt_word(&pc.params, None, 0)?);
+                xa.push(ParmEncrWord::encrypt_word_triv(&pc.params, 0)?);
             }
             for _ in 0..((x.len() as i64) - (y.len() as i64)) {
-                ya.push(ParmEncrWord::encrypt_word(&pc.params, None, 0)?);
+                ya.push(ParmEncrWord::encrypt_word_triv(&pc.params, 0)?);
             }
 
             m = ParmCiphertext::triv(xa.len(), &pc.params)?;
@@ -114,10 +114,10 @@ pub fn deprecated__max_impl(
             let mut xa = x.clone();
             let mut ya = y.clone();
             for _ in 0..((y.len() as i64) - (x.len() as i64)) {
-                xa.push(ParmEncrWord::encrypt_word(&pc.params, None, 0)?);
+                xa.push(ParmEncrWord::encrypt_word_triv(&pc.params, 0)?);
             }
             for _ in 0..((x.len() as i64) - (y.len() as i64)) {
-                ya.push(ParmEncrWord::encrypt_word(&pc.params, None, 0)?);
+                ya.push(ParmEncrWord::encrypt_word_triv(&pc.params, 0)?);
             }
 
             m = ParmCiphertext::triv(xa.len(), &pc.params)?;
@@ -131,7 +131,7 @@ pub fn deprecated__max_impl(
 
                 // t, u (in parallel)
                 // init tmp variables in this scope, only references can be passed to threads
-                let mut ui = ParmEncrWord::encrypt_word(&pc.params, None, 0).expect("ParmEncrWord::encrypt_word failed.");
+                let mut ui = ParmEncrWord::encrypt_word_triv(&pc.params, 0).expect("ParmEncrWord::encrypt_word_triv failed.");
                 let uir = &mut ui;
 
                 // parallel pool: mi, ui

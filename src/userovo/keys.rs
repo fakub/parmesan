@@ -49,7 +49,7 @@ impl PrivKeySet {
 
                     // client keys
                     measure_duration!(
-                        ["Generating secret keys (n = {}, N = {})", params.lwe_dimension, params.polynomial_size],
+                        ["Generating secret keys (n = {}, N = {})", params.lwe_dimension(), params.polynomial_size()],
                         [
                             _lwe_secret_key_after_ks = engine.create_lwe_secret_key(params.concrete_pars.lwe_dimension)?;
                             _glwe_secret_key = engine.create_glwe_secret_key(params.concrete_pars.glwe_dimension, params.concrete_pars.polynomial_size)?;

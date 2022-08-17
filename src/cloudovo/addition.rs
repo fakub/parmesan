@@ -74,7 +74,7 @@ pub fn add_sub_impl(
             }
             // if x is shorter than wlen, fill the rest with zeros
             for _ in 0..((wlen as i64) - (x.len() as i64)) {
-                w.push(ParmEncrWord::encrypt_word(&pc.params, None, 0)?);
+                w.push(ParmEncrWord::encrypt_word_triv(&pc.params, 0)?);
             }
             // now w has the correct length!
 
@@ -205,7 +205,7 @@ pub fn add_const_impl(
         };
 
         // encrypt as trivial sample
-        let cti = ParmEncrWord::encrypt_word(&pc.params, None, ki as i32)?;
+        let cti = ParmEncrWord::encrypt_word_triv(&pc.params, ki as i32)?;
 
         ck.push(cti);
     }

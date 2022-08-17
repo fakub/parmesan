@@ -4,6 +4,7 @@ use concrete_core::prelude::*;
 
 use crate::params::Params;
 use crate::userovo::keys::PrivKeySet;
+use crate::ParmesanCloudovo;
 
 
 
@@ -85,33 +86,67 @@ impl ParmEncrWord {
     // -------------------------------------------------------------------------
     //  Basic operations with encrypted words
 
-    pub fn add_inplace(&mut self, other: &Self) -> Result<(), Box<dyn Error>> {
+    pub fn add_inplace(
+        &mut self,
+        other: &Self,
+    ) -> Result<(), Box<dyn Error>> {
         let mut engine = CoreEngine::new(())?;
-        engine.fuse_add_lwe_ciphertext(&mut self.0, &other.0)?;
+
+        // self is triv and other is not => extend mutable self to dimension
+        if self.is_triv() && !other.is_triv() {
+            let ps = engine.trivially_decrypt_lwe_ciphertext(&self.0)?;
+            // re-"encrypt" self with the full dimension
+            *self = Self(engine.trivially_encrypt_lwe_ciphertext(
+                other.0.lwe_dimension().to_lwe_size(),
+                &ps,
+            )?);
+        }
+
+        // other is triv and self is not => extend other to dimension, otherwise clone
+        let other_w_dim = if !self.is_triv() && other.is_triv() {
+            let po = engine.trivially_decrypt_lwe_ciphertext(&other.0)?;
+            Self(engine.trivially_encrypt_lwe_ciphertext(
+                self.0.lwe_dimension().to_lwe_size(),
+                &po,
+            )?)
+        } else {
+            other.clone()
+        };
+
+        // add aligned ciphertexts
+        engine.fuse_add_lwe_ciphertext(&mut self.0, &other_w_dim.0)?;
         Ok(())
     }
 
-    pub fn add(&self, other: &Self) -> Result<Self, Box<dyn Error>> {
+    pub fn add(
+        &self,
+        other: &Self,
+    ) -> Result<Self, Box<dyn Error>> {
         let mut res = self.clone();
         res.add_inplace(other)?;
         Ok(res)
     }
 
-    pub fn add_half_inplace(&mut self, params: &Params) -> Result<(), Box<dyn Error>> {
+    pub fn add_half_inplace(&mut self, pc: &ParmesanCloudovo) -> Result<(), Box<dyn Error>> {
         let mut engine = CoreEngine::new(())?;
-        let enc_half: u64 = 1u64 << (64 - params.bit_precision - 1);
+        let enc_half: u64 = 1u64 << (64 - pc.params.bit_precision - 1);
         let p_half = engine.create_plaintext(&enc_half)?;
         engine.fuse_add_lwe_ciphertext_plaintext(&mut self.0, &p_half)?;
         Ok(())
     }
 
-    pub fn sub_inplace(&mut self, other: &Self) -> Result<(), Box<dyn Error>> {
-        let mut engine = CoreEngine::new(())?;
-        engine.fuse_sub_lwe_ciphertext(&mut self.0, &other.0)?;
-        Ok(())
+    pub fn sub_inplace(
+        &mut self,
+        other: &Self,
+    ) -> Result<(), Box<dyn Error>> {
+        let neg_other = other.opp()?;
+        self.add_inplace(&neg_other)
     }
 
-    pub fn sub(&self, other: &Self) -> Result<Self, Box<dyn Error>> {
+    pub fn sub(
+        &self,
+        other: &Self,
+    ) -> Result<Self, Box<dyn Error>> {
         let mut res = self.clone();
         res.sub_inplace(other)?;
         Ok(res)
@@ -180,9 +215,6 @@ pub trait ParmCiphertextImpl {
 
     fn empty() -> ParmCiphertext;
 
-    //TODO keep this?
-    //~ fn single(c: ParmEncrWord) -> ParmCiphertext;
-
     fn to_str(&self) -> String;
 }
 
@@ -197,10 +229,6 @@ impl ParmCiphertextImpl for ParmCiphertext {
     fn empty() -> ParmCiphertext {
         Vec::new()
     }
-
-    //~ fn single(c: ParmEncrWord) -> ParmCiphertext {
-        //~ vec![c]
-    //~ }
 
     fn to_str(&self) -> String {
         let mut s = "[[".to_string();

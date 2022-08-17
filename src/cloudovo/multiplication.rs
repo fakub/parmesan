@@ -52,9 +52,9 @@ pub fn mul_impl(
 
         for _i in 0..len_diff {
             if x_in.len() < y_in.len() {
-                x_in.push(ParmEncrWord::encrypt_word(&pc.params, None, 0)?);
+                x_in.push(ParmEncrWord::encrypt_word_triv(&pc.params, 0)?);
             } else {
-                y_in.push(ParmEncrWord::encrypt_word(&pc.params, None, 0)?);
+                y_in.push(ParmEncrWord::encrypt_word_triv(&pc.params, 0)?);
             }
         }
     }
@@ -361,8 +361,8 @@ pub fn deprecated__mul_lwe(
 
     // pos, neg (in parallel)
     // init tmp variables in this scope, only references can be passed to threads
-    let mut pos = ParmEncrWord::encrypt_word(&pc.params, None, 0).expect("ParmEncrWord::encrypt_word failed.");
-    let mut neg = ParmEncrWord::encrypt_word(&pc.params, None, 0).expect("ParmEncrWord::encrypt_word failed.");
+    let mut pos = ParmEncrWord::encrypt_word_triv(&pc.params, 0).expect("ParmEncrWord::encrypt_word failed.");
+    let mut neg = ParmEncrWord::encrypt_word_triv(&pc.params, 0).expect("ParmEncrWord::encrypt_word_triv failed.");
     let posr = &mut pos;
     let negr = &mut neg;
 
