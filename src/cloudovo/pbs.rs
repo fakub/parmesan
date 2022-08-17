@@ -15,8 +15,8 @@ use crate::ParmesanCloudovo;
     //~ pc: &ParmesanCloudovo,
     //~ c: &ParmEncrWord,
 //~ ) -> Result<ParmEncrWord, Box<dyn Error>> {
-    //~ //TODO resolve trivial case
-    //~ if c.dimension == 0 {
+    //~ //TODO resolve negacyclicity
+    //~ if c.is_triv() {
         //~ return Ok(c.clone());
     //~ }
 
@@ -35,7 +35,7 @@ use crate::ParmesanCloudovo;
 #[allow(non_snake_case)]
 fn eval_LUT_5_uint(
     pc: &ParmesanCloudovo,
-    ci: &ParmEncrWord,
+    c: &ParmEncrWord,
     lut: [u64; 1 << (5-1)],
 ) -> Result<ParmEncrWord, Box<dyn Error>> {
     let mut lut_f = [0f64; 1 << (5-1)];
@@ -45,7 +45,7 @@ fn eval_LUT_5_uint(
 
     eval_LUT_5_float(
         pc,
-        ci,
+        c,
         lut_f,
     )
 }
@@ -53,13 +53,12 @@ fn eval_LUT_5_uint(
 #[allow(non_snake_case)]
 fn eval_LUT_5_float(
     pc: &ParmesanCloudovo,
-    ci: &ParmEncrWord,
+    c: &ParmEncrWord,
     lut: [f64; 1 << (5-1)],
 ) -> Result<ParmEncrWord, Box<dyn Error>> {
     // resolve trivial case
-    //FIXME
-    if ci.is_triv() {
-        let  m = ci.decrypt_word_pos(&pc.params, None)?;
+    if c.is_triv() {
+        let  m = c.decrypt_word_pos(&pc.params, None)?;
         let fm = if m < (1 << (5-1)) { lut[m as usize] }
             else if m < (1 << 5) { -lut[(m as i32 - (1 << (5-1))) as usize] }
             else {return Err(format!("Word m = {} does not fit 5-bit LUT.", m).into())};
@@ -78,12 +77,12 @@ fn eval_LUT_5_float(
     } else {
         //PBS unsafe { crate::NBS += 1; }
 
-        let mut res = ci.0.clone();
+        let mut res = c.0.clone();
 
         let mut engine = CoreEngine::new(())?;
         let accumulator = create_accum(|x| lut[x as usize], &pc.pub_keys.bsk, pc.params.bit_precision)?;
 
-        let zero_plaintext = engine.create_plaintext(&0_u64)?;   //TODO : Plaintext64 needed?
+        let zero_plaintext = engine.create_plaintext(&0_u64)?;
         let mut buffer_lwe_after_pbs = engine.trivially_encrypt_lwe_ciphertext(
             pc.pub_keys.ksk.output_lwe_dimension().to_lwe_size(), // prepare space for the results
             &zero_plaintext,

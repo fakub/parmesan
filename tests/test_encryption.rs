@@ -18,7 +18,7 @@ use common::*;
 /// Decryption of trivial sample (no encryption of zero).
 fn t_decrypt_triv() {
     // trivial ciphertext of length common::TESTS_BITLEN_FULL
-    let c = ParmCiphertext::triv(common::TESTS_BITLEN_FULL, &common::TEST_PUB_K.encoder).expect("ParmCiphertext::triv failed.");
+    let c = ParmCiphertext::triv(common::TESTS_BITLEN_FULL, &common::TEST_PARAMS).expect("ParmCiphertext::triv failed.");
     // decryption
     let m = encryption::parm_decrypt(
         common::TEST_PARAMS,

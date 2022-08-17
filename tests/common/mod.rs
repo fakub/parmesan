@@ -1,7 +1,7 @@
 use rand::Rng;
 
 use parmesan::params::{self,Params};
-use parmesan::ciphertexts::{ParmCiphertext,ParmCiphertextImpl};
+use parmesan::ciphertexts::{ParmCiphertext,ParmCiphertextImpl,ParmEncrWord};
 use parmesan::userovo::keys::{PrivKeySet,PubKeySet};
 use parmesan::ParmesanUserovo;
 use parmesan::ParmesanCloudovo;
@@ -13,7 +13,8 @@ use parmesan::ParmesanCloudovo;
 //
 // to evaluate code in static declaration, lazy_static must be used
 // cf. https://stackoverflow.com/questions/46378637/how-to-make-a-variable-with-a-scope-lifecycle-for-all-test-functions-in-a-rust-t
-pub static TEST_PARAMS: &Params = &params::PARM80__PI_5__D_22;   //     PARMXX__TRIVIAL
+//~ pub static TEST_PARAMS: &Params = &params::PARM80__PI_5__D_22;   //     PARMXX__TRIVIAL
+pub static TEST_PARAMS: &Params = &params::PAR_CNCR_V0_2__M3_C2;   //     PARMXX__TRIVIAL
 lazy_static! {
     pub static ref TEST_PRIV_KEYS: PrivKeySet = PrivKeySet::new(TEST_PARAMS).expect("PrivKeySet::new failed.");
 }
@@ -126,9 +127,9 @@ pub fn encrypt_with_flags(
 
     res.iter_mut().zip(m_vec.iter().zip(m_flags.iter())).for_each(| (ri, (mi, fi)) | {
         *ri = if *fi {
-            ParmEncrWord::encrypt_word(par, Some(priv_keys), mi).expect("ParmEncrWord::encrypt_word failed.")
+            ParmEncrWord::encrypt_word(par, Some(priv_keys), *mi).expect("ParmEncrWord::encrypt_word failed.")
         } else {
-            ParmEncrWord::encrypt_word_triv(par, mi).expect("ParmEncrWord::encrypt_word_triv failed.")
+            ParmEncrWord::encrypt_word_triv(par, *mi).expect("ParmEncrWord::encrypt_word_triv failed.")
         };
     });
 
