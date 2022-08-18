@@ -49,6 +49,7 @@ pub static TESTS_BITLEN_SCM:        usize     =   9;
 pub static TESTS_BITLEN_SCALAR:     usize     =  30;
 pub static TESTS_BITLEN_KOY_TSU:    usize     =  30;
 pub static TESTS_BITLEN_NNE:        usize     =   5;
+pub static TESTS_EW_MAX_SCALAR:     usize     =   4;
 
 // NN-specific
 pub static TESTS_NNE_DEPTH:         usize     =   3;
@@ -56,6 +57,7 @@ pub static TESTS_NNE_LAYER_SIZE:    usize     =   5;
 pub static TESTS_NNE_B_ABS_MAX:     i64       =  15;
 
 pub static TESTS_REPEAT_ENCR:       usize     = 100;
+pub static TESTS_REPEAT_ENCR_WORD:  usize     = 100;
 pub static TESTS_REPEAT_MAX:        usize     =   3;
 pub static TESTS_REPEAT_SGN:        usize     =   3;
 pub static TESTS_REPEAT_ROUND:      usize     =  10;
@@ -67,7 +69,7 @@ pub static TESTS_REPEAT_SCM:        usize     =   3;
 pub static TESTS_REPEAT_KOY_TSU:    usize     =1000;
 pub static TESTS_REPEAT_NNE:        usize     =   3;
 
-#[derive(Clone,Copy)]
+#[derive(Clone,Copy,PartialEq)]
 pub enum EncrVsTriv {
     // all words encrypted
     ENCR,

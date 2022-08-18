@@ -70,7 +70,7 @@ impl ParmEncrWord {
         // decrypt
         let pi = match priv_keys_opt {
             Some(priv_keys) =>
-                engine.decrypt_lwe_ciphertext(&priv_keys.sk, &self.0)?,
+                if self.is_triv() {engine.trivially_decrypt_lwe_ciphertext(&self.0)?} else {engine.decrypt_lwe_ciphertext(&priv_keys.sk, &self.0)?},
             None =>
                 engine.trivially_decrypt_lwe_ciphertext(&self.0)?,
         };

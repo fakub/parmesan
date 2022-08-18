@@ -3,8 +3,8 @@ extern crate lazy_static;
 
 use rand::Rng;
 
-use parmesan::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
 use parmesan::userovo::encryption;
+use parmesan::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
 
 #[allow(dead_code)]
 mod common;

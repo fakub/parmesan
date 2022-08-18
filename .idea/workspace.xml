@@ -8,14 +8,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b4184c2c-b26b-4c0c-a27d-c41e040f44f6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/src/ciphertexts.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ciphertexts.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cloudovo/addition.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/cloudovo/addition.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cloudovo/maximum.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/cloudovo/maximum.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cloudovo/multiplication.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/cloudovo/multiplication.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cloudovo/pbs.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/cloudovo/pbs.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cloudovo/rounding.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/cloudovo/rounding.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cloudovo/signum.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/cloudovo/signum.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/userovo/keys.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/userovo/keys.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
