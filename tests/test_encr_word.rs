@@ -121,6 +121,11 @@ fn t_impl_encr_word_with_modes(
         assert_eq!(dscm as i32, (k * ms).rem_euclid(ps_mod));
 
         // verify add_half_inplace
-        //TODO
+        let mut cah = cs.clone();
+        cah.add_half_inplace(&common::TEST_PC).expect("ParmEncrWord::add_half_inplace failed.");
+        cah.mul_const_inplace(2).expect("ParmEncrWord::mul_const_inplace failed.");
+        let dah: u32 = cah.decrypt_word_pos(common::TEST_PARAMS, Some(&common::TEST_PRIV_KEYS)).expect("ParmEncrWord::decrypt_word_pos failed.");
+        println!("  dah = {} (exp. {})", dah,  (ms * 2 + 1).rem_euclid(ps_mod));
+        assert_eq!(dah as i32, (ms * 2 + 1).rem_euclid(ps_mod));
     }
 }
