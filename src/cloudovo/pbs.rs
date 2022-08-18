@@ -33,7 +33,7 @@ use crate::ParmesanCloudovo;
 //
 
 #[allow(non_snake_case)]
-fn eval_LUT_5_uint(
+pub fn eval_LUT_5_uint(
     pc: &ParmesanCloudovo,
     c: &ParmEncrWord,
     lut: [u64; 1 << (5-1)],
@@ -113,7 +113,7 @@ fn create_accum<F>(
 ) -> Result<GlweCiphertext64, Box<dyn std::error::Error>>
 where F: Fn(usize) -> f64 {
     let mut engine = CoreEngine::new(())?;
-    let delta = 1 << (64 - bit_precision);
+    let delta = 1u64 << (64 - bit_precision);
     let mut accumulator_u64 = vec![0_u64; bootstrapping_key.polynomial_size().0];
     let modulus_sup = 1 << (bit_precision - 1);   // half of values is to be set .. 16
     let box_size = bootstrapping_key.polynomial_size().0 / modulus_sup;

@@ -121,5 +121,6 @@ fn t_impl_encr_word_with_modes(
         assert_eq!(dscm as i32, (k * ms).rem_euclid(ps_mod));
 
         // verify add_half_inplace
+        //TODO
     }
 }
