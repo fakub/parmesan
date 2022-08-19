@@ -14,6 +14,8 @@ Parmesan implements selected parallel algorithms for multi-digit arithmetics ove
 - rounding, and
 - evaluation of a simple neural network.
 
+*Disclaimer: Parmesan is currently an experimental library, which serves as a proof-of-concept for parallelizable arithmetics over encrypted data. Hence neither correct functionality nor any level of code quality is guaranteed.*
+
 
 ## The Short Story
 
