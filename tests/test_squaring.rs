@@ -26,13 +26,12 @@ fn t_squ_all_triv() {
     t_impl_squ_with_mode(EncrVsTriv::TRIV);
 }
 
-//FIXME same as for multiplication
-//~ #[test]
-//~ /// Squaring of mixed sub-samples.
-//~ fn t_squ_some_triv() {
-    //~ println!("Mixed ...");
-    //~ t_impl_squ_with_mode(EncrVsTriv::ENCRTRIV);
-//~ }
+#[test]
+/// Squaring of mixed sub-samples.
+fn t_squ_some_triv() {
+    println!("Mixed ...");
+    t_impl_squ_with_mode(EncrVsTriv::ENCRTRIV);
+}
 
 
 // -----------------------------------------------------------------------------
