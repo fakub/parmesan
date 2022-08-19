@@ -19,29 +19,28 @@ Parmesan implements selected parallel algorithms for multi-digit arithmetics ove
 
 In the standard integer representation, parallel addition is not possible due to the carry, which can propagate all the way from the LSB to the MSB.
 However, using, e.g., an alphabet `{-1,0,1}` for base-2 integer representation, a parallel addition algorithm does exist.
-Other operations like (scalar) multiplication and squaring benefit from fast addition, too.
+Other operations like (scalar) multiplication and squaring benefit from the fast addition, too.
 
 
 ## The Long Story
 
-See our [full paper](https://eprint.iacr.org/2022/067).
+See our [full paper](https://dl.acm.org/doi/10.1145/3508398.3511527) (also at [eprint](https://eprint.iacr.org/2022/067)).
 
 
 ## Use `parmesan`
 
 Add a dependency to your `Cargo.toml` file in your Rust project.
-(Currently only from git or locally.)
 
 ```toml
 [dependencies]
-parmesan = { git = "https://gitlab.fit.cvut.cz/klemsjak/parmesan" }
-colored = "^2.0.0"
-# or:
-parmesan = { path = "../parmesan" }
+parmesan = { version = "^0.0.20-alpha", features = ["measure"] }
 colored = "^2.0.0"
 ```
 
-For the best performance, we recommend to compile with the `RUSTFLAGS="-C target-cpu=native" cargo build --release` command.
+For the best performance, compile with
+```shell
+$ RUSTFLAGS="-C target-cpu=native" cargo build --release
+```
 
 
 ## Example
@@ -63,7 +62,8 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     //  Initialization
     // ---------------------------------
     //  Global Scope
-    let par = &params::PARM80__PI_5__D_22;   // or params from Concrete v0.2: CONCR__M_2__C_3
+    let par = &params::PAR_CNCR_V0_2__M3_C2;
+
     // ---------------------------------
     //  Userovo Scope
     let pu = ParmesanUserovo::new(par)?;
@@ -79,8 +79,8 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     let ca = pu.encrypt_vec(&a)?;
     let cb = pu.encrypt_vec(&b)?;
     // convert to actual numbers
-    let a_val = encryption::convert(&a)?;
-    let b_val = encryption::convert(&b)?;
+    let a_val = encryption::convert_from_vec(&a)?;
+    let b_val = encryption::convert_from_vec(&b)?;
     // print plain inputs
     println!("\nInputs:\n");
     println!("a   = {:12}", a_val);

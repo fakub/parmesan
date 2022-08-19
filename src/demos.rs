@@ -21,7 +21,6 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
     // ---------------------------------
     //  Global Scope
-    //~ let par = &params::PARM80__PI_5__D_22;   //  80    112    128    CONCR__M_2__C_3
     let par = &params::PAR_CNCR_V0_2__M3_C2;
 
     // ---------------------------------
@@ -317,7 +316,6 @@ pub fn nn_demo() -> Result<(), Box<dyn Error>> {
 
     // ---------------------------------
     //  Global Scope
-    //~ let par = &params::PARM80__PI_5__D_22;   //  80    112    128    CONCR__M_2__C_3
     let par = &params::PAR_CNCR_V0_2__M3_C2;
 
     // ---------------------------------
