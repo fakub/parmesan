@@ -215,6 +215,8 @@ pub trait ParmCiphertextImpl {
 
     fn empty() -> ParmCiphertext;
 
+    fn single(ew: ParmEncrWord) -> ParmCiphertext;
+
     fn to_str(&self) -> String;
 }
 
@@ -228,6 +230,10 @@ impl ParmCiphertextImpl for ParmCiphertext {
 
     fn empty() -> ParmCiphertext {
         Vec::new()
+    }
+
+    fn single(ew: ParmEncrWord) -> ParmCiphertext {
+        vec![ew]
     }
 
     fn to_str(&self) -> String {

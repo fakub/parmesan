@@ -48,7 +48,7 @@ pub fn sgn_impl(
         ]
     );
 
-    Ok(vec![s_lwe])
+    Ok(ParmCiphertext::single(s_lwe))
 }
 
 /// Internal recursive function:
