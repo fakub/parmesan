@@ -2,8 +2,14 @@
 name = "parmesan"
 version = "0.0.20-alpha"
 edition = "2018"
-description = "PARMESAN: Parallel ARithMEticS on tfhe ENcrypted data."
 license = "AGPL-3.0"
+description = "PARMESAN: Parallel ARithMEticS over tfhe ENcrypted data."
+homepage = "https://github.com/fakub/parmesan"
+documentation = "https://github.com/fakub/parmesan"
+repository = "https://github.com/fakub/parmesan"
+readme = "README.md"
+keywords = ["cryptography", "fhe", "homomorphic", "arithmetics", "parallel"]
+categories = ["cryptography", "mathematics", "science"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
