@@ -64,7 +64,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     //  Initialization
     // ---------------------------------
     //  Global Scope
-    let par = &params::PAR_CNCR_V0_2__M3_C2;
+    let par = &params::PAR_CNCR_V0_2__M2_C3;
 
     // ---------------------------------
     //  Userovo Scope
@@ -116,3 +116,8 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 ## License
 
 Parmesan is licensed under AGPLv3.
+
+
+## Acknowledgments
+
+Partially supported by [EURECOM](https://www.eurecom.fr/).

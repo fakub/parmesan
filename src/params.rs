@@ -101,10 +101,10 @@ impl Params {
 }
 
 #[allow(dead_code)]
-pub const PAR_CNCR_V0_2__M3_C2: Params = Params {
-    concrete_pars:  concrete_shortint::parameters::PARAM_MESSAGE_3_CARRY_2,
-    bit_precision:   5,
-    quad_weight:    16,   //TODO will it be used?
+pub const PAR_CNCR_V0_2__M2_C3: Params = Params {
+    concrete_pars:  concrete_shortint::parameters::PARAM_MESSAGE_2_CARRY_3,
+    bit_precision:    5,
+    quad_weight:    100,   //TODO will it be used?
 };
 
 

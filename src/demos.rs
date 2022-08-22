@@ -21,7 +21,7 @@ pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
     // ---------------------------------
     //  Global Scope
-    let par = &params::PAR_CNCR_V0_2__M3_C2;
+    let par = &params::PAR_CNCR_V0_2__M2_C3;
 
     // ---------------------------------
     //  Userovo Scope
@@ -316,7 +316,7 @@ pub fn nn_demo() -> Result<(), Box<dyn Error>> {
 
     // ---------------------------------
     //  Global Scope
-    let par = &params::PAR_CNCR_V0_2__M3_C2;
+    let par = &params::PAR_CNCR_V0_2__M2_C3;
 
     // ---------------------------------
     //  Userovo Scope

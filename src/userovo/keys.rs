@@ -123,7 +123,7 @@ impl PrivKeySet {
                                                             pars.ks_base_log(),
                                                                  pars.ks_level(),
         );
-        let filename = format!("{}/concrete_keys__{}", KEYS_PATH, suffix);
+        let filename = format!("{}/parcrete-keys__{}", KEYS_PATH, suffix);
 
         filename
     }
