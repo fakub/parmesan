@@ -60,7 +60,14 @@ pub fn max_impl(
             // calc x and y selectors
             m.par_iter_mut().zip(xa.par_iter().zip(ya.par_iter())).for_each(| (mi, (xi, yi)) | {
                 // 6 yi
-                let mut s_2xi_6yi = pbs::f_1__pi_5__with_val(pc, yi, 6).expect("pbs::f_1__pi_5__with_val failed.");
+                let mut s_2xi_6yi;
+                // check whether direct multiplication of yi by 6 can be applied
+                // (altogether 6yi + 2xi + s gives QW = 6^2 + 2^2 + 1^2 = 41)
+                if pc.params.quad_weight >= 41 {
+                    s_2xi_6yi = yi.mul_const(6).expect("mul_const failed.");
+                } else {
+                    s_2xi_6yi = pbs::f_1__pi_5__with_val(pc, yi, 6).expect("pbs::f_1__pi_5__with_val failed.");
+                }
                 // 2 xi
                 let xi_2 = xi.mul_const(2).expect("mul_const failed.");
                 s_2xi_6yi.add_inplace(&xi_2).expect("add_inplace failed.");

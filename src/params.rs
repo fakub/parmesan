@@ -104,7 +104,10 @@ impl Params {
 pub const PAR_CNCR_V0_2__M2_C3: Params = Params {
     concrete_pars:  concrete_shortint::parameters::PARAM_MESSAGE_2_CARRY_3,
     bit_precision:    5,
-    quad_weight:    100,   //TODO will it be used?
+    // derived as follows: greatest message = 3, fits within carry multiplied by 10 (3x10 = 30 < 2^5)
+    // i.e., the error must fit even when sample is multiplied by 10
+    // => QW = 10^2
+    quad_weight:    100,
 };
 
 
