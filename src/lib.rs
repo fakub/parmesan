@@ -70,6 +70,33 @@ pub use demos::*;
 
 // =============================================================================
 //
+//  Global Variables
+//
+
+/// Minimum value for the parameters' quadratic weights (addition needs 20, maximum needs 22)
+static MIN_QUAD_WEIGHT: usize = 22;
+
+/// Addition-Subtraction Chains' bitlength
+pub static ASC_BITLEN: usize = 12;
+// this file must be present in <exec-dir/assets>, copy it from <lib-root/assets>
+static ASC_12_FILE: &str = "assets/asc-12.yaml";
+
+lazy_static::lazy_static! {
+/// Addition-Subtraction Chains for Scalar Multiplication
+pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = Asc::map_from_yaml(ASC_BITLEN, ASC_12_FILE).expect("Asc::map_from_yaml failed.");
+}
+
+/// Keeps log level for nested time measurements
+pub static mut LOG_LVL: u8 = 0;
+/// Log file
+pub const LOGFILE: &str = "./operations.log";
+pub static mut LOG_INITED: bool = false;
+
+//PBS pub static mut NBS: usize = 0;
+
+
+// =============================================================================
+//
 //  Parmesan Structs
 //
 
@@ -87,10 +114,14 @@ impl ParmesanUserovo<'_> {
     /// * save immutable reference to params
     /// * generate keys
     pub fn new(params: &Params) -> Result<ParmesanUserovo, Box<dyn Error>> {
-        Ok(ParmesanUserovo {
-            params,
-            priv_keys: PrivKeySet::new(params)?,
-        })
+        if params.quad_weight < MIN_QUAD_WEIGHT {
+            Err(format!("Quadratic weight of provided parameters ({}) is lower than required ({}).", params.quad_weight, MIN_QUAD_WEIGHT).into())
+        } else {
+            Ok(ParmesanUserovo {
+                params,
+                priv_keys: PrivKeySet::new(params)?,
+            })
+        }
     }
 
     /// Get the Public Key Set
@@ -148,30 +179,6 @@ impl ParmesanCloudovo<'_> {
         }
     }
 }
-
-
-// =============================================================================
-//
-//  Global Variables
-//
-
-/// Keeps log level for nested time measurements
-pub static mut LOG_LVL: u8 = 0;
-/// Log file
-pub const LOGFILE: &str = "./operations.log";
-pub static mut LOG_INITED: bool = false;
-
-/// Addition-Subtraction Chains' bitlength
-pub static ASC_BITLEN: usize = 12;
-// this file must be present in <exec-dir/assets>, copy it from <lib-root/assets>
-static ASC_12_FILE: &str = "assets/asc-12.yaml";
-
-lazy_static::lazy_static! {
-/// Addition-Subtraction Chains for Scalar Multiplication
-pub static ref ASC_12: BTreeMap<usize, Vec<AddShift>> = Asc::map_from_yaml(ASC_BITLEN, ASC_12_FILE).expect("Asc::map_from_yaml failed.");
-}
-
-//PBS pub static mut NBS: usize = 0;
 
 
 // =============================================================================
