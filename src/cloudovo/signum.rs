@@ -86,13 +86,18 @@ pub fn sgn_recursion_raw(
 
                 // first-round input is fresh and in {-1, 0, 1}
                 if first_round {
-                    // calc bootstrapped 8-multiple of local MSB
+                    // check whether direct multiplication of local MSB by 8 can be applied
+                    // (altogether 8a + 4b + 2c + d gives QW = 8^2 + 4^2 + 2^2 + 1^2 = 85)
                     if GAMMA * j + 3 < x.len() {
-                        let sj3 = pbs::f_1__pi_5__with_val(
-                            pc,
-                            &x[GAMMA * j + 3],
-                            1 << 3,
-                        ).expect("pbs::f_1__pi_5__with_val failed.");
+                        let sj3 = if pc.params.quad_weight >= 85 {
+                            x[GAMMA * j + 3].mul_const(1 << 3).expect("mul_const failed.")
+                        } else {
+                            pbs::f_1__pi_5__with_val(
+                                pc,
+                                &x[GAMMA * j + 3],
+                                1 << 3,
+                            ).expect("pbs::f_1__pi_5__with_val failed.")
+                        };
                         bj.add_inplace(&sj3).expect("add_inplace failed.");
                     }
                     // add others multiplied by 1 << i
