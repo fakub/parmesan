@@ -66,7 +66,9 @@ pub fn mul_impl(
             &x_in,
             &y_in,
         ),
-        l if l < 16 || l == 17  => mul_schoolbook(
+        //~ l if l < 16 || l == 17  => mul_schoolbook(
+        //DBG
+        l if l < 8              => mul_schoolbook(
             pc,
             &x_in,
             &y_in,
