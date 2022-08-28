@@ -45,6 +45,14 @@ $ RUSTFLAGS="-C target-cpu=native" cargo build --release
 ```
 
 
+## Benchmarks
+
+For benchmarks, we implement an experimental tool [bench-parmesan](https://github.com/fakub/bench-parmesan), which also compares Parmesan and Concrete `v0.2`.
+Results will be published in a paper.
+
+Find preliminary measurements of the processor load on a machine with 2xAMD EPYC 7543 during 32-bit multiplication [attached in a file](assets/mul32.pdf).
+
+
 ## Example
 
 ```rust
