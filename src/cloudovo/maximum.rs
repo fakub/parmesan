@@ -28,18 +28,16 @@ pub fn max_impl(
         ["Maximum ({}-bit)", x.len()],
         [
             // r = x - y
-            //WISH after I implement manual bootstrap after addition, here it can be customized to powers of two (then first layer of bootstraps can be omitted in signum)
             let r: ParmCiphertext = ParmArithmetics::sub(pc, x, y);   // new sgn_recursion_raw requires fresh samples
 
             // s = nonneg(r)
-            // returns one sample, not bootstrapped (to be bootstrapped with nonneg)
+            // returns one sample .. res in {-15, ..., 15} (to be bootstrapped with nonneg)
             let s_raw: ParmCiphertext = signum::sgn_recursion_raw(
                 pc,
                 &r,
                 true,
             )?;
-            //WISH copy this into vector (and test if this helps: concurrent memory access might be slow)
-            // bootstrap whether >= 0 (val =  2)
+            // bootstrap whether >= 0 .. res in {0, 1}
             let s: ParmEncrWord = pbs::nonneg__pi_5(
                 pc,
                 &s_raw[0],
