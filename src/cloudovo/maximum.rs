@@ -29,30 +29,7 @@ pub fn max_impl(
         ["Maximum ({}-bit)", x.len()],
         [
             // v1: leveled sub, PBS directly in sgn_recursion_raw
-            // r = x - y .. subtract just leveled -> {-2,-1,0,1,2}              (here I save 2 levels of PBS; cmp. to v0)
-            let mut r = ParmCiphertext::empty();
-            for (xi, yi) in x.iter().zip(y.iter()) {
-                r.push(xi.sub(yi)?);
-            }
-            // resolve different lengths of x, y
-            if x.len() > y.len() {
-                for xi in x[r.len()..].iter() {
-                    // +xi
-                    r.push(xi.clone());
-                }
-            } else if x.len() < y.len() {
-                for yi in y[r.len()..].iter() {
-                    // -yi
-                    r.push(yi.opp()?);
-                }
-            }
-
-            // call sgn_recursion_raw with first_round = false                  (here I need 1 more PBS level, with lower #PBS; cmp. to v0)
-            let s_raw: ParmCiphertext = signum::sgn_recursion_raw(
-                pc,
-                &r,
-                false,
-            )?;
+            let s_raw = signum::sgn_sub_raw(pc, x, y)?;
 
             //WISH yet less operations: combine 2 instead of 4 digits in 1st level
             // => implement this in signum.rs as sgn(x-y)

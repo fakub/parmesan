@@ -139,6 +139,42 @@ pub fn sgn_recursion_raw(
     Ok(s)
 }
 
+/// Signum of x - y, not bootstrapped
+///  - result in {-15, ..., 15}
+///  - compared to calling sgn(x.sub(y)), this can be way faster
+pub fn sgn_sub_raw(
+    pc: &ParmesanCloudovo,
+    x: &ParmCiphertext,
+    y: &ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
+    // r = x - y .. subtract just leveled -> {-2,-1,0,1,2}              (here I save 2 levels of PBS; cmp. to v0)
+    let mut r = ParmCiphertext::empty();
+    for (xi, yi) in x.iter().zip(y.iter()) {
+        r.push(xi.sub(yi)?);
+    }
+    // resolve different lengths of x, y
+    if x.len() > y.len() {
+        for xi in x[r.len()..].iter() {
+            // +xi
+            r.push(xi.clone());
+        }
+    } else if x.len() < y.len() {
+        for yi in y[r.len()..].iter() {
+            // -yi
+            r.push(yi.opp()?);
+        }
+    }
+
+    // call sgn_recursion_raw with first_round = false                  (here I need 1 more PBS level, with lower #PBS; cmp. to v0)
+    signum::sgn_recursion_raw(
+        pc,
+        &r,
+        false,
+    )
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // for archiving purposes (includes non-necessary BS in 1st round)
