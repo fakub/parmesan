@@ -3,6 +3,7 @@ use std::error::Error;
 pub use std::fs::{self,File,OpenOptions};
 pub use std::path::Path;
 pub use std::io::Write;
+pub use std::cmp;
 use crate::*;
 
 // parallelization tools
@@ -27,19 +28,52 @@ pub fn max_impl(
     measure_duration!(
         ["Maximum ({}-bit)", x.len()],
         [
-            // r = x - y
-            //WISH after I implement manual bootstrap after addition, here it can be customized to powers of two (then first layer of bootstraps can be omitted in signum)
-            let r: ParmCiphertext = ParmArithmetics::sub(pc, x, y);   // new sgn_recursion_raw requires fresh samples
+            // v1: leveled sub, PBS directly in sgn_recursion_raw
+            // r = x - y .. subtract just leveled -> {-2,-1,0,1,2}              (here I save 2 levels of PBS; cmp. to v0)
+            let mut r = ParmCiphertext::empty();
+            for (xi, yi) in x.iter().zip(y.iter()) {
+                r.push(xi.sub(yi)?);
+            }
+            // resolve different lengths of x, y
+            if x.len() > y.len() {
+                for xi in x[r.len()..].iter() {
+                    // +xi
+                    r.push(xi.clone());
+                }
+            } else if x.len() < y.len() {
+                for yi in y[r.len()..].iter() {
+                    // -yi
+                    r.push(yi.opp()?);
+                }
+            }
 
-            // s = nonneg(r)
-            // returns one sample, not bootstrapped (to be bootstrapped with nonneg)
+            // call sgn_recursion_raw with first_round = false                  (here I need 1 more PBS level, with lower #PBS; cmp. to v0)
             let s_raw: ParmCiphertext = signum::sgn_recursion_raw(
                 pc,
                 &r,
-                true,
+                false,
             )?;
-            //WISH copy this into vector (and test if this helps: concurrent memory access might be slow)
-            // bootstrap whether >= 0 (val =  2)
+
+            //WISH yet less operations: combine 2 instead of 4 digits in 1st level
+            // => implement this in signum.rs as sgn(x-y)
+
+            // -----------------------------------------------------------------
+            // for archiving purposes
+            // v0: bootstrapped sub (also 1-bit longer output)
+            //
+            // // r = x - y
+            // let r: ParmCiphertext = ParmArithmetics::sub(pc, x, y);   // new sgn_recursion_raw requires fresh samples
+            //
+            // // s = nonneg(r)
+            // // first, return one sample, not bootstrapped, in {-15 .. 15}, to be bootstrapped with nonneg
+            // let s_raw: ParmCiphertext = signum::sgn_recursion_raw(
+            //     pc,
+            //     &r,
+            //     true,
+            // )?;
+            // -----------------------------------------------------------------
+
+            // bootstrap whether >= 0, result 0 / 1
             let s: ParmEncrWord = pbs::nonneg__pi_5(
                 pc,
                 &s_raw[0],
