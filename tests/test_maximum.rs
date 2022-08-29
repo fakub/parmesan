@@ -108,6 +108,38 @@ fn t_max_empty_nonempty() {
     assert_eq!(m_he, m_pl);
 }
 
+#[test]
+fn t_max_failing() {
+    println!("Failing case ...");
+
+    // init failing vector(s)
+    //~ let m1_vec = vec![-1, 0, -1, 0, -1, -1];
+    //~ let m2_vec = vec![1, 1, 1, 1, 0, 1, -1];
+    let m1_vec = vec![-1, -1, 1, 0];
+    let m2_vec = vec![0, 1, 0];
+    // convert to integer(s)
+    let m1 = encryption::convert_from_vec(&m1_vec).expect("convert failed.");
+    let m2 = encryption::convert_from_vec(&m2_vec).expect("convert failed.");
+
+    println!("  m1 = {} ({}-bit: {:?})\n  m2 = {} ({}-bit: {:?})", m1, 0, m1_vec, m2, common::TESTS_BITLEN_MAX, m2_vec);
+
+    // encrypt -> homomorphic eval -> decrypt
+    let c1 = encrypt_with_mode(&m1_vec, EncrVsTriv::ENCRTRIV);
+    let c2 = encrypt_with_mode(&m2_vec, EncrVsTriv::ENCRTRIV);
+
+    let c_he = ParmArithmetics::max(&common::TEST_PC, &c1, &c2);
+
+    let m_he = common::TEST_PU.decrypt(&c_he).expect("ParmesanUserovo::decrypt failed.");
+
+    // plain eval
+    let m_pl = ParmArithmetics::max(&common::TEST_PC, &m1, &m2);
+
+    println!("  max = {} (exp. {})", m_he, m_pl);
+
+    // compare results
+    assert_eq!(m_he, m_pl);
+}
+
 
 // -----------------------------------------------------------------------------
 //  Test Implementations
