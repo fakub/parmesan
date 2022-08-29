@@ -37,7 +37,7 @@ pub fn sgn_impl(
             let s_raw: ParmCiphertext = sgn_recursion_raw(
                 pc,
                 x,
-                true,
+                0,
             )?;
 
             let s_lwe = pbs::f_1__pi_5__with_val(
@@ -52,15 +52,21 @@ pub fn sgn_impl(
 }
 
 /// Internal recursive function:
-///  - in 1st round, inputs fresh {-1,0,1}
+///  - in 1st round, inputs fresh {-1,0,1} (designated by bits = 0)
 ///  - in subseq rounds, inputs {-15..15} of qw = 22
 ///      - this is also its output
 pub fn sgn_recursion_raw(
     pc: &ParmesanCloudovo,
     x: &ParmCiphertext,
-    first_round: bool,
+    mut bits: usize,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
-    const GAMMA: usize = 4;
+    // setup gamma
+    let gamma = pc.params.bit_precision - 1;
+    // check & setup how big groups of "bits" will be taken
+    if bits > gamma {
+        return Err(format!("Too big group of \"bits\" ({}) given to signum (max allowed {})!", bits, gamma).into());
+    }
+    if bits == 0 { bits = gamma; }
 
     // special case: empty ciphertext
     if x.len() == 0 {
@@ -77,24 +83,24 @@ pub fn sgn_recursion_raw(
     let s: ParmCiphertext;
 
     measure_duration!(
-        ["Signum recursion in parallel ({}-bit, groups by {})", x.len(), GAMMA],
+        ["Signum recursion in parallel ({}-bit, groups by {})", x.len(), gamma],
         [
-            let mut b = ParmCiphertext::triv((x.len() - 1) / GAMMA + 1, &pc.params)?;
+            let mut b = ParmCiphertext::triv((x.len() - 1) / gamma + 1, &pc.params)?;
 
             // the thread needs to know the index j so that it can check against x.len()
             b.par_iter_mut().enumerate().for_each(| (j, bj) | {
 
                 // first-round input is fresh and in {-1, 0, 1}
-                if first_round {
+                if bits == gamma { //TODO this is bits = gamma
                     // check whether direct multiplication of local MSB by 8 can be applied
                     // (altogether 8a + 4b + 2c + d gives QW = 8^2 + 4^2 + 2^2 + 1^2 = 85)
-                    if GAMMA * j + 3 < x.len() {
+                    if gamma * j + 3 < x.len() {
                         let sj3 = if pc.params.quad_weight >= 85 {
-                            x[GAMMA * j + 3].mul_const(1 << 3).expect("mul_const failed.")
+                            x[gamma * j + 3].mul_const(1 << 3).expect("mul_const failed.")
                         } else {
                             pbs::f_1__pi_5__with_val(
                                 pc,
-                                &x[GAMMA * j + 3],
+                                &x[gamma * j + 3],
                                 1 << 3,
                             ).expect("pbs::f_1__pi_5__with_val failed.")
                         };
@@ -102,20 +108,20 @@ pub fn sgn_recursion_raw(
                     }
                     // add others multiplied by 1 << i
                     for i in 0..=2 {
-                        if GAMMA * j + i < x.len() {
-                            let xi = if i == 0 {x[GAMMA * j + i].clone()} else {x[GAMMA * j + i].mul_const(1 << i).expect("mul_const failed.")};
+                        if gamma * j + i < x.len() {
+                            let xi = if i == 0 {x[gamma * j + i].clone()} else {x[gamma * j + i].mul_const(1 << i).expect("mul_const failed.")};
                             bj.add_inplace(&xi).expect("add_inplace failed.");
                         }
                     }
                 // otherwise input ranges in {-15 .. 15} and not bootstrapped
-                } else {
-                    let mut sj = ParmCiphertext::triv(GAMMA, &pc.params).expect("ParmCiphertext::triv failed.");
+                } else { //TODO this is bits = 1
+                    let mut sj = ParmCiphertext::triv(gamma, &pc.params).expect("ParmCiphertext::triv failed.");
 
                     sj.par_iter_mut().enumerate().for_each(| (i, sji) | {
-                        if GAMMA * j + i < x.len() {
+                        if gamma * j + i < x.len() {
                             *sji = pbs::f_1__pi_5__with_val(
                                 pc,
-                                &x[GAMMA * j + i],
+                                &x[gamma * j + i],
                                 1 << i,
                             ).expect("pbs::f_1__pi_5__with_val failed.");
                         }
@@ -131,7 +137,7 @@ pub fn sgn_recursion_raw(
             s = sgn_recursion_raw(
                 pc,
                 &b,
-                false,
+                1,
             )?;
         ]
     );
@@ -147,7 +153,7 @@ pub fn sgn_sub_raw(
     x: &ParmCiphertext,
     y: &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
-    // r = x - y .. subtract just leveled -> {-2,-1,0,1,2}              (here I save 2 levels of PBS; cmp. to v0)
+    // r = x - y .. subtract just leveled -> {-2,-1,0,1,2}                      (here I save 2 levels of PBS; cmp. to v0)
     let mut r = ParmCiphertext::empty();
     for (xi, yi) in x.iter().zip(y.iter()) {
         r.push(xi.sub(yi)?);
@@ -165,11 +171,13 @@ pub fn sgn_sub_raw(
         }
     }
 
-    // call sgn_recursion_raw with first_round = false                  (here I need 1 more PBS level, with lower #PBS; cmp. to v0)
+    // since ri ∈ {-2,-1,0,1,2}, groups of three "bits" can be taken            (here I take groups of 3 instead of 4; cmp to v0)
     signum::sgn_recursion_raw(
         pc,
         &r,
-        false,
+        //TODO FIXME
+        //~ 3,
+        1,
     )
 }
 

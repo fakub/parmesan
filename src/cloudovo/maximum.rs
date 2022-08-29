@@ -28,27 +28,8 @@ pub fn max_impl(
     measure_duration!(
         ["Maximum ({}-bit)", x.len()],
         [
-            // v1: leveled sub, PBS directly in sgn_recursion_raw
+            // optimized variant of .. sgn_recursion_raw(pc, sub(pc, x, y), 0);
             let s_raw = signum::sgn_sub_raw(pc, x, y)?;
-
-            //WISH yet less operations: combine 2 instead of 4 digits in 1st level
-            // => implement this in signum.rs as sgn(x-y)
-
-            // -----------------------------------------------------------------
-            // for archiving purposes
-            // v0: bootstrapped sub (also 1-bit longer output)
-            //
-            // // r = x - y
-            // let r: ParmCiphertext = ParmArithmetics::sub(pc, x, y);   // new sgn_recursion_raw requires fresh samples
-            //
-            // // s = nonneg(r)
-            // // first, return one sample, not bootstrapped, in {-15 .. 15}, to be bootstrapped with nonneg
-            // let s_raw: ParmCiphertext = signum::sgn_recursion_raw(
-            //     pc,
-            //     &r,
-            //     true,
-            // )?;
-            // -----------------------------------------------------------------
 
             // bootstrap whether >= 0, result 0 / 1
             let s: ParmEncrWord = pbs::nonneg__pi_5(
@@ -111,7 +92,7 @@ pub fn deprecated__max_impl(
         [
             // r = x - y
             //WISH after I implement manual bootstrap after addition, here it can be customized to powers of two (then first layer of bootstraps can be omitted in signum)
-            let r: ParmCiphertext = ParmArithmetics::sub_noisy(pc, x, y);   // can be noisy -- sgn_recursion_raw bootstraps the sample without adding
+            let r: ParmCiphertext = ParmArithmetics::sub_noisy(pc, x, y);   // can be noisy -- deprecated__sgn_recursion_raw bootstraps the sample without adding
 
             // s = 2 * sgn^+(r)
             // returns one sample, not bootstrapped (to be bootstrapped with val = 2)

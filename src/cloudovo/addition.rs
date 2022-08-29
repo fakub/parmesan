@@ -117,7 +117,7 @@ pub fn add_sub_impl(
                 println!("\ty.len = {}", y.len());
                 println!("\ty_rzero = {}", y_rzero);
                 println!("\ty_lzero = {}", y_lzero);
-                return Err("Unexpected fatal error!".into());
+                return Err("Unexpected fatal error in addition (inconsistent lengths)!".into());
             }
 
             //PBS q[r_triv..].iter_mut().zip(w[r_triv..].iter().enumerate()).for_each(| (qi, (i0, wi)) | {
