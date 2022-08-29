@@ -109,14 +109,18 @@ fn t_max_empty_nonempty() {
 }
 
 #[test]
-fn t_max_failing() {
-    println!("Failing case ...");
+fn t_max_fail() {
+    println!("Failing cases ...");
 
-    // init failing vector(s)
-    //~ let m1_vec = vec![-1, 0, -1, 0, -1, -1];
-    //~ let m2_vec = vec![1, 1, 1, 1, 0, 1, -1];
-    let m1_vec = vec![-1, -1, 1, 0];
-    let m2_vec = vec![0, 1, 0];
+    // init failing vector(s) (set 1)
+    //~ // let m1_vec = vec![-1, 0, -1, 0, -1, -1];
+    //~ // let m2_vec = vec![1, 1, 1, 1, 0, 1, -1];
+    //~ let m1_vec = vec![-1, -1, 1, 0];
+    //~ let m2_vec = vec![0, 1, 0];
+    // init failing vector(s) (set 2)
+    let m1_vec = vec![-1, 0, -1];
+    let m2_vec = vec![0, 0, 1, 1, -1];
+
     // convert to integer(s)
     let m1 = encryption::convert_from_vec(&m1_vec).expect("convert failed.");
     let m2 = encryption::convert_from_vec(&m2_vec).expect("convert failed.");
