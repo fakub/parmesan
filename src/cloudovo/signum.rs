@@ -91,30 +91,31 @@ pub fn sgn_recursion_raw(
             b.par_iter_mut().enumerate().for_each(| (j, bj) | {
 
                 // first-round input is fresh and in {-1, 0, 1}
-                if bits == gamma { //TODO this is bits = gamma
+                if bits > 1 {
                     // check whether direct multiplication of local MSB by 8 can be applied
                     // (altogether 8a + 4b + 2c + d gives QW = 8^2 + 4^2 + 2^2 + 1^2 = 85)
-                    if gamma * j + 3 < x.len() {
-                        let sj3 = if pc.params.quad_weight >= 85 {
-                            x[gamma * j + 3].mul_const(1 << 3).expect("mul_const failed.")
-                        } else {
-                            pbs::f_1__pi_5__with_val(
-                                pc,
-                                &x[gamma * j + 3],
-                                1 << 3,
-                            ).expect("pbs::f_1__pi_5__with_val failed.")
-                        };
-                        bj.add_inplace(&sj3).expect("add_inplace failed.");
-                    }
+                    //~ if gamma * j + 3 < x.len() {
+                        //~ //TODO FIXME now different lengths may apply
+                        //~ let sj3 = if pc.params.quad_weight >= 85 {
+                            //~ x[gamma * j + 3].mul_const(1 << 3).expect("mul_const failed.")
+                        //~ } else {
+                            //~ pbs::f_1__pi_5__with_val(
+                                //~ pc,
+                                //~ &x[gamma * j + 3],
+                                //~ 1 << 3,
+                            //~ ).expect("pbs::f_1__pi_5__with_val failed.")
+                        //~ };
+                        //~ bj.add_inplace(&sj3).expect("add_inplace failed.");
+                    //~ }
                     // add others multiplied by 1 << i
-                    for i in 0..=2 {
+                    for i in 0..bits {
                         if gamma * j + i < x.len() {
                             let xi = if i == 0 {x[gamma * j + i].clone()} else {x[gamma * j + i].mul_const(1 << i).expect("mul_const failed.")};
                             bj.add_inplace(&xi).expect("add_inplace failed.");
                         }
                     }
                 // otherwise input ranges in {-15 .. 15} and not bootstrapped
-                } else { //TODO this is bits = 1
+                } else {
                     let mut sj = ParmCiphertext::triv(gamma, &pc.params).expect("ParmCiphertext::triv failed.");
 
                     sj.par_iter_mut().enumerate().for_each(| (i, sji) | {
@@ -175,9 +176,7 @@ pub fn sgn_sub_raw(
     signum::sgn_recursion_raw(
         pc,
         &r,
-        //TODO FIXME
-        //~ 3,
-        1,
+        3,
     )
 }
 
