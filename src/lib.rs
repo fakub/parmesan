@@ -186,6 +186,8 @@ impl ParmesanCloudovo<'_> {
 //  TODO / Wishlist
 //
 //  - mul_lwe .. for more than 1x1 bit? let say 1x2 bit? what about squaring?
+//      - well, for squ it works, for mul?
+//      - in squ, can there be more zeros? we have redundant repre..
 //  - check optimality of squaring (incorrect estimates for longer inputs)
 //  - parallel mulary reduction? is it worth?
 //

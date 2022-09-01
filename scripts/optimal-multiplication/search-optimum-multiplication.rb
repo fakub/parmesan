@@ -63,8 +63,8 @@ jm[4] = m(4)    # = 40
 js = {}
 js[0] = Float::NAN
 js[1] = s(1)    # =  S = 1
-js[2] = s(2)    # =  7
-js[3] = s(3)    # = 18
+js[2] = 3   # four bits, while 2^1 always zero; was: s(2)    # =  7
+js[3] = 5   # dtto; was: s(3)    # = 18
 
 #   calc the optimal BS complexity of multiplication
 puts "\n>>> #PBS Complexity of multiplication: schoolbook vs. Karatsuba"

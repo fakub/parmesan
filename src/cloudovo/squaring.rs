@@ -13,7 +13,7 @@ use crossbeam_utils::thread;
 use colored::Colorize;
 
 use crate::ciphertexts::{ParmCiphertext,ParmCiphertextImpl,ParmEncrWord};
-use super::{pbs, multiplication};
+use super::pbs;
 
 
 // =============================================================================
@@ -30,7 +30,8 @@ pub fn squ_impl(
     match x.len() {
         l if l == 0     => Ok(ParmArithmetics::zero()),
         l if l == 1     => squ_1word(pc, x),
-        l if l <  4     => squ_schoolbook(pc, x),
+        l if l == 2     => squ_2word(pc, x),
+        l if l == 3     => squ_3word(pc, x),
         l if l <=32     => squ_dnq(pc, x),
         _ => return Err(format!("Squaring for {}-word integer not implemented.", x.len()).into()),
     }
@@ -112,28 +113,7 @@ fn squ_dnq(
     Ok(res)
 }
 
-/// Schoolbook squaring `O(n^2)`
-fn squ_schoolbook(
-    pc: &ParmesanCloudovo,
-    x:  &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
-
-    measure_duration!(
-        ["Squaring schoolbook ({}-bit)", x.len()],
-        [
-            // calc multiplication array
-            let squary = fill_squary(pc, x)?;
-            //PBS unsafe { println!("(after fill squary {}-bit)    #BS = {}", x.len(), NBS); }
-
-            let res = multiplication::reduce_mulsquary(pc, &squary);
-        ]
-    );
-    //PBS unsafe { println!("(after rdc squary {}-bit)    #BS = {}", x.len(), NBS); }
-
-    Ok(res)
-}
-
-/// Square of a 1-word ciphertext
+/// Square of a 1-bit ciphertext
 fn squ_1word(
     pc: &ParmesanCloudovo,
     x:  &ParmCiphertext,
@@ -142,52 +122,76 @@ fn squ_1word(
     measure_duration!(
         ["Squaring 1-word"],
         [
-            // calc squaring array
-            let squary = fill_squary(pc, x)?;
+            //
+            let sqbit = pbs::a_1__pi_5(pc, &x[0])?;
         ]
     );
 
-    Ok(squary[0].clone())
+    Ok(ParmCiphertext::single(sqbit))
 }
 
-/// Fill squaring array (for schoolbook squaring)
-fn fill_squary(
+/// Square of a 2-bit ciphertext
+fn squ_2word(
     pc: &ParmesanCloudovo,
-    x: &ParmCiphertext,
-) -> Result<Vec<ParmCiphertext>, Box<dyn Error>> {
+    x:  &ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
+    assert_eq!(x.len(), 2);
+    let mut res = ParmCiphertext::triv(2*x.len(), &pc.params)?;
 
-    let len = x.len();
-    let x2 = x.clone();   //WISH needed? intended for parallel addition to avoid concurrent memory access
+    //      x y
+    //      x y
+    // ---------
+    //  a b c d   -> res (reversed endian)
 
-    // fill temp squaring array
-    let mut squary_tmp  = vec![ParmCiphertext::triv(2*len, &pc.params)?; len];
-    let mut squary      = vec![ParmCiphertext::triv(2*len, &pc.params)?; len];
+    measure_duration!(
+        ["Squaring 2-word"],
+        [
+            // get value of x
+            let mut x_val = x[1].mul_const(2)?;
+            x_val.add_inplace(&x[0])?;
 
-    //WISH prepare designated arrays (one for diagonal, another for upper-diagonal; reorder them after calculations; would it help at all?)
-    //PBS   squary_tmp.iter_mut().zip(x.iter().enumerate()).for_each(| (sqi, (i, xi)) | {
-    //PBS       sqi[i..].iter_mut().zip(x2.iter().enumerate()).for_each(| (sqij, (j, x2j)) | {
-    squary_tmp.par_iter_mut().zip(x.par_iter().enumerate()).for_each(| (sqi, (i, xi)) | {
-        sqi[i..].par_iter_mut().zip(x2.par_iter().enumerate()).for_each(| (sqij, (j, x2j)) | {
-            if j < i {
-                *sqij = multiplication::mul_lwe(pc, &xi, &x2j).expect("mul_lwe failed.");
-            } else if j == i {
-                *sqij = squ_lwe(pc, &xi).expect("squ_lwe failed.");
-            }
-        });
-    });
+            // calc the 4 bits in parallel
+            //TODO create just 3 threads !! a^2 mod 4 in {0,1}
+            res.par_iter_mut().enumerate().for_each(| (i, ri) | {
+                *ri = pbs::squ_3_bit__pi_5(pc, &x_val, i).expect("pbs::squ_3_bit__pi_5 failed.");
+            });
+        ]
+    );
 
-    // copy values & identities
-    for (i, sqi) in squary.iter_mut().enumerate() {
-        for (j, sqij) in sqi[i..].iter_mut().enumerate() {
-            if j <= i {
-                *sqij = squary_tmp[i][i+j].clone();
-            } else if j > i && j < len {
-                *sqij = squary_tmp[j][i+j].clone();
-            }
-        }
-    }
+    Ok(res)
+}
 
-    Ok(squary)
+/// Square of a 3-bit ciphertext
+fn squ_3word(
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
+    assert_eq!(x.len(), 3);
+    let mut res = ParmCiphertext::triv(2*x.len(), &pc.params)?;
+
+    //      x y z
+    //      x y z
+    // -----------
+    // a b c d ...   -> res (reversed endian)
+
+    measure_duration!(
+        ["Squaring 3-word"],
+        [
+            // get value of x
+            let mut x_val = x[2].mul_const(2)?;
+            x_val.add_inplace(&x[1])?;
+            x_val.mul_const_inplace(2)?;
+            x_val.add_inplace(&x[0])?;
+
+            // calc the 6 bits in parallel
+            //TODO create just 5 threads !! a^2 mod 4 in {0,1}
+            res.par_iter_mut().enumerate().for_each(| (i, ri) | {
+                *ri = pbs::squ_3_bit__pi_5(pc, &x_val, i).expect("pbs::squ_3_bit__pi_5 failed.");
+            });
+        ]
+    );
+
+    Ok(res)
 }
 
 /// Implementation of LWE sample squaring, where `x` encrypts a plaintext

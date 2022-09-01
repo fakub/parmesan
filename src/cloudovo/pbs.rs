@@ -287,6 +287,46 @@ pub fn a_1__pi_5(
 }
 
 //
+//  3-bit squaring (usable for 2-bit squ, too)
+//
+#[allow(non_snake_case)]
+pub fn squ_3_bit__pi_5(
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
+    pos: usize,
+) -> Result<ParmEncrWord, Box<dyn Error>> {
+    match pos {
+        i if i == 0 =>  eval_LUT_5_uint(
+                            pc,
+                            c,
+                            [0, 1,0,1,0,1,0,1,   0,   31,0,31,0,31,0,31]
+                        ),
+        i if i == 1 =>  ParmEncrWord::encrypt_word_triv(&pc.params, 0),
+        i if i == 2 =>  eval_LUT_5_uint(
+                            pc,
+                            c,
+                            [0, 0,1,0,0,0,1,0,   0,   0,31,0,0,0,31,0]
+                        ),
+        i if i == 3 =>  eval_LUT_5_uint(
+                            pc,
+                            c,
+                            [0, 0,0,1,0,1,0,0,   0,   0,0,31,0,31,0,0]
+                        ),
+        i if i == 4 =>  eval_LUT_5_uint(
+                            pc,
+                            c,
+                            [0, 0,0,0,1,1,0,1,   0,   31,0,31,31,0,0,0]
+                        ),
+        i if i == 5 =>  eval_LUT_5_uint(
+                            pc,
+                            c,
+                            [0, 0,0,0,0,0,1,1,   0,   31,31,0,0,0,0,0]
+                        ),
+        _ => return Err(format!("Squaring of 2-bit has no position {}.", pos).into()),
+    }
+}
+
+//
 //  Multiplication table serialized for 3X + Y
 //
 //  X·Y | -1 |  0 |  1 |
