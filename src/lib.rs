@@ -185,18 +185,42 @@ impl ParmesanCloudovo<'_> {
 //
 //  TODO / Wishlist
 //
-//  - check optimality of squaring (incorrect estimates for longer inputs)
-//  - merge with TODOs file
 //  - mul_lwe .. for more than 1x1 bit? let say 1x2 bit? what about squaring?
-//  - parallel mulary reduction
+//  - check optimality of squaring (incorrect estimates for longer inputs)
+//  - parallel mulary reduction? is it worth?
 //
 //  - WISH: track quadratic weight within Parmesan Ciphertext (Vec<(LWE, usize)> ??)
 //      - keep track of sample freshness (e.g., in signum recursion that's mess)
 //          - identity-bootstrapped only if needed
-//          - warn if a fresh sample gets bootstraped -- that could be done a step in advance
+//          - warning if a fresh sample gets bootstraped -- that could have been done a step in advance
 //      - for analytics purposes, introduce a "sequential" feature, which calls iter() instead of par_iter() etc. (tricky for thread/scope/spawn)
 //
 //  - NOTES:
 //      - very peculiar optimization: Karatsuba splits odd numbers into "halves" .. 31 and 33 worth splitting differently due to 15(s) 16(K) 17(s)
 //          - for B = r_0 * s_0 it is worth calling schoolbook, which keeps its length without overlap to A
 //          => simple concat, no addition needed
+//
+//  * check that *everything* runs in parallel (e.g., pairs of operations; nested parallel iterators work as expected, i.e., they put everything into one pool)
+//  * for squaring of non-power-of-2: multiply |n|n+1|-bit numbers (isn't this too technical? it can be bypassed by adding a triv zero)
+//  * make new estimates on Karatsuba and D&C squaring BS complexity (actually only for 2 and more nested recursion levels, schoolbook does not add extra bits)
+//
+//  * "floating-point-like" feature:
+//      ? at which position shall the number be rounded?
+//      ! it may happen that there is a leading zero
+//      * devise a "conditional shift": bootstrap the leading position in a maximum-like manner
+//      * here, at i-th position, pick either x_i (leading +-1), or x_i-1 (leading 0)
+//          0 1 1 0 1 0 0|1 1   / round and cond. shift
+//      ->  1 1 0 1 0 1
+//
+//  * make lib & bin in single project: https://stackoverflow.com/questions/26946646/rust-package-with-both-a-library-and-a-binary
+//
+//  * cfg for max{} behavior
+//  * resolve bootstraps before / after / in between operations
+//
+//  * wish: add standard base algorithms
+//  * WISH: add tree-based method for arbitrary function evaluation
+//
+//
+//
+//
+//
