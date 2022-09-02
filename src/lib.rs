@@ -88,7 +88,7 @@ pub const LOGFILE: &str = "./operations.log";
 pub static mut LOG_INITED: bool = false;
 
 #[cfg(feature = "seq_analyze")]
-pub static mut N_PBS: usize = 0;
+pub static mut N_PBS: Vec<usize> = Vec::new();
 
 
 // =============================================================================

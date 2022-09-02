@@ -133,6 +133,23 @@ macro_rules! parm_log_plain {
     }}
 }
 
+#[macro_export]
+#[cfg(feature = "seq_analyze")]
+macro_rules! start_pbs_analysis {
+    () => { unsafe { crate::N_PBS.push(0); }}
+}
+
+#[macro_export]
+#[cfg(feature = "seq_analyze")]
+macro_rules! finish_pbs_analysis {
+    () => { unsafe {
+        if let Some(n_pbs) = crate::N_PBS.pop() {
+            println!("{}  └ {} PBS", "  │ ".repeat(crate::LOG_LVL as usize), String::from(format!("{}", n_pbs)).red().bold());
+            if let Some(new_last) = crate::N_PBS.last_mut() { *new_last += n_pbs; }
+        }
+    }}
+}
+
 // Parmesan logging macros
 //~ #[macro_export]
 //~ macro_rules! info {

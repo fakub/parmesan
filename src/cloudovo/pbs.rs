@@ -76,7 +76,7 @@ fn eval_LUT_5_float(
         }
     } else {
         #[cfg(feature = "seq_analyze")]
-        unsafe { crate::N_PBS += 1; }
+        unsafe { if let Some(last) = crate::N_PBS.last_mut() { *last += 1; } }
 
         let mut res = c.0.clone();
 
