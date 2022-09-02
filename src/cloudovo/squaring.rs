@@ -121,7 +121,7 @@ fn squ_1word(
     measure_duration!(
         ["Squaring 1-word"],
         [
-            //
+            // squaring 1 signed bit is equivalent to |x| ≥ 1
             let sqbit = pbs::a_1__pi_5(pc, &x[0])?;
         ]
     );
@@ -175,13 +175,4 @@ fn squ_2_3word(
     }
 
     Ok(res)
-}
-
-/// Implementation of LWE sample squaring, where `x` encrypts a plaintext
-/// in `{-1, 0, 1}`
-pub fn squ_lwe(
-    pc: &ParmesanCloudovo,
-    x: &ParmEncrWord,
-) -> Result<ParmEncrWord, Box<dyn Error>> {
-    pbs::a_1__pi_5(pc, x)
 }
