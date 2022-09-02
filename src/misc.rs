@@ -40,6 +40,9 @@ macro_rules! measure_duration {
             unsafe {
                 // decrease log level back & print result
                 if LOG_LVL > 0 {LOG_LVL -= 1;}
+                #[cfg(feature = "seq_analyze")]
+                let indent = format!("{}  ╞ ", "  │ ".repeat(LOG_LVL as usize));
+                #[cfg(not(feature = "seq_analyze"))]
                 let indent = format!("{}  └ ", "  │ ".repeat(LOG_LVL as usize));
                 let status = String::from("OK").green().bold();   // can be other statuses
                 println!("{}{} {}: {} (in {})", indent, String::from("Finished").yellow().bold(), __msg, status, __s_time);

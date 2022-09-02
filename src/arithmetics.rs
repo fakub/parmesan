@@ -1,3 +1,5 @@
+use colored::Colorize;
+
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
 use crate::ParmesanCloudovo;
 use crate::cloudovo::*;
@@ -245,7 +247,7 @@ impl ParmArithmetics for ParmCiphertext {
         ).expect("ParmArithmetics::add failed.");
 
         #[cfg(feature = "seq_analyze")]
-        unsafe { println!(">>> ParmArithmetics::add({}-bit, {}-bit)             #PBS = {}", x.len(), y.len(), crate::N_PBS); }
+        unsafe { println!("{}  └ {} PBS", "  │ ".repeat(crate::LOG_LVL as usize), String::from(format!("{}", crate::N_PBS)).red().bold()); }
 
         res
     }
@@ -267,7 +269,7 @@ impl ParmArithmetics for ParmCiphertext {
         ).expect("ParmArithmetics::sub failed.");
 
         #[cfg(feature = "seq_analyze")]
-        unsafe { println!(">>> ParmArithmetics::sub({}-bit, {}-bit)             #PBS = {}", x.len(), y.len(), crate::N_PBS); }
+        unsafe { println!("{}  └ {} PBS", "  │ ".repeat(crate::LOG_LVL as usize), String::from(format!("{}", crate::N_PBS)).red().bold()); }
 
         res
     }
@@ -289,7 +291,7 @@ impl ParmArithmetics for ParmCiphertext {
         ).expect("ParmArithmetics::add failed.");
 
         #[cfg(feature = "seq_analyze")]
-        unsafe { println!(">>> ParmArithmetics::add_noisy({}-bit, {}-bit)       #PBS = {}", x.len(), y.len(), crate::N_PBS); }
+        unsafe { println!("{}  └ {} PBS", "  │ ".repeat(crate::LOG_LVL as usize), String::from(format!("{}", crate::N_PBS)).red().bold()); }
 
         res
     }
@@ -311,7 +313,7 @@ impl ParmArithmetics for ParmCiphertext {
         ).expect("ParmArithmetics::sub failed.");
 
         #[cfg(feature = "seq_analyze")]
-        unsafe { println!(">>> ParmArithmetics::sub_noisy({}-bit, {}-bit)       #PBS = {}", x.len(), y.len(), crate::N_PBS); }
+        unsafe { println!("{}  └ {} PBS", "  │ ".repeat(crate::LOG_LVL as usize), String::from(format!("{}", crate::N_PBS)).red().bold()); }
 
         res
     }
@@ -331,7 +333,7 @@ impl ParmArithmetics for ParmCiphertext {
         ).expect("ParmArithmetics::add_const failed.");
 
         #[cfg(feature = "seq_analyze")]
-        unsafe { println!(">>> ParmArithmetics::add_const({}-bit, k = {})       #PBS = {}", x.len(), k, crate::N_PBS); }
+        unsafe { println!("{}  └ {} PBS", "  │ ".repeat(crate::LOG_LVL as usize), String::from(format!("{}", crate::N_PBS)).red().bold()); }
 
         res
     }
@@ -351,7 +353,7 @@ impl ParmArithmetics for ParmCiphertext {
         ).expect("ParmArithmetics::scalar_mul failed.");
 
         #[cfg(feature = "seq_analyze")]
-        unsafe { println!(">>> ParmArithmetics::scalar_mul({}-bit, k = {})      #PBS = {}", x.len(), k, crate::N_PBS); }
+        unsafe { println!("{}  └ {} PBS", "  │ ".repeat(crate::LOG_LVL as usize), String::from(format!("{}", crate::N_PBS)).red().bold()); }
 
         res
     }
@@ -369,7 +371,7 @@ impl ParmArithmetics for ParmCiphertext {
         ).expect("ParmArithmetics::sgn failed.");
 
         #[cfg(feature = "seq_analyze")]
-        unsafe { println!(">>> ParmArithmetics::sgn({}-bit)                     #PBS = {}", x.len(), crate::N_PBS); }
+        unsafe { println!("{}  └ {} PBS", "  │ ".repeat(crate::LOG_LVL as usize), String::from(format!("{}", crate::N_PBS)).red().bold()); }
 
         res
     }
@@ -389,7 +391,7 @@ impl ParmArithmetics for ParmCiphertext {
         ).expect("ParmArithmetics::max failed.");
 
         #[cfg(feature = "seq_analyze")]
-        unsafe { println!(">>> ParmArithmetics::max({}-bit, {}-bit)             #PBS = {}", x.len(), y.len(), crate::N_PBS); }
+        unsafe { println!("{}  └ {} PBS", "  │ ".repeat(crate::LOG_LVL as usize), String::from(format!("{}", crate::N_PBS)).red().bold()); }
 
         res
     }
@@ -408,7 +410,7 @@ impl ParmArithmetics for ParmCiphertext {
         ).expect("ParmArithmetics::relu failed.");
 
         #[cfg(feature = "seq_analyze")]
-        unsafe { println!(">>> ParmArithmetics::relu({}-bit)                    #PBS = {}", x.len(), crate::N_PBS); }
+        unsafe { println!("{}  └ {} PBS", "  │ ".repeat(crate::LOG_LVL as usize), String::from(format!("{}", crate::N_PBS)).red().bold()); }
 
         res
     }
@@ -428,7 +430,7 @@ impl ParmArithmetics for ParmCiphertext {
         ).expect("ParmArithmetics::mul failed.");
 
         #[cfg(feature = "seq_analyze")]
-        unsafe { println!(">>> ParmArithmetics::mul({}-bit, {}-bit)             #PBS = {}", x.len(), y.len(), crate::N_PBS); }
+        unsafe { println!("{}  └ {} PBS", "  │ ".repeat(crate::LOG_LVL as usize), String::from(format!("{}", crate::N_PBS)).red().bold()); }
 
         res
     }
@@ -446,7 +448,7 @@ impl ParmArithmetics for ParmCiphertext {
         ).expect("ParmArithmetics::squ failed.");
 
         #[cfg(feature = "seq_analyze")]
-        unsafe { println!(">>> ParmArithmetics::squ({}-bit)                     #PBS = {}", x.len(), crate::N_PBS); }
+        unsafe { println!("{}  └ {} PBS", "  │ ".repeat(crate::LOG_LVL as usize), String::from(format!("{}", crate::N_PBS)).red().bold()); }
 
         res
     }
@@ -466,7 +468,7 @@ impl ParmArithmetics for ParmCiphertext {
         ).expect("ParmArithmetics::round_at failed.");
 
         #[cfg(feature = "seq_analyze")]
-        unsafe { println!(">>> ParmArithmetics::add({}-bit, pos = {})           #PBS = {}", x.len(), pos, crate::N_PBS); }
+        unsafe { println!("{}  └ {} PBS", "  │ ".repeat(crate::LOG_LVL as usize), String::from(format!("{}", crate::N_PBS)).red().bold()); }
 
         res
     }
