@@ -301,7 +301,7 @@ pub fn squ_3_bit__pi_5(
                             c,
                             [0, 1,0,1,0,1,0,1,   0,   31,0,31,0,31,0,31]
                         ),
-        i if i == 1 =>  ParmEncrWord::encrypt_word_triv(&pc.params, 0),
+        i if i == 1 =>  ParmEncrWord::encrypt_word_triv(&pc.params, 0),         // throw warning?
         i if i == 2 =>  eval_LUT_5_uint(
                             pc,
                             c,
