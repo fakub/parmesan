@@ -8,6 +8,7 @@ pub use std::collections::BTreeMap;
 use crate::*;
 
 // parallelization tools
+#[cfg(not(feature = "seq_analyze"))]
 use rayon::prelude::*;
 
 #[allow(unused_imports)]
@@ -61,8 +62,16 @@ pub fn scalar_mul_impl(
             wiabs_wix_map.insert(wi.abs() as u32, ParmCiphertext::empty());
         }
     }
+
     // calc values (wi * x) in parallel
-    wiabs_wix_map.par_iter_mut().for_each(|(wiabs, wi_x)| {
+    // parallel iterators
+    #[cfg(not(feature = "seq_analyze"))]
+    let wa_wi_iter = wiabs_wix_map.par_iter_mut();
+    // sequential iterators
+    #[cfg(feature = "seq_analyze")]
+    let wa_wi_iter = wiabs_wix_map.iter_mut();
+
+    wa_wi_iter.for_each(|(wiabs, wi_x)| {
         let wi_asc = &ASC_12[&(*wiabs as usize)];
         println!("(i) Evaluating ASC for {wiabs} ...", );
         *wi_x = wi_asc.eval(pc, &x_pos).expect("Asc::eval failed.");   // due to wi.abs, x_pos must be taken

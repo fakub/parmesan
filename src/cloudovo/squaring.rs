@@ -6,7 +6,9 @@ pub use std::io::Write;
 use crate::*;
 
 // parallelization tools
+#[cfg(not(feature = "seq_analyze"))]
 use rayon::prelude::*;
+//~ #[cfg(not(feature = "seq_analyze"))]   //TODO
 use crossbeam_utils::thread;
 
 #[allow(unused_imports)]
@@ -161,7 +163,14 @@ fn squ_2_3word(
             // calc the 4/6 bits in parallel
             // n.b., a^2 mod 4 in {0,1} => no need to calc bit at 2^1 (always zero)
             // this way, only 3/5 threads are created
-            res_pbs.par_iter_mut().enumerate().for_each(| (i, rpi) | {
+            // parallel iterators
+            #[cfg(not(feature = "seq_analyze"))]
+            let sj_iter = res_pbs.par_iter_mut().enumerate();
+            // sequential iterators
+            #[cfg(feature = "seq_analyze")]
+            let sj_iter = res_pbs.iter_mut().enumerate();
+
+            sj_iter.for_each(| (i, rpi) | {
                 *rpi = pbs::squ_3_bit__pi_5(pc, &x_val, if i < 1 {i} else {i+1}).expect("pbs::squ_3_bit__pi_5 failed.");
             });
         ]

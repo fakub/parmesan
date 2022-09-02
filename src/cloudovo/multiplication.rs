@@ -6,7 +6,9 @@ pub use std::io::Write;
 use crate::*;
 
 // parallelization tools
+#[cfg(not(feature = "seq_analyze"))]
 use rayon::prelude::*;
+//~ #[cfg(not(feature = "seq_analyze"))]   //TODO
 use crossbeam_utils::thread;
 
 #[allow(unused_imports)]
@@ -263,8 +265,23 @@ fn fill_mulary(
 
     //PBS   mulary.iter_mut().zip(y.iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
     //PBS       x_yj[j..j+len].iter_mut().zip(x.iter()).for_each(| (xi_yj, xi) | {
-    mulary.par_iter_mut().zip(y.par_iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
-        x_yj[j..j+len].par_iter_mut().zip(x.par_iter()).for_each(| (xi_yj, xi) | {
+
+    // parallel iterators
+    #[cfg(not(feature = "seq_analyze"))]
+    let x_y_iter = mulary.par_iter_mut().zip(y.par_iter().enumerate());
+    // sequential iterators
+    #[cfg(feature = "seq_analyze")]
+    let x_y_iter = mulary.iter_mut().zip(y.iter().enumerate());
+
+    x_y_iter.for_each(| (x_yj, (j, yj)) | {
+        // parallel iterators
+        #[cfg(not(feature = "seq_analyze"))]
+        let xy_x_iter = x_yj[j..j+len].par_iter_mut().zip(x.par_iter());
+        // sequential iterators
+        #[cfg(feature = "seq_analyze")]
+        let xy_x_iter = x_yj[j..j+len].iter_mut().zip(x.iter());
+
+        xy_x_iter.for_each(| (xi_yj, xi) | {
             *xi_yj = mul_lwe(pc, &xi, &yj).expect("mul_lwe failed.");
         });
     });

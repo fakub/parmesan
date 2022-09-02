@@ -6,6 +6,7 @@ pub use std::io::Write;
 use crate::*;
 
 // parallelization tools
+#[cfg(not(feature = "seq_analyze"))]
 use rayon::prelude::*;
 
 #[allow(unused_imports)]
@@ -82,7 +83,14 @@ pub fn sgn_recursion_raw(
             let mut b = ParmCiphertext::triv((x.len() - 1) / GAMMA + 1, &pc.params)?;
 
             // the thread needs to know the index j so that it can check against x.len()
-            b.par_iter_mut().enumerate().for_each(| (j, bj) | {
+            // parallel iterators
+            #[cfg(not(feature = "seq_analyze"))]
+            let b_iter = b.par_iter_mut().enumerate();
+            // sequential iterators
+            #[cfg(feature = "seq_analyze")]
+            let b_iter = b.iter_mut().enumerate();
+
+            b_iter.for_each(| (j, bj) | {
 
                 // first-round input is fresh and in {-1, 0, 1}
                 if first_round {
@@ -111,7 +119,14 @@ pub fn sgn_recursion_raw(
                 } else {
                     let mut sj = ParmCiphertext::triv(GAMMA, &pc.params).expect("ParmCiphertext::triv failed.");
 
-                    sj.par_iter_mut().enumerate().for_each(| (i, sji) | {
+                    // parallel iterators
+                    #[cfg(not(feature = "seq_analyze"))]
+                    let sj_iter = sj.par_iter_mut().enumerate();
+                    // sequential iterators
+                    #[cfg(feature = "seq_analyze")]
+                    let sj_iter = sj.iter_mut().enumerate();
+
+                    sj_iter.for_each(| (i, sji) | {
                         if GAMMA * j + i < x.len() {
                             *sji = pbs::f_1__pi_5__with_val(
                                 pc,
@@ -132,65 +147,6 @@ pub fn sgn_recursion_raw(
                 pc,
                 &b,
                 false,
-            )?;
-        ]
-    );
-
-    Ok(s)
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// for archiving purposes (includes non-necessary BS in 1st round)
-#[allow(non_snake_case)]
-pub fn deprecated__sgn_recursion_raw(
-    gamma: usize,
-    pc: &ParmesanCloudovo,
-    x: &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
-    // special case: empty ciphertext
-    if x.len() == 0 {
-        // must not be empty (i.e., no ParmArithmetics::zero())
-        return ParmCiphertext::triv(1, &pc.params);
-    }
-
-    // end of recursion
-    if x.len() == 1 {
-        return Ok(x.clone());
-    }
-
-    let s: ParmCiphertext;
-
-    measure_duration!(
-        ["Signum recursion in parallel ({}-bit, groups by {})", x.len(), gamma],
-        [
-            let mut b = ParmCiphertext::triv((x.len() - 1) / gamma + 1, &pc.params)?;
-
-            // the thread needs to know the index j so that it can check against x.len()
-            b.par_iter_mut().enumerate().for_each(| (j, bj) | {
-
-                let mut sj = ParmCiphertext::triv(gamma, &pc.params).expect("ParmCiphertext::triv failed.");
-
-                sj.par_iter_mut().enumerate().for_each(| (i, sji) | {
-                    if gamma * j + i < x.len() {
-                        *sji = pbs::f_1__pi_5__with_val(
-                            pc,
-                            &x[gamma * j + i],
-                            1 << i,
-                        ).expect("pbs::f_1__pi_5__with_val failed.");
-                    }
-                });
-
-                // possibly exchange for parallel reduction (negligible effect expected)
-                for sji in sj {
-                    bj.add_inplace(&sji).expect("add_inplace failed.");
-                }
-            });
-
-            s = deprecated__sgn_recursion_raw(
-                gamma,
-                pc,
-                &b,
             )?;
         ]
     );

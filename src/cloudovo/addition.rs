@@ -7,6 +7,7 @@ pub use std::io::Write;
 use crate::*;
 
 // parallelization tools
+#[cfg(not(feature = "seq_analyze"))]
 use rayon::prelude::*;
 
 #[allow(unused_imports)]
@@ -79,32 +80,15 @@ pub fn add_sub_impl(
             // now w has the correct length!
 
             // w = x + y
-            // -----------------------------------------------------------------
-            // sequential approach (6-bit: 50-70 us)
-            //~ measure_duration!(
-            //~ ["w = x + y (seq)"],
-            //~ [
-                if is_add {
-                    for (wi, yi) in w.iter_mut().zip(y.iter()) {
-                        wi.add_inplace(&yi)?;
-                    }
-                } else {
-                    for (wi, yi) in w.iter_mut().zip(y.iter()) {
-                        wi.sub_inplace(&yi)?;
-                    }
+            if is_add {
+                for (wi, yi) in w.iter_mut().zip(y.iter()) {
+                    wi.add_inplace(&yi)?;
                 }
-            //~ ]);
-            // parallel approach (6-bit: 110-130 us)
-            //~ measure_duration!(
-            //~ ["w = x + y (par)"],
-            //~ [
-                //~ if is_add {
-                    //~ w.par_iter_mut().zip(y.par_iter()).for_each(|(wi,yi)| wi.add_uint_inplace(&yi).expect("add_uint_inplace failed.") );
-                //~ } else {
-                    //~ w.par_iter_mut().zip(y.par_iter()).for_each(|(wi,yi)| wi.sub_uint_inplace(&yi).expect("sub_uint_inplace failed.") );
-                //~ }
-            //~ ]);
-            // -----------------------------------------------------------------
+            } else {
+                for (wi, yi) in w.iter_mut().zip(y.iter()) {
+                    wi.sub_inplace(&yi)?;
+                }
+            }
 
             let mut q = ParmCiphertext::triv(wlen, &pc.params)?;
 
@@ -120,8 +104,14 @@ pub fn add_sub_impl(
                 return Err("Unexpected fatal error!".into());
             }
 
-            //PBS q[r_triv..].iter_mut().zip(w[r_triv..].iter().enumerate()).for_each(| (qi, (i0, wi)) | {
-            q[r_triv..].par_iter_mut().zip(w[r_triv..].par_iter().enumerate()).for_each(| (qi, (i0, wi)) | {
+            // parallel iterators
+            #[cfg(not(feature = "seq_analyze"))]
+            let q_w_iter = q[r_triv..].par_iter_mut().zip(w[r_triv..].par_iter().enumerate());
+            // sequential iterators
+            #[cfg(feature = "seq_analyze")]
+            let q_w_iter = q[r_triv..].iter_mut().zip(w[r_triv..].iter().enumerate());
+
+            q_w_iter.for_each(| (qi, (i0, wi)) | {
                 let i = i0 + r_triv;
                 // calc   3 w_i + w_i-1
                 let mut wi_3 = wi.mul_const(3).expect("mul_const failed.");
@@ -142,8 +132,14 @@ pub fn add_sub_impl(
             z = ParmCiphertext::triv(wlen, &pc.params)?;
             // MSB part of z is bootstrapped (if requested) ...
             if refresh {
-                //PBS z[r_triv..].iter_mut().zip(w[r_triv..].iter()).for_each(| (zi, wi) | {
-                z[r_triv..].par_iter_mut().zip(w[r_triv..].par_iter()).for_each(| (zi, wi) | {
+                // parallel iterators
+                #[cfg(not(feature = "seq_analyze"))]
+                let z_w_iter = z[r_triv..].par_iter_mut().zip(w[r_triv..].par_iter());
+                // sequential iterators
+                #[cfg(feature = "seq_analyze")]
+                let z_w_iter = z[r_triv..].iter_mut().zip(w[r_triv..].iter());
+
+                z_w_iter.for_each(| (zi, wi) | {
                     *zi = pbs::id__pi_5(pc, wi).expect("pbs::id__pi_5 failed.");
                 });
             } else {
