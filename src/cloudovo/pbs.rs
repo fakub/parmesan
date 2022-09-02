@@ -75,7 +75,8 @@ fn eval_LUT_5_float(
             Ok(ParmEncrWord::encrypt_word_triv(&pc.params, fm_u as i32)?)
         }
     } else {
-        //PBS unsafe { crate::NBS += 1; }
+        #[cfg(feature = "seq_analyze")]
+        unsafe { crate::N_PBS += 1; }
 
         let mut res = c.0.clone();
 
@@ -367,7 +368,7 @@ pub fn relu_plus__pi_5(
 }
 
 //
-//  Rounding PBS for 2y + s:
+//  Rounding for 2y + s:
 //
 //  -1   (2y + s == -3)
 //   0   (2y + s \in -2..1)
@@ -808,7 +809,7 @@ pub fn max_s_2x_6y__pi_5(
     //~ c: &ParmEncrWord,
 //~ ) -> ParmEncrWord {
     //~ measure_duration!(
-        //~ ["PBS: Identity"],
+        //~ ["PBS Identity"],
         //~ [let res = c.bootstrap_with_function(pc.bsk, |x| x*x, pc.encoder)?
                     //~ .keyswitch(pc.ksk)?;]
     //~ );

@@ -156,8 +156,6 @@ pub fn add_sub_impl(
         ]
     );
 
-    //PBS unsafe { println!("(after add {}-bit actv)    #BS = {}", wlen - r_triv, NBS); }
-
     Ok(z)
 }
 

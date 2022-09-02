@@ -77,8 +77,7 @@ fn squ_dnq(
             let br = &mut b;
             let cr = &mut c;
 
-            //PBS comment scopes out
-            // parallel pool: A, B, C
+            // parallel pool: A, B, C (n.b., for seq_analyze, there are fake implementations in seq_utils)
             thread::scope(|abc_scope| {
                 abc_scope.spawn(|_| {
                     //  A = x_1 ^ 2                     .. len1-bit squaring
@@ -111,8 +110,6 @@ fn squ_dnq(
             };
         ]
     );
-
-    //PBS unsafe { println!("(after DnQ {}-bit)    #BS = {}", x.len(), NBS); }
 
     Ok(res)
 }
@@ -149,7 +146,7 @@ fn squ_2_3word(
     // (r s) t u v w   -> res (reversed endian)
 
     measure_duration!(
-        [format!("Squaring {}-word", x.len())],
+        ["Squaring {}-word", x.len()],
         [
             // get value of x
             let mut x_val;

@@ -136,8 +136,7 @@ fn mul_karatsuba(
             let na_nbr  = &mut na_nb;
             let cr      = &mut c;
 
-            //PBS comment scopes out
-            // parallel pool: A, B, C
+            // parallel pool: A, B, C (n.b., for seq_analyze, there are fake implementations in seq_utils)
             thread::scope(|abc_scope| {
                 // calc A, B, and -A - B
                 abc_scope.spawn(|_| {
@@ -203,8 +202,6 @@ fn mul_karatsuba(
         ]
     );
 
-    //PBS unsafe { println!("(after Krts {}-bit)    #BS = {}", x.len(), NBS); }
-
     Ok(res)
 }
 
@@ -220,12 +217,10 @@ fn mul_schoolbook(
         [
             // calc multiplication array
             let mulary = fill_mulary(pc, x, y)?;
-            //PBS unsafe { println!("(after fill mulary {}-bit)    #BS = {}", x.len(), NBS); }
 
             let res = reduce_mulsquary(pc, &mulary);
         ]
     );
-    //PBS unsafe { println!("(after rdc mulary {}-bit)    #BS = {}", x.len(), NBS); }
 
     Ok(res)
 }
@@ -265,9 +260,6 @@ fn fill_mulary(
     let mut mulary = vec![ParmCiphertext::triv(2*len, &pc.params)?; len];
 
     // nested parallel iterators work as expected: they indeed create nested pools
-
-    //PBS   mulary.iter_mut().zip(y.iter().enumerate()).for_each(| (x_yj, (j, yj)) | {
-    //PBS       x_yj[j..j+len].iter_mut().zip(x.iter()).for_each(| (xi_yj, xi) | {
 
     // parallel iterators
     #[cfg(not(feature = "seq_analyze"))]
@@ -386,7 +378,7 @@ pub fn deprecated__mul_lwe(
     let posr = &mut pos;
     let negr = &mut neg;
 
-    // parallel pool: pos, neg
+    // parallel pool: pos, neg (n.b., for seq_analyze, there are fake implementations in seq_utils)
     thread::scope(|pn_scope| {
         pn_scope.spawn(|_| {
             // pos = ...

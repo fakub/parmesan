@@ -9,10 +9,9 @@ use crate::*;
 /// Arithmetics Demo
 pub fn arith_demo() -> Result<(), Box<dyn Error>> {
 
-    // not used at the moment
-    #[cfg(not(feature = "sequential"))]
+    #[cfg(not(feature = "seq_analyze"))]
     infobox!("Parallel Arithmetics DEMO ({} threads)", rayon::current_num_threads());
-    #[cfg(feature = "sequential")]
+    #[cfg(feature = "seq_analyze")]
     infobox!("Sequential Arithmetics DEMO");
 
 

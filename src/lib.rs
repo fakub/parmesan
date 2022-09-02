@@ -1,22 +1,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //!
-//! # PARMESAN: Parallel-ARithMEticS-on-tfhe-ENcrypted-data
+//! # PARMESAN: Parallel-ARithMEticS-over-tfhe-ENcrypted-data
 //!
-//! *A library for fast parallel arithmetics on TFHE-encrypted data.*
+//! *A library for fast parallel arithmetics over TFHE-encrypted data.*
 //!
 //!  ╭─────────╮
 //!  │  P.M.S  │
 //!  ╰─────────╯
-//!
-//! Employs the Concrete Library.
-//!
-//!  •        •
-//!    ▂█████
-//!    ██
-//!    ██
-//!    ▀█████
-//!  •        •
 //!
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -96,7 +87,8 @@ pub static mut LOG_LVL: u8 = 0;
 pub const LOGFILE: &str = "./operations.log";
 pub static mut LOG_INITED: bool = false;
 
-//PBS pub static mut NBS: usize = 0;
+#[cfg(feature = "seq_analyze")]
+pub static mut N_PBS: usize = 0;
 
 
 // =============================================================================

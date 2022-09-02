@@ -28,7 +28,7 @@ concrete-core = { package = "concrete-core-experimental", version = "^1.0.0-alph
 concrete-shortint = { version = "^0.1.0-beta" }
 
 [features]
-default = []                # no feature selected by default
-seq_analyze = []            # run algorithms sequentially & count bootstraps
-measure = []                # measure duration of selected operations
-log_ops = ["measure"]       # log operation timing into a logfile (used in gnuplot scripts)
+default = []                            # no feature selected by default
+seq_analyze = ["log_ops"]               # run algorithms sequentially & count bootstraps
+measure = []                            # measure duration of selected operations
+log_ops = ["measure"]                   # log operation timing into a logfile (used in gnuplot scripts)
