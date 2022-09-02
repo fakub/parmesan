@@ -67,6 +67,10 @@ pub use cloudovo::scalar_multiplication::asc::*;
 pub mod demos;
 pub use demos::*;
 
+// Fake threads for sequential analysis
+#[cfg(feature = "seq_analyze")]
+pub mod seq_utils;
+
 
 // =============================================================================
 //

@@ -8,8 +8,11 @@ use crate::*;
 // parallelization tools
 #[cfg(not(feature = "seq_analyze"))]
 use rayon::prelude::*;
-//~ #[cfg(not(feature = "seq_analyze"))]   //TODO
+#[cfg(not(feature = "seq_analyze"))]
 use crossbeam_utils::thread;
+// fake threads for sequential analysis
+#[cfg(feature = "seq_analyze")]
+use crate::seq_utils::thread;
 
 #[allow(unused_imports)]
 use colored::Colorize;
