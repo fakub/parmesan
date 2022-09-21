@@ -21,15 +21,16 @@ pub fn avg_adds_in_scalar_mul() {
     for k in 1..(1 << gen_bits) {
         // skip even
         if k & 1 == 0 {continue;}
-        // get "NAF"
+        // get Koyama-Tsuruoka recoding
         let ktv = naf::koyama_tsuruoka_vec(k);
-        // get window of size ASC_BITLEN
+        // trim to window of size ASC_BITLEN
         let w = ktv[0..if ktv.len() < ASC_BITLEN {ktv.len()} else {ASC_BITLEN}].to_vec();
-        // get its value
+        // get its abs value (many will repeat)
         let w_val = encryption::convert_from_vec(&w).expect("convert failed.").abs() as usize;
 
-        // HW-1 .. standard NAF approach ; ASC's length .. window-Koy-Tsu
+        // # of additions = HW-1 .. standard "NAF" approach (or) ASC's length .. window-Koy-Tsu
         if !val_ads.contains_key(&w_val) {
+            // get HW of extracted Koy-Tsu recoding
             let hw = encryption::bin_hw(&w).expect("bin_hw failed.");
             val_ads.insert(w_val, (hw-1, ASC_12[&w_val].len()));
             nai_tot += hw-1;

@@ -181,6 +181,8 @@ impl ParmesanCloudovo<'_> {
 //
 //  TODO / Wishlist
 //
+//  - scalar mul: 13-bit chains are mostly in 4 additions, but those in 5 additions might not occur in the K-T recoding $\Rightarrow$ check it out!
+//
 //  - mul_lwe .. for more than 1x1 bit? let say 1x2 bit? what about squaring?
 //      - well, for squ it works, for mul?
 //      - in squ, can there be more zeros? we have redundant repre..
@@ -191,7 +193,6 @@ impl ParmesanCloudovo<'_> {
 //      - keep track of sample freshness (e.g., in signum recursion that's mess)
 //          - identity-bootstrapped only if needed
 //          - warning if a fresh sample gets bootstraped -- that could have been done a step in advance
-//      - for analytics purposes, introduce a "sequential" feature, which calls iter() instead of par_iter() etc. (tricky for thread/scope/spawn)
 //
 //  - NOTES:
 //      - very peculiar optimization: Karatsuba splits odd numbers into "halves" .. 31 and 33 worth splitting differently due to 15(s) 16(K) 17(s)
