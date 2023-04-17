@@ -1,7 +1,7 @@
 
 # Parmesan
 
-*Parallel ARithMEticS on tfhe ENcrypted data*
+*Parallel ARithMEticS over ENcrypted data*
 
 Parmesan implements selected parallel algorithms for multi-digit arithmetics over TFHE ciphertexts. Namely:
 
@@ -20,13 +20,13 @@ Parmesan implements selected parallel algorithms for multi-digit arithmetics ove
 ## The Short Story
 
 In the standard integer representation, parallel addition is not possible due to the carry, which can propagate all the way from the LSB to the MSB.
-However, using, e.g., an alphabet `{-1,0,1}` for base-2 integer representation, a parallel addition algorithm does exist.
+However, using, e.g., an alphabet `{-1,0,1}` for base-2 integer representation, a parallel addition algorithm *does* exist.
 Other operations like (scalar) multiplication and squaring benefit from the fast addition, too.
 
 
 ## The Long Story
 
-See our [full paper](https://dl.acm.org/doi/10.1145/3508398.3511527) (also at [eprint](https://eprint.iacr.org/2022/067)).
+See our [full paper on eprint](https://eprint.iacr.org/2023/544) and our preceeding [study](https://dl.acm.org/doi/10.1145/3508398.3511527) that compares various approaches for parallel addition (also on [eprint](https://eprint.iacr.org/2022/067)).
 
 
 ## Use `parmesan`
@@ -43,14 +43,6 @@ For the best performance, compile with
 ```shell
 $ RUSTFLAGS="-C target-cpu=native" cargo build --release
 ```
-
-
-## Benchmarks
-
-For benchmarks, we implement an experimental tool [bench-parmesan](https://github.com/fakub/bench-parmesan), which also compares Parmesan and Concrete `v0.2`.
-Results will be published in a paper.
-
-Find preliminary measurements of the processor load on a machine with 2xAMD EPYC 7543 during 32-bit multiplication [attached in a file](assets/mul32.pdf).
 
 
 ## Example
@@ -121,6 +113,20 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 ```
 
 
+## Benchmarks
+
+For benchmarks, we implement an experimental tool [bench-parmesan](https://github.com/fakub/bench-parmesan), which also compares Parmesan and Concrete `v0.2`.
+Results can be found in the [whitepaper](https://eprint.iacr.org/2023/544).
+
+### Processor Load
+
+In particular, we measure the processor load; in the graph below, find our results for 32-bit maximum that were measured on a machine with AMD EPYC 7543.
+
+![proc load max](docs/plot-dstat.png)
+
+An extra graph that shows the processor load during 32-bit multiplication can be found [here](docs/mul32.pdf).
+
+
 ## License
 
 Parmesan is licensed under AGPLv3.
@@ -128,4 +134,10 @@ Parmesan is licensed under AGPLv3.
 
 ## Acknowledgments
 
-Partially supported by [EURECOM](https://www.eurecom.fr/).
+This work was supported by the MESRI-BMBF French-German joint project UPCARE (ANR-20-CYAL-0003-01), granted to [EURECOM](https://www.eurecom.fr/).
+
+![EURECOM logo](docs/eurecom-logo.png)
+
+Computational resources were supplied by the project [e-Infrastruktura CZ](https://www.cesnet.cz/projekty/e-infra_cz/) (e-INFRA CZ LM2018140) supported by the Ministry of Education, Youth and Sports of the Czech Republic.
+
+![e-infra logo](docs/e-infra.svg)
