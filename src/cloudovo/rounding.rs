@@ -11,11 +11,11 @@ use colored::Colorize;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
 use super::pbs;
 
-pub fn round_at_impl(
-    pc: &ParmesanCloudovo,
-    x:  &ParmCiphertext,
+pub fn round_at_impl<'a>(
+    pc: &'a ParmesanCloudovo<'a>,
+    x:  &'a ParmCiphertext<'a>,
     pos: usize,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
 
     match pos {
         // no rounding needed

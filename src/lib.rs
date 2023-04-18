@@ -122,10 +122,7 @@ impl ParmesanUserovo<'_> {
 
     /// Get the Public Key Set
     pub fn export_pub_keys(&self) -> PubKeySet {
-        PubKeySet {
-            bsk:     &self.priv_keys.bsk,
-            ksk:     &self.priv_keys.ksk,
-        }
+        PubKeySet {server_key: &self.server_key}
     }
 
     /// Encrypt a 64-bit signed integer

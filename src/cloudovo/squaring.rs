@@ -27,10 +27,10 @@ use super::pbs;
 //
 
 /// Choose & call appropriate algorithm for a square of a ciphertexts (Divide'n'Conquer, or schoolbook multiplication)
-pub fn squ_impl(
-    pc: &ParmesanCloudovo,
-    x:  &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
+pub fn squ_impl<'a>(
+    pc: &'a ParmesanCloudovo<'a>,
+    x:  &'a ParmCiphertext<'a>,
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
 
     match x.len() {
         l if l == 0     => Ok(ParmArithmetics::zero()),
@@ -42,10 +42,10 @@ pub fn squ_impl(
 }
 
 /// Divide'n'Conquer squaring
-fn squ_dnq(
-    pc: &ParmesanCloudovo,
-    x:  &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
+fn squ_dnq<'a>(
+    pc: &'a ParmesanCloudovo<'a>,
+    x:  &'a ParmCiphertext<'a>,
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
 
     let len0 = (x.len() + 1) / 2;
 
@@ -115,10 +115,10 @@ fn squ_dnq(
 }
 
 /// Square of a 1-bit ciphertext
-fn squ_1word(
-    pc: &ParmesanCloudovo,
-    x:  &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
+fn squ_1word<'a>(
+    pc: &'a ParmesanCloudovo<'a>,
+    x:  &'a ParmCiphertext<'a>,
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
 
     measure_duration!(
         ["Squaring 1-word"],
@@ -132,13 +132,13 @@ fn squ_1word(
 }
 
 /// Square of a 2- or 3-bit ciphertexts
-fn squ_2_3word(
-    pc: &ParmesanCloudovo,
-    x:  &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
+fn squ_2_3word<'a>(
+    pc: &'a ParmesanCloudovo<'a>,
+    x:  &'a ParmCiphertext<'a>,
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
     assert!(x.len() == 2 || x.len() == 3);
-    let mut res = ParmCiphertext::triv(2*x.len(), &pc.params)?;
-    let mut res_pbs = ParmCiphertext::triv(2*x.len() - 1, &pc.params)?;
+    let mut res = ParmCiphertext::triv(2*x.len(), &pc);
+    let mut res_pbs = ParmCiphertext::triv(2*x.len() - 1, &pc);
 
     //       (x) y z
     //       (x) y z
@@ -178,7 +178,7 @@ fn squ_2_3word(
 
     // fill 0 at 2^1
     res[0] = res_pbs[0].clone();
-    res[1] = ParmEncrWord::encrypt_word_triv(&pc.params, 0)?;
+    res[1] = ParmEncrWord::encrypt_word_triv(0);
     for (ri, rpi) in res[2..].iter_mut().zip(res_pbs[1..].iter()) {
         *ri = rpi.clone();
     }

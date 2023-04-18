@@ -8,7 +8,8 @@ pub use std::fs::{self,File,OpenOptions};
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use concrete_core::prelude::*;
+//~ use concrete_core::prelude::*;
+use tfhe::shortint::prelude::*;
 
 use crate::*;
 use crate::params::Params;
@@ -24,9 +25,8 @@ pub const KEYS_PATH: &str = "./keys/";
 
 //WISH #[derive(Serialize, Deserialize)]
 pub struct PrivKeySet {
-    pub sk : LweSecretKey64,
-    pub ksk: LweKeyswitchKey64,
-    pub bsk: FourierLweBootstrapKey64,
+    pub client_key: ClientKey,
+    pub server_key: ServerKey,
 }
 
 impl PrivKeySet {
@@ -38,50 +38,13 @@ impl PrivKeySet {
         //  Generate / load params & keys
         let filename = Self::filename_from_params(params);
         let path = Path::new(&filename);
-        let (_lwe_secret_key_after_ks, _glwe_secret_key, lwe_secret_key, key_switching_key, bootstrapping_key):
-            (LweSecretKey64, GlweSecretKey64, LweSecretKey64, LweKeyswitchKey64, FourierLweBootstrapKey64);
+        let (client_key, server_key): (ClientKey, ServerKey);
 
         if !path.is_file() {
             measure_duration!(
                 ["Generating new keys"],
                 [
-                    let mut engine = CoreEngine::new(())?;
-
-                    // client keys
-                    measure_duration!(
-                        ["Generating secret keys (n = {}, N = {})", params.lwe_dimension(), params.polynomial_size()],
-                        [
-                            _lwe_secret_key_after_ks = engine.create_lwe_secret_key(params.concrete_pars.lwe_dimension)?;
-                            _glwe_secret_key = engine.create_glwe_secret_key(params.concrete_pars.glwe_dimension, params.concrete_pars.polynomial_size)?;
-                            lwe_secret_key = engine.transmute_glwe_secret_key_to_lwe_secret_key(_glwe_secret_key.clone())?;
-                        ]
-                    );
-
-                    // server keys
-                    measure_duration!(
-                        ["Calculating public key-switching keys"],
-                        [
-                            key_switching_key = engine.create_lwe_keyswitch_key(
-                                &lwe_secret_key,
-                                &_lwe_secret_key_after_ks,
-                                params.concrete_pars.ks_level,
-                                params.concrete_pars.ks_base_log,
-                                Variance(params.lwe_var_f64()),
-                            )?;
-                        ]
-                    );
-                    measure_duration!(
-                        ["Calculating public bootstrapping keys"],
-                        [
-                            bootstrapping_key = engine.create_lwe_bootstrap_key(
-                                &_lwe_secret_key_after_ks,
-                                &_glwe_secret_key,
-                                params.concrete_pars.pbs_base_log,
-                                params.concrete_pars.pbs_level,
-                                Variance(params.glwe_var_f64()),
-                            )?;
-                        ]
-                    );
+                    (client_key, server_key) = gen_keys(params);
                 ]
             );
 
@@ -89,7 +52,7 @@ impl PrivKeySet {
                 ["Exporting new keys"],
                 [
                     let keys_file = File::create(path).map(BufWriter::new)?;
-                    bincode::serialize_into(keys_file, &(&_lwe_secret_key_after_ks, &_glwe_secret_key, &lwe_secret_key, &key_switching_key, &bootstrapping_key))?;
+                    bincode::serialize_into(keys_file, &(&client_key, &server_key))?;
                 ]
             );
         } else {
@@ -100,17 +63,13 @@ impl PrivKeySet {
                 ["Loading saved keys"],
                 [
                     let keys_file = File::open(path).map(BufReader::new)?;
-                    (_lwe_secret_key_after_ks, _glwe_secret_key, lwe_secret_key, key_switching_key, bootstrapping_key) = bincode::deserialize_from(keys_file)?;
+                    (client_key, server_key) = bincode::deserialize_from(keys_file)?;
                 ]
             );
         }
 
         // fill & return PrivKeySet struct
-        Ok(PrivKeySet {
-            sk : lwe_secret_key,
-            ksk: key_switching_key,
-            bsk: bootstrapping_key,
-        })
+        Ok(PrivKeySet {client_key, server_key})
     }
 
     /// Get filename from params
@@ -137,6 +96,5 @@ impl PrivKeySet {
 //
 
 pub struct PubKeySet<'a> {
-    pub ksk: &'a LweKeyswitchKey64,
-    pub bsk: &'a FourierLweBootstrapKey64,
+    pub server_key: &'a ServerKey,
 }

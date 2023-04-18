@@ -27,11 +27,11 @@ use super::pbs;
 //
 
 /// Choose & call appropriate algorithm for a product of two ciphertexts (Karatsuba, or schoolbook multiplication)
-pub fn mul_impl(
-    pc: &ParmesanCloudovo,
-    x:  &ParmCiphertext,
-    y:  &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
+pub fn mul_impl<'a>(
+    pc: &'a ParmesanCloudovo<'a>,
+    x:  &'a ParmCiphertext<'a>,
+    y:  &'a ParmCiphertext<'a>,
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
 
     //  Karatsuba for lengths 14 or >= 16, otherwise schoolbook (i.e., lengths < 14 or 15)
     //
@@ -57,9 +57,9 @@ pub fn mul_impl(
 
         for _i in 0..len_diff {
             if x_in.len() < y_in.len() {
-                x_in.push(ParmEncrWord::encrypt_word_triv(&pc.params, 0)?);
+                x_in.push(ParmEncrWord::encrypt_word_triv(0));
             } else {
-                y_in.push(ParmEncrWord::encrypt_word_triv(&pc.params, 0)?);
+                y_in.push(ParmEncrWord::encrypt_word_triv(0));
             }
         }
     }
@@ -86,11 +86,11 @@ pub fn mul_impl(
 }
 
 /// Karatsuba multiplication
-fn mul_karatsuba(
-    pc: &ParmesanCloudovo,
-    x:  &ParmCiphertext,
-    y:  &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
+fn mul_karatsuba<'a>(
+    pc: &'a ParmesanCloudovo<'a>,
+    x:  &'a ParmCiphertext<'a>,
+    y:  &'a ParmCiphertext<'a>,
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
 
     //WISH  be able to calculate n and n-1 bit numbers (useful for squaring of non-power of two lengths)
     //      in the end, it will be needed in schoolbook, too
@@ -128,8 +128,8 @@ fn mul_karatsuba(
             // init tmp variables in this scope, only references can be passed to threads
             let mut a       = ParmCiphertext::empty();
             let mut b       = ParmCiphertext::empty();
-            let mut na_nb   = ParmCiphertext::triv(len0, &pc.params)?;
-            let mut c       = ParmCiphertext::triv(len0, &pc.params)?;
+            let mut na_nb   = ParmCiphertext::triv(len0, &pc);
+            let mut c       = ParmCiphertext::triv(len0, &pc);
 
             let ar      = &mut a;
             let br      = &mut b;
@@ -206,11 +206,11 @@ fn mul_karatsuba(
 }
 
 /// Schoolbook multiplication `O(n^2)`
-fn mul_schoolbook(
-    pc: &ParmesanCloudovo,
-    x:  &ParmCiphertext,
-    y:  &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
+fn mul_schoolbook<'a>(
+    pc: &'a ParmesanCloudovo<'a>,
+    x:  &'a ParmCiphertext<'a>,
+    y:  &'a ParmCiphertext<'a>,
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
 
     measure_duration!(
         ["Multiplication schoolbook ({}-bit)", x.len()],
@@ -226,11 +226,11 @@ fn mul_schoolbook(
 }
 
 /// Product of two 1-word ciphertexts
-fn mul_1word(
-    pc: &ParmesanCloudovo,
-    x:  &ParmCiphertext,
-    y:  &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
+fn mul_1word<'a>(
+    pc: &'a ParmesanCloudovo<'a>,
+    x:  &'a ParmCiphertext<'a>,
+    y:  &'a ParmCiphertext<'a>,
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
 
     measure_duration!(
         ["Multiplication 1-word"],
@@ -244,11 +244,11 @@ fn mul_1word(
 }
 
 /// Fill multiplication array (for schoolbook multiplication)
-fn fill_mulary(
-    pc: &ParmesanCloudovo,
-    x: &ParmCiphertext,
-    y: &ParmCiphertext,
-) -> Result<Vec<ParmCiphertext>, Box<dyn Error>> {
+fn fill_mulary<'a>(
+    pc: &'a ParmesanCloudovo<'a>,
+    x:  &'a ParmCiphertext<'a>,
+    y:  &'a ParmCiphertext<'a>,
+) -> Result<Vec<ParmCiphertext<'a>>, Box<dyn Error>> {
 
     assert_eq!(x.len(), y.len());
 
@@ -257,7 +257,7 @@ fn fill_mulary(
     // fill multiplication array
     //TODO check the size, it might grow outsite due to redundant representation
     //WISH try different approaches and compare
-    let mut mulary = vec![ParmCiphertext::triv(2*len, &pc.params)?; len];
+    let mut mulary = vec![ParmCiphertext::triv(2*len, &pc); len];
 
     // nested parallel iterators work as expected: they indeed create nested pools
 
@@ -286,11 +286,11 @@ fn fill_mulary(
 
 /// Implementation of LWE sample multiplication, where `x` and `y` encrypt
 /// a plaintext in `{-1, 0, 1}`
-pub fn mul_lwe(
-    pc: &ParmesanCloudovo,
-    x: &ParmEncrWord,
-    y: &ParmEncrWord,
-) -> Result<ParmEncrWord, Box<dyn Error>> {
+pub fn mul_lwe<'a>(
+    pc: &'a ParmesanCloudovo<'a>,
+    x:  &'a ParmEncrWord<'a>,
+    y:  &'a ParmEncrWord<'a>,
+) -> Result<ParmEncrWord<'a>, Box<dyn Error>> {
 
     // resolve trivial cases
     //WISH check correctness
@@ -324,10 +324,10 @@ pub fn mul_lwe(
 }
 
 /// Reduce mul/squ-ary with addition
-pub fn reduce_mulsquary (
-    pc: &ParmesanCloudovo,
-    mulary: &Vec<ParmCiphertext>,
-) -> ParmCiphertext {
+pub fn reduce_mulsquary<'a>(
+    pc: &'a ParmesanCloudovo<'a>,
+    mulary: &'a Vec<ParmCiphertext<'a>>,
+) -> ParmCiphertext<'a> {
     let mut intmd = vec![ParmCiphertext::empty(); 2];
     let mut idx = 0usize;
     intmd[idx] = ParmArithmetics::add(pc, &mulary[0], &mulary[1]);
@@ -339,60 +339,4 @@ pub fn reduce_mulsquary (
     }
 
     intmd[idx].clone()
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// for archiving purposes (also presenting author's stupidity)
-#[allow(non_snake_case)]
-pub fn deprecated__mul_lwe(
-    pc: &ParmesanCloudovo,
-    x: &ParmEncrWord,
-    y: &ParmEncrWord,
-) -> Result<ParmEncrWord, Box<dyn Error>> {
-    let mut z: ParmEncrWord;
-    let pi = pc.params.bit_precision;
-    if x.is_triv() {
-        let mut mx: i32 = x.decrypt_word_pos(&pc.params, None)? as i32;
-        // convert to signed domain
-        if mx > 1 << (pi - 1) {mx -= 1 << pi}
-        return Ok(y.mul_const(mx)?);
-    } else if y.is_triv() {
-        let mut my: i32 = y.decrypt_word_pos(&pc.params, None)? as i32;
-        // convert to signed domain
-        if my > 1 << (pi - 1) {my -= 1 << pi}
-        return Ok(x.mul_const(my)?);
-    }
-
-    // x + y
-    let mut pxpy: ParmEncrWord = x.clone();
-    pxpy.add_inplace(y)?;
-    // x - y
-    let mut pxny: ParmEncrWord = x.clone();
-    pxny.sub_inplace(y)?;
-
-    // pos, neg (in parallel)
-    // init tmp variables in this scope, only references can be passed to threads
-    let mut pos = ParmEncrWord::encrypt_word_triv(&pc.params, 0).expect("ParmEncrWord::encrypt_word failed.");
-    let mut neg = ParmEncrWord::encrypt_word_triv(&pc.params, 0).expect("ParmEncrWord::encrypt_word_triv failed.");
-    let posr = &mut pos;
-    let negr = &mut neg;
-
-    // parallel pool: pos, neg (n.b., for seq_analyze, there are fake implementations in seq_utils)
-    thread::scope(|pn_scope| {
-        pn_scope.spawn(|_| {
-            // pos = ...
-            *posr  = pbs::a_2__pi_5(pc, &pxpy).expect("pbs::a_2__pi_5 failed.");
-        });
-        pn_scope.spawn(|_| {
-            // neg = ...
-            *negr  = pbs::a_2__pi_5(pc, &pxny).expect("pbs::a_2__pi_5 failed.");
-        });
-    }).expect("thread::scope pn_scope failed.");
-
-    // z = pos - neg
-    z = pos.clone();
-    z.sub_inplace(&neg)?;
-
-    Ok(z)
 }

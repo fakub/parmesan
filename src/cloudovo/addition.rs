@@ -17,13 +17,13 @@ use crate::ciphertexts::{ParmCiphertext,ParmCiphertextImpl,ParmEncrWord};
 use super::pbs;
 
 /// Implementation of parallel addition/subtraction
-pub fn add_sub_impl(
+pub fn add_sub_impl<'a>(
     is_add: bool,
-    pc: &ParmesanCloudovo,
-    x:  &ParmCiphertext,
-    y:  &ParmCiphertext,
+    pc: &'a ParmesanCloudovo<'a>,
+    x:  &'a ParmCiphertext<'a>,
+    y:  &'a ParmCiphertext<'a>,
     refresh: bool,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
 
     // calculate right overlap of trivial zero samples (any)
     //             ____
@@ -75,7 +75,7 @@ pub fn add_sub_impl(
             }
             // if x is shorter than wlen, fill the rest with zeros
             for _ in 0..((wlen as i64) - (x.len() as i64)) {
-                w.push(ParmEncrWord::encrypt_word_triv(&pc.params, 0)?);
+                w.push(ParmEncrWord::encrypt_word_triv(0));
             }
             // now w has the correct length!
 
@@ -90,7 +90,7 @@ pub fn add_sub_impl(
                 }
             }
 
-            let mut q = ParmCiphertext::triv(wlen, &pc.params)?;
+            let mut q = ParmCiphertext::triv(wlen, &pc);
 
             // this shall not happen
             if r_triv >= q.len() {
@@ -129,7 +129,7 @@ pub fn add_sub_impl(
             });
 
             // init z of zeros of wlen length, then clone / bootstrap ID from w, finally push carry q_i-1
-            z = ParmCiphertext::triv(wlen, &pc.params)?;
+            z = ParmCiphertext::triv(wlen, &pc);
             // MSB part of z is bootstrapped (if requested) ...
             if refresh {
                 // parallel iterators
@@ -159,9 +159,9 @@ pub fn add_sub_impl(
     Ok(z)
 }
 
-pub fn opposite_impl(
-    x: &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
+pub fn opposite_impl<'a>(
+    x: &'a ParmCiphertext<'a>,
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
     let mut nx = ParmCiphertext::empty();
 
     for xi in x {
@@ -171,11 +171,11 @@ pub fn opposite_impl(
     Ok(nx)
 }
 
-pub fn add_const_impl(
-    pc: &ParmesanCloudovo,
-    x:  &ParmCiphertext,
+pub fn add_const_impl<'a>(
+    pc: &'a ParmesanCloudovo<'a>,
+    x:  &'a ParmCiphertext<'a>,
     k:  i64,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
     // resolve k == 0
     if k == 0 {
         return Ok(x.clone());
@@ -199,7 +199,7 @@ pub fn add_const_impl(
         };
 
         // encrypt as trivial sample
-        let cti = ParmEncrWord::encrypt_word_triv(&pc.params, ki as i32)?;
+        let cti = ParmEncrWord::encrypt_word_triv(ki as i32);
 
         ck.push(cti);
     }

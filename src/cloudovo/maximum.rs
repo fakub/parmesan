@@ -16,11 +16,11 @@ use crate::ciphertexts::{ParmCiphertext,ParmCiphertextImpl,ParmEncrWord};
 use super::{pbs,signum};
 
 /// Implementation of parallel maximum using signum
-pub fn max_impl(
-    pc: &ParmesanCloudovo,
-    x:  &ParmCiphertext,
-    y:  &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
+pub fn max_impl<'a>(
+    pc: &'a ParmesanCloudovo<'a>,
+    x:  &'a ParmCiphertext<'a>,
+    y:  &'a ParmCiphertext<'a>,
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
 
     let mut m: ParmCiphertext;
 
@@ -47,13 +47,13 @@ pub fn max_impl(
             let mut xa = x.clone();
             let mut ya = y.clone();
             for _ in 0..((y.len() as i64) - (x.len() as i64)) {
-                xa.push(ParmEncrWord::encrypt_word_triv(&pc.params, 0)?);
+                xa.push(ParmEncrWord::encrypt_word_triv(0));
             }
             for _ in 0..((x.len() as i64) - (y.len() as i64)) {
-                ya.push(ParmEncrWord::encrypt_word_triv(&pc.params, 0)?);
+                ya.push(ParmEncrWord::encrypt_word_triv(0));
             }
 
-            m = ParmCiphertext::triv(xa.len(), &pc.params)?;
+            m = ParmCiphertext::triv(xa.len(), &pc);
 
             // parallel iterators
             #[cfg(not(feature = "seq_analyze"))]

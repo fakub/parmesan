@@ -20,22 +20,22 @@ pub const PARM_CT_MAXLEN: usize = 63;
 /// Parmesan encryption of a 64-bit signed integer
 /// * splits signed integer into words
 /// * encrypts one-by-one
-pub fn parm_encrypt(
-    params: &Params,
-    priv_keys: &PrivKeySet,
+pub fn parm_encrypt<'a>(
+    params: &'a Params,
+    priv_keys: &'a PrivKeySet,
     m: i64,
     words: usize,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
     let mv = convert_to_vec(m, words);
     parm_encrypt_from_vec(params, priv_keys, &mv)
 }
 
 /// Parmesan encryption of a vector of words from alphabet `{-1,0,1}`
-pub fn parm_encrypt_from_vec(
-    params: &Params,
-    priv_keys: &PrivKeySet,
-    mv: &Vec<i32>,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
+pub fn parm_encrypt_from_vec<'a>(
+    params: &'a Params,
+    priv_keys: &'a PrivKeySet,
+    mv: &'a Vec<i32>,
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
     let mut c = ParmCiphertext::empty();
     for mi in mv {
 
@@ -44,7 +44,7 @@ pub fn parm_encrypt_from_vec(
             return Err(format!("{}", "Word to be encrypted outside the alphabet {-1,0,1}.").into());
         }
 
-        c.push(ParmEncrWord::encrypt_word(params, Some(priv_keys), *mi)?);
+        c.push(ParmEncrWord::encrypt_word(params, priv_keys, *mi));
     }
     Ok(c)
 }

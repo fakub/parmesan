@@ -21,11 +21,11 @@ pub use asc::{Asc, AddShift, AscEval, AscValue};
 pub mod naf;
 
 /// Implementation of signum via parallel reduction
-pub fn scalar_mul_impl(
-    pc: &ParmesanCloudovo,
+pub fn scalar_mul_impl<'a>(
+    pc: &'a ParmesanCloudovo<'a>,
     k: i32,
-    x: &ParmCiphertext,
-) -> Result<ParmCiphertext, Box<dyn Error>> {
+    x: &'a ParmCiphertext<'a>,
+) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
 
     // move sign of k to x, prepare both +1 and -1 multiples
     let mut x_pos = ParmCiphertext::empty();

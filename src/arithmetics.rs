@@ -211,31 +211,31 @@ impl ParmArithmetics for i64 {
     }
 }
 
-impl ParmArithmetics for ParmCiphertext {
-    fn zero() -> ParmCiphertext {
+impl ParmArithmetics for ParmCiphertext<'_> {
+    fn zero() -> ParmCiphertext<'static> {
         ParmCiphertext::empty()
     }
 
-    fn opp(x: &ParmCiphertext) -> ParmCiphertext {
+    fn opp<'a>(x: &'a ParmCiphertext<'a>) -> ParmCiphertext<'a> {
         addition::opposite_impl(x).expect("ParmArithmetics::opp failed.")
     }
 
-    fn shift(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
+    fn shift<'a>(
+        pc: &'a ParmesanCloudovo<'a>,
+        x: &'a ParmCiphertext<'a>,
         k: usize,
-    ) -> ParmCiphertext {
+    ) -> ParmCiphertext<'a> {
         if k == 0 {return x.clone();}
         let mut x_shifted = ParmCiphertext::triv(k, &pc.params).expect("ParmCiphertext::triv failed.");
         x_shifted.append(&mut x.clone());
         x_shifted
     }
 
-    fn add(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
-        y: &ParmCiphertext,
-    ) -> ParmCiphertext {
+    fn add<'a>(
+        pc: &'a ParmesanCloudovo<'a>,
+        x: &'a ParmCiphertext<'a>,
+        y: &'a ParmCiphertext<'a>,
+    ) -> ParmCiphertext<'a> {
         #[cfg(feature = "seq_analyze")]
         start_pbs_analysis!();
 
@@ -253,11 +253,11 @@ impl ParmArithmetics for ParmCiphertext {
         res
     }
 
-    fn sub(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
-        y: &ParmCiphertext,
-    ) -> ParmCiphertext {
+    fn sub<'a>(
+        pc: &'a ParmesanCloudovo<'a>,
+        x: &'a ParmCiphertext<'a>,
+        y: &'a ParmCiphertext<'a>,
+    ) -> ParmCiphertext<'a> {
         #[cfg(feature = "seq_analyze")]
         start_pbs_analysis!();
 
@@ -275,11 +275,11 @@ impl ParmArithmetics for ParmCiphertext {
         res
     }
 
-    fn add_noisy(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
-        y: &ParmCiphertext,
-    ) -> ParmCiphertext {
+    fn add_noisy<'a>(
+        pc: &'a ParmesanCloudovo<'a>,
+        x: &'a ParmCiphertext<'a>,
+        y: &'a ParmCiphertext<'a>,
+    ) -> ParmCiphertext<'a> {
         #[cfg(feature = "seq_analyze")]
         start_pbs_analysis!();
 
@@ -297,11 +297,11 @@ impl ParmArithmetics for ParmCiphertext {
         res
     }
 
-    fn sub_noisy(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
-        y: &ParmCiphertext,
-    ) -> ParmCiphertext {
+    fn sub_noisy<'a>(
+        pc: &'a ParmesanCloudovo<'a>,
+        x: &'a ParmCiphertext<'a>,
+        y: &'a ParmCiphertext<'a>,
+    ) -> ParmCiphertext<'a> {
         #[cfg(feature = "seq_analyze")]
         start_pbs_analysis!();
 
@@ -319,11 +319,11 @@ impl ParmArithmetics for ParmCiphertext {
         res
     }
 
-    fn add_const(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
+    fn add_const<'a>(
+        pc: &'a ParmesanCloudovo<'a>,
+        x: &'a ParmCiphertext<'a>,
         k: i64,
-    ) -> ParmCiphertext {
+    ) -> ParmCiphertext<'a> {
         #[cfg(feature = "seq_analyze")]
         start_pbs_analysis!();
 
@@ -339,11 +339,11 @@ impl ParmArithmetics for ParmCiphertext {
         res
     }
 
-    fn scalar_mul(
-        pc: &ParmesanCloudovo,
+    fn scalar_mul<'a>(
+        pc: &'a ParmesanCloudovo<'a>,
         k: i32,
-        x: &ParmCiphertext,
-    ) -> ParmCiphertext {
+        x: &'a ParmCiphertext<'a>,
+    ) -> ParmCiphertext<'a> {
         #[cfg(feature = "seq_analyze")]
         start_pbs_analysis!();
 
@@ -359,10 +359,10 @@ impl ParmArithmetics for ParmCiphertext {
         res
     }
 
-    fn sgn(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
-    ) -> ParmCiphertext {
+    fn sgn<'a>(
+        pc: &'a ParmesanCloudovo<'a>,
+        x: &'a ParmCiphertext<'a>,
+    ) -> ParmCiphertext<'a> {
         #[cfg(feature = "seq_analyze")]
         start_pbs_analysis!();
 
@@ -377,11 +377,11 @@ impl ParmArithmetics for ParmCiphertext {
         res
     }
 
-    fn max(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
-        y: &ParmCiphertext,
-    ) -> ParmCiphertext {
+    fn max<'a>(
+        pc: &'a ParmesanCloudovo<'a>,
+        x: &'a ParmCiphertext<'a>,
+        y: &'a ParmCiphertext<'a>,
+    ) -> ParmCiphertext<'a> {
         #[cfg(feature = "seq_analyze")]
         start_pbs_analysis!();
 
@@ -397,10 +397,10 @@ impl ParmArithmetics for ParmCiphertext {
         res
     }
 
-    fn relu(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
-    ) -> ParmCiphertext {
+    fn relu<'a>(
+        pc: &'a ParmesanCloudovo<'a>,
+        x: &'a ParmCiphertext<'a>,
+    ) -> ParmCiphertext<'a> {
         #[cfg(feature = "seq_analyze")]
         start_pbs_analysis!();
 
@@ -416,11 +416,11 @@ impl ParmArithmetics for ParmCiphertext {
         res
     }
 
-    fn mul(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
-        y: &ParmCiphertext,
-    ) -> ParmCiphertext {
+    fn mul<'a>(
+        pc: &'a ParmesanCloudovo<'a>,
+        x: &'a ParmCiphertext<'a>,
+        y: &'a ParmCiphertext<'a>,
+    ) -> ParmCiphertext<'a> {
         #[cfg(feature = "seq_analyze")]
         start_pbs_analysis!();
 
@@ -436,10 +436,10 @@ impl ParmArithmetics for ParmCiphertext {
         res
     }
 
-    fn squ(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
-    ) -> ParmCiphertext {
+    fn squ<'a>(
+        pc: &'a ParmesanCloudovo<'a>,
+        x: &'a ParmCiphertext<'a>,
+    ) -> ParmCiphertext<'a> {
         #[cfg(feature = "seq_analyze")]
         start_pbs_analysis!();
 
@@ -454,11 +454,11 @@ impl ParmArithmetics for ParmCiphertext {
         res
     }
 
-    fn round_at(
-        pc: &ParmesanCloudovo,
-        x: &ParmCiphertext,
+    fn round_at<'a>(
+        pc: &'a ParmesanCloudovo<'a>,
+        x: &'a ParmCiphertext<'a>,
         pos: usize,
-    ) -> ParmCiphertext {
+    ) -> ParmCiphertext<'a> {
         #[cfg(feature = "seq_analyze")]
         start_pbs_analysis!();
 
