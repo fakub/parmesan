@@ -111,7 +111,7 @@ pub fn encrypt_with_mode(
 
     // return encrypted
     encrypt_with_flags(
-        TEST_PARAMS,
+        &TEST_PC,
         &TEST_PRIV_KEYS,
         &m_vec,
         &m_flg,
@@ -120,18 +120,18 @@ pub fn encrypt_with_mode(
 
 /// Encrypt input vector `m_vec` at positions given by `m_flags` vector (other samples trivial).
 pub fn encrypt_with_flags(
-    par: &Params,
+    pc: &ParmesanCloudovo,
     priv_keys: &PrivKeySet,
     m_vec: &Vec<i32>,
     m_flags: &Vec<bool>,
 ) -> ParmCiphertext {
-    let mut res = ParmCiphertext::triv(m_vec.len(), par).expect("ParmCiphertext::triv failed.");
+    let mut res = ParmCiphertext::triv(m_vec.len(), pc);
 
     res.iter_mut().zip(m_vec.iter().zip(m_flags.iter())).for_each(| (ri, (mi, fi)) | {
         *ri = if *fi {
-            ParmEncrWord::encrypt_word(par, Some(priv_keys), *mi).expect("ParmEncrWord::encrypt_word failed.")
+            ParmEncrWord::encrypt_word(priv_keys, *mi)
         } else {
-            ParmEncrWord::encrypt_word_triv(par, *mi).expect("ParmEncrWord::encrypt_word_triv failed.")
+            ParmEncrWord::encrypt_word_triv(&pc.pub_keys, *mi)
         };
     });
 

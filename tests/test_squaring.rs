@@ -101,7 +101,7 @@ fn t_impl_squ_2_3(m_vec: &Vec<i32>) {
     // encrypt -> homomorphic eval -> decrypt
     let c = encrypt_with_mode(&m_vec, EncrVsTriv::ENCR);
     let c_he = ParmArithmetics::squ(&common::TEST_PC, &c);
-    let m_vec_he = parm_decrypt_to_vec(common::TEST_PARAMS, &common::TEST_PRIV_KEYS, &c_he).expect("parm_decrypt_to_vec failed.");
+    let m_vec_he = parm_decrypt_to_vec(&common::TEST_PRIV_KEYS, &c_he).expect("parm_decrypt_to_vec failed.");
     let m_he = common::TEST_PU.decrypt(&c_he).expect("ParmesanUserovo::decrypt failed.");
 
     // plain eval

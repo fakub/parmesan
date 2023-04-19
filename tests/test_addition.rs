@@ -94,8 +94,8 @@ fn t_impl_add_sub_with_mode(
         let m_he_a = common::TEST_PU.decrypt(&c_he_a).expect("ParmesanUserovo::decrypt failed.");
         let m_he_s = common::TEST_PU.decrypt(&c_he_s).expect("ParmesanUserovo::decrypt failed.");
         // also decrypt into vec
-        let m_he_a_vec = encryption::parm_decrypt_to_vec(common::TEST_PARAMS, &common::TEST_PRIV_KEYS, &c_he_a).expect("ParmesanUserovo::parm_decrypt_to_vec failed.");
-        let m_he_s_vec = encryption::parm_decrypt_to_vec(common::TEST_PARAMS, &common::TEST_PRIV_KEYS, &c_he_s).expect("ParmesanUserovo::parm_decrypt_to_vec failed.");
+        let m_he_a_vec = encryption::parm_decrypt_to_vec(&common::TEST_PRIV_KEYS, &c_he_a).expect("ParmesanUserovo::parm_decrypt_to_vec failed.");
+        let m_he_s_vec = encryption::parm_decrypt_to_vec(&common::TEST_PRIV_KEYS, &c_he_s).expect("ParmesanUserovo::parm_decrypt_to_vec failed.");
 
         // plain eval
         let m_pl_a = ParmArithmetics::add(&common::TEST_PC, &m1, &m2);

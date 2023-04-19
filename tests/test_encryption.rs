@@ -18,10 +18,9 @@ use common::*;
 /// Decryption of trivial sample (no encryption of zero).
 fn t_decrypt_triv() {
     // trivial ciphertext of length common::TESTS_BITLEN_FULL
-    let c = ParmCiphertext::triv(common::TESTS_BITLEN_FULL, &common::TEST_PARAMS).expect("ParmCiphertext::triv failed.");
+    let c = ParmCiphertext::triv(common::TESTS_BITLEN_FULL, &common::TEST_PC);
     // decryption
     let m = encryption::parm_decrypt(
-        common::TEST_PARAMS,
         &common::TEST_PRIV_KEYS,
         &c,
     ).expect("parm_decrypt failed.");
@@ -40,13 +39,11 @@ fn t_encrypt_decrypt_int() {
 
         // encrypt & decrypt
         let c = encryption::parm_encrypt(
-            common::TEST_PARAMS,
             &common::TEST_PRIV_KEYS,
             mi,
             common::TESTS_BITLEN_FULL,
         ).expect("parm_encrypt_vec failed.");
         let mp = encryption::parm_decrypt(
-            common::TEST_PARAMS,
             &common::TEST_PRIV_KEYS,
             &c,
         ).expect("parm_decrypt failed.");
@@ -64,12 +61,10 @@ fn t_encrypt_decrypt_vec() {
 
         // encrypt & decrypt
         let c = encryption::parm_encrypt_from_vec(
-            common::TEST_PARAMS,
             &common::TEST_PRIV_KEYS,
             &m_vec,
         ).expect("parm_encrypt_vec failed.");
         let mp = encryption::parm_decrypt(
-            common::TEST_PARAMS,
             &common::TEST_PRIV_KEYS,
             &c,
         ).expect("parm_decrypt failed.");

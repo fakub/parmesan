@@ -51,16 +51,16 @@ fn t_impl_pbs_with_mode(
 
         // encrypt
         let c = match mode {
-            EncrVsTriv::ENCR => ParmEncrWord::encrypt_word(common::TEST_PARAMS, Some(&common::TEST_PRIV_KEYS), m).expect("ParmEncrWord::encrypt_word failed."),
-            EncrVsTriv::TRIV => ParmEncrWord::encrypt_word_triv(common::TEST_PARAMS, m).expect("ParmEncrWord::encrypt_word_triv failed."),
+            EncrVsTriv::ENCR => ParmEncrWord::encrypt_word(&common::TEST_PRIV_KEYS, m),
+            EncrVsTriv::TRIV => ParmEncrWord::encrypt_word_triv(&common::TEST_PC.pub_keys, m),
             EncrVsTriv::ENCRTRIV => panic!("Not called"),
         };
 
         // verify PBS
         let lut: [u64; 1 << (5-1)] = [0,1,2,3,4,5,6,7,8,7,6,5,4,3,2,1];   // 5-bit identity
-        let cpbs = pbs::eval_LUT_5_uint(&common::TEST_PC, &c, lut).expect("pbs::eval_LUT_5_uint failed.");
-        let dpbs: u32 = cpbs.decrypt_word_pos(common::TEST_PARAMS, Some(&common::TEST_PRIV_KEYS)).expect("ParmEncrWord::decrypt_word_pos failed.");
-        let epbs = (if m_usize < ps_mod as usize / 2 {lut[m_usize] as i32} else {-(lut[m_usize - ps_mod as usize / 2] as i32)}).rem_euclid(ps_mod) as u32;
+        let cpbs = pbs::eval_LUT_5_uint(&common::TEST_PC, &c, lut);
+        let dpbs = cpbs.decrypt_mu(Some(&common::TEST_PRIV_KEYS)).expect("ParmEncrWord::decrypt_word_pos failed.");
+        let epbs = (if m_usize < ps_mod as usize / 2 {lut[m_usize] as i32} else {-(lut[m_usize - ps_mod as usize / 2] as i32)}).rem_euclid(ps_mod) as u64;
         println!("  dpbs = {} (exp. {})", dpbs, epbs);
         assert_eq!(dpbs, epbs);
     }
