@@ -100,7 +100,7 @@ impl Params {
 }
 
 #[allow(dead_code)]
-pub const PAR_CNCR_V0_2__M2_C3: Params = Params {
+pub const PAR_TFHE_V0_2__M4_C0: Params = Params {
     concrete_pars:  Parameters {
         message_modulus: MessageModulus(1 << 5),
         ..PARAM_MESSAGE_4_CARRY_0

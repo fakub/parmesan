@@ -127,14 +127,6 @@ impl ParmEncrWord {
         Self::mu_to_mi(msg_mod, Self::pt_to_mu(msg_mod, pt))
     }
 
-    //~ pub fn is_triv(&self) -> bool {
-        //~ self.0.lwe_dimension().0 == 0
-    //~ }
-
-    //~ pub fn is_triv_zero(&self, params: &Params) -> Result<bool, Box<dyn Error>> {
-        //~ Ok(self.is_triv() && (self.decrypt_word_pos(params, None)? == 0u32))
-    //~ }
-
 
     // -------------------------------------------------------------------------
     //  Basic operations with encrypted words

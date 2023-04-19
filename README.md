@@ -64,7 +64,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     //  Initialization
     // ---------------------------------
     //  Global Scope
-    let par = &params::PAR_CNCR_V0_2__M2_C3;
+    let par = &params::PAR_TFHE_V0_2__M4_C0;
 
     // ---------------------------------
     //  Userovo Scope
@@ -125,6 +125,12 @@ In particular, we measure the processor load; in the graph below, find our resul
 ![proc load max](docs/plot-dstat.png)
 
 An extra graph that shows the processor load during 32-bit multiplication can be found [here](docs/mul32.pdf).
+
+
+## Version Log
+
+  * `v0.1.0-alpha`: rewritten using `tfhe v0.2` instead of `concrete_core`.
+  * `v0.0.20-alpha-4`: algorithms for [whitepaper](https://eprint.iacr.org/2023/544).
 
 
 ## License

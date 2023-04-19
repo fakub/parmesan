@@ -90,43 +90,6 @@ fn eval_LUT_5_float(
     }
 }
 
-//~ // create accumulator
-//~ fn create_accum<F>(
-    //~ func: F,
-    //~ bootstrapping_key: &FourierLweBootstrapKey64,
-    //~ bit_precision: usize,
-//~ ) -> Result<GlweCiphertext64, Box<dyn std::error::Error>>
-//~ where F: Fn(usize) -> f64 {
-    //~ let mut engine = CoreEngine::new(())?;
-    //~ let delta = 1u64 << (64 - bit_precision);
-    //~ let mut accumulator_u64 = vec![0_u64; bootstrapping_key.polynomial_size().0];
-    //~ let modulus_sup = 1 << (bit_precision - 1);   // half of values is to be set .. 16
-    //~ let box_size = bootstrapping_key.polynomial_size().0 / modulus_sup;
-    //~ let half_box_size = box_size / 2;
-    //~ // fill accumulator
-    //~ for i in 0..modulus_sup {
-        //~ let index = i as usize * box_size;
-        //~ accumulator_u64[index..index + box_size]
-            //~ .iter_mut()
-            //~ .for_each(|a| *a = (func(i) * delta as f64).round() as u64);
-    //~ }
-    //~ // Negate the first half_box_size coefficients
-    //~ for a_i in accumulator_u64[0..half_box_size].iter_mut() {
-        //~ *a_i = (*a_i).wrapping_neg();
-    //~ }
-    //~ // Rotate the accumulator
-    //~ accumulator_u64.rotate_left(half_box_size);
-    //~ // init accumulator as GLWE
-    //~ let accumulator_plaintext = engine.create_plaintext_vector(&accumulator_u64)?;
-
-    //~ let accumulator = engine.trivially_encrypt_glwe_ciphertext(
-        //~ bootstrapping_key.glwe_dimension().to_glwe_size(), // prepare space for the results
-        //~ &accumulator_plaintext,
-    //~ )?;
-
-    //~ Ok(accumulator)
-//~ }
-
 // create no-padding accumulator
 fn gen_no_padding_acc<F>(server_key: &ServerKey, f: F) -> LookupTableOwned
 where
