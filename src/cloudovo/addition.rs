@@ -161,14 +161,12 @@ pub fn add_sub_impl<'a>(
 
 pub fn opposite_impl<'a>(
     x: &'a ParmCiphertext<'a>,
-) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+) -> ParmCiphertext<'a> {
     let mut nx = ParmCiphertext::empty();
-
     for xi in x {
         nx.push(xi.opp());
     }
-
-    Ok(nx)   //TODO consider removing Result from all arithmetic trait
+    nx
 }
 
 pub fn add_const_impl<'a>(

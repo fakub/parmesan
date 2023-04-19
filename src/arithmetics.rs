@@ -217,7 +217,7 @@ impl<'a> ParmArithmetics for ParmCiphertext<'a> {
     }
 
     fn opp(x: &ParmCiphertext<'a>) -> ParmCiphertext<'a> {
-        addition::opposite_impl(x).expect("ParmArithmetics::opp failed.")
+        addition::opposite_impl(x)
     }
 
     fn shift(

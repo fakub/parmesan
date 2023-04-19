@@ -30,11 +30,11 @@ pub struct ParmEncrWord<'a> {
     pub server_key: &'a ServerKey,
 }
 
-impl ParmEncrWord<'_> {
+impl<'a> ParmEncrWord<'a> {
     pub fn encrypt_word(
-        priv_keys: &PrivKeySet,
+        priv_keys: &'a PrivKeySet,
         mi: i32,
-    ) -> Self {
+    ) -> ParmEncrWord<'a> {
         Self{
             ct: ParmCtWord::Ct(priv_keys.client_key.encrypt_without_padding(Self::mi_to_mu(&priv_keys.server_key, mi))),
             server_key: &priv_keys.server_key,
@@ -42,9 +42,9 @@ impl ParmEncrWord<'_> {
     }
 
     pub fn encrypt_word_triv(
-        pub_keys: &PubKeySet,
+        pub_keys: &'a PubKeySet,
         mi: i32,
-    ) -> Self {
+    ) -> ParmEncrWord<'a> {
         Self{
             ct: ParmCtWord::Triv(Self::mi_to_pt(&pub_keys.server_key, mi)),
             server_key: pub_keys.server_key,
@@ -55,7 +55,7 @@ impl ParmEncrWord<'_> {
         &self,
         priv_keys_opt: Option<&PrivKeySet>,
     ) -> Result<u64, Box<dyn Error>> {
-        match self.ct {
+        match &self.ct {
             ParmCtWord::Ct(ctb) =>
                 if let Some(priv_keys) = priv_keys_opt {
                     Ok(priv_keys.client_key.decrypt_without_padding(&ctb))
@@ -155,24 +155,24 @@ impl ParmEncrWord<'_> {
         &mut self,
         other: &Self,
     ) {
-        match self.ct {
+        match &mut self.ct {
             ParmCtWord::Ct(ctbs) =>
                 // !self.is_triv
-                match other.ct {
+                match &other.ct {
                     ParmCtWord::Ct(ctbo) =>
                         // !other.is_triv -> addition of two ciphertexts
                         lwe_ciphertext_add_assign(&mut ctbs.ct, &ctbo.ct),
                     ParmCtWord::Triv(pto) =>
                         // other.is_triv
-                        lwe_ciphertext_plaintext_add_assign(&mut ctbs.ct, pto),
+                        lwe_ciphertext_plaintext_add_assign(&mut ctbs.ct, *pto),
                 },
             ParmCtWord::Triv(pts) =>
                 // self.is_triv
-                match other.ct {
+                match &other.ct {
                     ParmCtWord::Ct(ctbo) => {
                         // !other.is_triv
                         let mut new_self_ct = ctbo.clone();
-                        lwe_ciphertext_plaintext_add_assign(&mut new_self_ct.ct, pts);
+                        lwe_ciphertext_plaintext_add_assign(&mut new_self_ct.ct, *pts);
                         self.ct = ParmCtWord::Ct(new_self_ct);
                     },
                     ParmCtWord::Triv(pto) =>
@@ -194,7 +194,7 @@ impl ParmEncrWord<'_> {
     pub fn add_half_inplace(&mut self) {
         let half_pt = Self::half_to_pt(self.server_key);
 
-        match self.ct {
+        match &mut self.ct {
             ParmCtWord::Ct(ctbs) => {
                 // !self.is_triv, half.is_triv
                 lwe_ciphertext_plaintext_add_assign(&mut ctbs.ct, half_pt);
@@ -223,7 +223,7 @@ impl ParmEncrWord<'_> {
     }
 
     pub fn opp_inplace(&mut self) {
-        match self.ct {
+        match &mut self.ct {
             ParmCtWord::Ct(ctbs) =>
                 lwe_ciphertext_opposite_assign(&mut ctbs.ct),
             ParmCtWord::Triv(pts) =>
@@ -239,7 +239,7 @@ impl ParmEncrWord<'_> {
 
     pub fn mul_const_inplace(&mut self, k: i32) {
         let k_abs: u64 = k.abs() as u64;
-        match self.ct {
+        match &mut self.ct {
             ParmCtWord::Ct(ctbs) =>
                 lwe_ciphertext_cleartext_mul_assign(&mut ctbs.ct, Cleartext(k_abs)),
             ParmCtWord::Triv(pts) =>
