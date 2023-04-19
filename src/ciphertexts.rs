@@ -25,29 +25,29 @@ pub enum ParmCtWord {
 
 /// Struct that holds encrypted Parmesan word
 #[derive(Clone)]
-pub struct ParmEncrWord<'a> {
+pub struct ParmEncrWord {
     pub ct: ParmCtWord,
-    pub server_key: &'a ServerKey,
+    pub msg_mod: MessageModulus,
 }
 
-impl<'a> ParmEncrWord<'a> {
+impl ParmEncrWord {
     pub fn encrypt_word(
-        priv_keys: &'a PrivKeySet,
+        priv_keys: &PrivKeySet,
         mi: i32,
-    ) -> ParmEncrWord<'a> {
+    ) -> ParmEncrWord {
         Self{
-            ct: ParmCtWord::Ct(priv_keys.client_key.encrypt_without_padding(Self::mi_to_mu(&priv_keys.server_key, mi))),
-            server_key: &priv_keys.server_key,
+            ct: ParmCtWord::Ct(priv_keys.client_key.encrypt_without_padding(Self::mi_to_mu(priv_keys.server_key.message_modulus, mi))),
+            msg_mod: priv_keys.server_key.message_modulus,
         }
     }
 
     pub fn encrypt_word_triv(
-        pub_keys: &'a PubKeySet,
+        pub_keys: &PubKeySet,
         mi: i32,
-    ) -> ParmEncrWord<'a> {
+    ) -> ParmEncrWord {
         Self{
-            ct: ParmCtWord::Triv(Self::mi_to_pt(&pub_keys.server_key, mi)),
-            server_key: pub_keys.server_key,
+            ct: ParmCtWord::Triv(Self::mi_to_pt(pub_keys.server_key.message_modulus, mi)),
+            msg_mod: pub_keys.server_key.message_modulus,
         }
     }
 
@@ -63,7 +63,7 @@ impl<'a> ParmEncrWord<'a> {
                     Err("Client key is None for decryption of non-trivial ciphertext.".into())
                 },
             ParmCtWord::Triv(pt) =>
-                Ok(Self::pt_to_mu(self.server_key, &pt)),
+                Ok(Self::pt_to_mu(self.msg_mod, &pt)),
         }
     }
 
@@ -71,48 +71,48 @@ impl<'a> ParmEncrWord<'a> {
         &self,
         priv_keys_opt: Option<&PrivKeySet>,
     ) -> Result<i32, Box<dyn Error>> {
-        Ok(Self::mu_to_mi(self.server_key, self.decrypt_mu(priv_keys_opt)?))
+        Ok(Self::mu_to_mi(self.msg_mod, self.decrypt_mu(priv_keys_opt)?))
     }
 
-    fn delta(server_key: &ServerKey) -> u64 {((1_u64 << 63) / server_key.message_modulus.0 as u64) * 2}
+    fn delta(msg_mod: MessageModulus) -> u64 {((1_u64 << 63) / msg_mod.0 as u64) * 2}
 
     fn mi_to_mu(
-        server_key: &ServerKey,
+        msg_mod: MessageModulus,
         mi: i32,
     ) -> u64 {
-        mi.rem_euclid(server_key.message_modulus.0 as i32) as u64
+        mi.rem_euclid(msg_mod.0 as i32) as u64
     }
 
     fn mu_to_mi(
-        server_key: &ServerKey,
+        msg_mod: MessageModulus,
         mut mu: u64,
     ) -> i32 {
-        mu %= server_key.message_modulus.0 as u64;
-        if mu >= server_key.message_modulus.0 as u64 / 2 {
-            mu as i32 - server_key.message_modulus.0 as i32
+        mu %= msg_mod.0 as u64;
+        if mu >= msg_mod.0 as u64 / 2 {
+            mu as i32 - msg_mod.0 as i32
         } else {
             mu as i32
         }
     }
 
     fn mi_to_pt(
-        server_key: &ServerKey,
+        msg_mod: MessageModulus,
         mi: i32,
     ) -> Plaintext<u64> {
-        Plaintext(Self::mi_to_mu(server_key, mi) * Self::delta(server_key))
+        Plaintext(Self::mi_to_mu(msg_mod, mi) * Self::delta(msg_mod))
     }
 
     fn half_to_pt(
-        server_key: &ServerKey,
+        msg_mod: MessageModulus,
     ) -> Plaintext<u64> {
-        Plaintext(1u64 * Self::delta(server_key) / 2)
+        Plaintext(1u64 * Self::delta(msg_mod) / 2)
     }
 
     pub fn pt_to_mu(
-        server_key: &ServerKey,
+        msg_mod: MessageModulus,
         pt: &Plaintext<u64>,
     ) -> u64 {
-        let delta = Self::delta(server_key);
+        let delta = Self::delta(msg_mod);
 
         let rounding_bit = delta >> 1;
         let rounding = (pt.0 & rounding_bit) << 1;
@@ -120,11 +120,12 @@ impl<'a> ParmEncrWord<'a> {
         (pt.0.wrapping_add(rounding)) / delta
     }
 
+    #[allow(dead_code)]
     fn pt_to_mi(
-        server_key: &ServerKey,
+        msg_mod: MessageModulus,
         pt: &Plaintext<u64>,
     ) -> i32 {
-        Self::mu_to_mi(server_key, Self::pt_to_mu(server_key, pt))
+        Self::mu_to_mi(msg_mod, Self::pt_to_mu(msg_mod, pt))
     }
 
     //~ pub fn is_triv(&self) -> bool {
@@ -192,7 +193,7 @@ impl<'a> ParmEncrWord<'a> {
     }
 
     pub fn add_half_inplace(&mut self) {
-        let half_pt = Self::half_to_pt(self.server_key);
+        let half_pt = Self::half_to_pt(self.msg_mod);
 
         match &mut self.ct {
             ParmCtWord::Ct(ctbs) => {
@@ -263,7 +264,7 @@ impl<'a> ParmEncrWord<'a> {
 //
 
 /// Parmesan's ciphertext holds individual encrypted words
-pub type ParmCiphertext<'a> = Vec<ParmEncrWord<'a>>;
+pub type ParmCiphertext = Vec<ParmEncrWord>;
 //WISH  ciphertext should be more standalone type: it should hold a reference to its public keys & params so that operations can be done with only this type parameter
 //      ale je to: zasrane, zamrdane
 //WISH Vec<(ParmEncrWord, usize)> .. to hold quadratic weights, bootstrap only when necessary (appears to be already implemented in Concrete v0.2)
@@ -273,29 +274,29 @@ pub type ParmCiphertext<'a> = Vec<ParmEncrWord<'a>>;
 //~ }
 
 pub trait ParmCiphertextImpl {
-    fn triv<'a>(
+    fn triv(
         len: usize,
-        pc: &'a ParmesanCloudovo<'a>,
-    ) -> ParmCiphertext<'a>;
+        pc: &ParmesanCloudovo,
+    ) -> ParmCiphertext;
 
     //TODO add triv_const (from vec?), the above is triv_zero, used internally (there is ParmArithmetics::zero)
 
-    fn empty() -> ParmCiphertext<'static>;
+    fn empty() -> ParmCiphertext;
 
     fn single(ew: ParmEncrWord) -> ParmCiphertext;
 
     fn to_str(&self) -> String;
 }
 
-impl ParmCiphertextImpl for ParmCiphertext<'_> {
-    fn triv<'a>(
+impl ParmCiphertextImpl for ParmCiphertext {
+    fn triv(
         len: usize,
-        pc: &'a ParmesanCloudovo<'a>,
-    ) -> ParmCiphertext<'a> {
+        pc: &ParmesanCloudovo,
+    ) -> ParmCiphertext {
         vec![ParmEncrWord::encrypt_word_triv(&pc.pub_keys, 0); len]
     }
 
-    fn empty() -> ParmCiphertext<'static> {
+    fn empty() -> ParmCiphertext {
         Vec::new()
     }
 

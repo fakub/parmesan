@@ -17,9 +17,9 @@ use super::pbs;
 
 /// Implementation of signum via parallel reduction
 pub fn sgn_impl<'a>(
-    pc: &'a ParmesanCloudovo<'a>,
-    x:  &'a ParmCiphertext<'a>,
-) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+    pc: &'a ParmesanCloudovo,
+    x:  &'a ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     if x.len() == 0 {
         return Ok(ParmArithmetics::zero());
@@ -57,10 +57,10 @@ pub fn sgn_impl<'a>(
 ///  - in subseq rounds, inputs {-15..15} of qw = 22
 ///      - this is also its output
 pub fn sgn_recursion_raw<'a>(
-    pc: &'a ParmesanCloudovo<'a>,
-    x:  &'a ParmCiphertext<'a>,
+    pc: &'a ParmesanCloudovo,
+    x:  &'a ParmCiphertext,
     first_round: bool,
-) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+) -> Result<ParmCiphertext, Box<dyn Error>> {
     const GAMMA: usize = 4;
 
     // special case: empty ciphertext

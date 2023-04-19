@@ -23,16 +23,16 @@ pub fn parm_encrypt<'a>(
     priv_keys: &'a PrivKeySet,
     m: i64,
     words: usize,
-) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+) -> Result<ParmCiphertext, Box<dyn Error>> {
     let mv = convert_to_vec(m, words);
     parm_encrypt_from_vec(priv_keys, &mv)
 }
 
 /// Parmesan encryption of a vector of words from alphabet `{-1,0,1}`
 pub fn parm_encrypt_from_vec<'a>(
-    priv_keys: &'a PrivKeySet,
+    priv_keys: &PrivKeySet,
     mv: &'a Vec<i32>,
-) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+) -> Result<ParmCiphertext, Box<dyn Error>> {
     let mut c = ParmCiphertext::empty();
     for mi in mv {
 

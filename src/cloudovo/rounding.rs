@@ -12,10 +12,10 @@ use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
 use super::pbs;
 
 pub fn round_at_impl<'a>(
-    pc: &'a ParmesanCloudovo<'a>,
-    x:  &'a ParmCiphertext<'a>,
+    pc: &'a ParmesanCloudovo,
+    x:  &'a ParmCiphertext,
     pos: usize,
-) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     match pos {
         // no rounding needed

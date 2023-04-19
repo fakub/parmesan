@@ -14,9 +14,9 @@ use crate::ParmesanCloudovo;
 //~ //  X (positive half)
 //~ //
 //~ pub fn pos_id(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ c: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ c: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ //TODO resolve negacyclicity
     //~ if c.is_triv() {
         //~ return Ok(c.clone());
@@ -36,10 +36,10 @@ use crate::ParmesanCloudovo;
 
 #[allow(non_snake_case)]
 pub fn eval_LUT_5_uint<'a>(
-    pc: &'a ParmesanCloudovo<'a>,
-    c: &'a ParmEncrWord<'a>,
+    pc: &'a ParmesanCloudovo,
+    c: &'a ParmEncrWord,
     lut: [u64; 1 << (5-1)],
-) -> ParmEncrWord<'a> {
+) -> ParmEncrWord {
     let mut lut_f = [0f64; 1 << (5-1)];
     for (lu, lf) in lut.iter().zip(lut_f.iter_mut()) {
         *lf = *lu as f64;
@@ -54,11 +54,11 @@ pub fn eval_LUT_5_uint<'a>(
 
 #[allow(non_snake_case)]
 fn eval_LUT_5_float<'a>(
-    pc: &'a ParmesanCloudovo<'a>,
-    c: &'a ParmEncrWord<'a>,
+    pc: &'a ParmesanCloudovo,
+    c: &'a ParmEncrWord,
     lut: [f64; 1 << (5-1)],
-) -> ParmEncrWord<'a> {
-    match c.ct {
+) -> ParmEncrWord {
+    match &c.ct {
         ParmCtWord::Ct(ctb) => {
             #[cfg(feature = "seq_analyze")]
             unsafe { if let Some(last) = crate::N_PBS.last_mut() { *last += 1; } }
@@ -66,12 +66,12 @@ fn eval_LUT_5_float<'a>(
             let accumulator = gen_no_padding_acc(pc.pub_keys.server_key, |x| lut[x as usize]);
 
             ParmEncrWord{
-                server_key: pc.pub_keys.server_key,
                 ct: ParmCtWord::Ct(pc.pub_keys.server_key.apply_lookup_table(&ctb, &accumulator)),
+                msg_mod: pc.pub_keys.server_key.message_modulus,
             }
         },
         ParmCtWord::Triv(pt) => {
-            let  m = ParmEncrWord::pt_to_mu(c.server_key, &pt);
+            let  m = ParmEncrWord::pt_to_mu(c.msg_mod, &pt);
             let fm = if m < (1 << (5-1)) { lut[m as usize] }
                 else if m < (1 << 5) { -lut[(m as i32 - (1 << (5-1))) as usize] }
                 else {panic!("Word m = {} does not fit 5-bit LUT.", m)};
@@ -200,9 +200,9 @@ where
 //
 #[allow(non_snake_case)]
 pub fn id__pi_5<'a>(
-    pc: &ParmesanCloudovo<'a>,
-    c: &ParmEncrWord<'a>,
-) -> ParmEncrWord<'a> {
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
+) -> ParmEncrWord {
     eval_LUT_5_uint(
         pc,
         c,
@@ -215,9 +215,9 @@ pub fn id__pi_5<'a>(
 //
 #[allow(non_snake_case)]
 pub fn f_3__pi_5<'a>(
-    pc: &ParmesanCloudovo<'a>,
-    c: &ParmEncrWord<'a>,
-) -> ParmEncrWord<'a> {
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
+) -> ParmEncrWord {
     eval_LUT_5_uint(
         pc,
         c,
@@ -230,9 +230,9 @@ pub fn f_3__pi_5<'a>(
 //
 #[allow(non_snake_case)]
 pub fn f_4__pi_5<'a>(
-    pc: &ParmesanCloudovo<'a>,
-    c: &ParmEncrWord<'a>,
-) -> ParmEncrWord<'a> {
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
+) -> ParmEncrWord {
     eval_LUT_5_uint(
         pc,
         c,
@@ -245,9 +245,9 @@ pub fn f_4__pi_5<'a>(
 //
 #[allow(non_snake_case)]
 pub fn f_5__pi_5<'a>(
-    pc: &ParmesanCloudovo<'a>,
-    c: &ParmEncrWord<'a>,
-) -> ParmEncrWord<'a> {
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
+) -> ParmEncrWord {
     eval_LUT_5_uint(
         pc,
         c,
@@ -260,10 +260,10 @@ pub fn f_5__pi_5<'a>(
 //
 #[allow(non_snake_case)]
 pub fn g_2__pi_5__with_val<'a>(
-    pc: &ParmesanCloudovo<'a>,
-    c: &ParmEncrWord<'a>,
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
     val: u64,
-) -> ParmEncrWord<'a> {
+) -> ParmEncrWord {
     eval_LUT_5_uint(
         pc,
         c,
@@ -276,10 +276,10 @@ pub fn g_2__pi_5__with_val<'a>(
 //
 #[allow(non_snake_case)]
 pub fn f_1__pi_5__with_val<'a>(
-    pc: &ParmesanCloudovo<'a>,
-    c: &ParmEncrWord<'a>,
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
     val: u64,
-) -> ParmEncrWord<'a> {
+) -> ParmEncrWord {
     eval_LUT_5_uint(
         pc,
         c,
@@ -292,10 +292,10 @@ pub fn f_1__pi_5__with_val<'a>(
 //
 #[allow(non_snake_case)]
 pub fn f_0__pi_5__with_val<'a>(
-    pc: &ParmesanCloudovo<'a>,
-    c: &ParmEncrWord<'a>,
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
     val: u64,
-) -> ParmEncrWord<'a> {
+) -> ParmEncrWord {
     eval_LUT_5_uint(
         pc,
         c,
@@ -308,9 +308,9 @@ pub fn f_0__pi_5__with_val<'a>(
 //
 #[allow(non_snake_case)]
 pub fn a_2__pi_5<'a>(
-    pc: &ParmesanCloudovo<'a>,
-    c: &ParmEncrWord<'a>,
-) -> ParmEncrWord<'a> {
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
+) -> ParmEncrWord {
     eval_LUT_5_uint(
         pc,
         c,
@@ -323,9 +323,9 @@ pub fn a_2__pi_5<'a>(
 //
 #[allow(non_snake_case)]
 pub fn a_1__pi_5<'a>(
-    pc: &ParmesanCloudovo<'a>,
-    c: &ParmEncrWord<'a>,
-) -> ParmEncrWord<'a> {
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
+) -> ParmEncrWord {
     eval_LUT_5_uint(
         pc,
         c,
@@ -338,10 +338,10 @@ pub fn a_1__pi_5<'a>(
 //
 #[allow(non_snake_case)]
 pub fn squ_3_bit__pi_5<'a>(
-    pc: &ParmesanCloudovo<'a>,
-    c: &ParmEncrWord<'a>,
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
     pos: usize,
-) -> ParmEncrWord<'a> {
+) -> ParmEncrWord {
     match pos {
         i if i == 0 =>  eval_LUT_5_uint(
                             pc,
@@ -385,9 +385,9 @@ pub fn squ_3_bit__pi_5<'a>(
 //
 #[allow(non_snake_case)]
 pub fn mul_bit__pi_5<'a>(
-    pc: &ParmesanCloudovo<'a>,
-    c: &ParmEncrWord<'a>,
-) -> ParmEncrWord<'a> {
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
+) -> ParmEncrWord {
     eval_LUT_5_uint(
         pc,
         c,
@@ -403,9 +403,9 @@ pub fn mul_bit__pi_5<'a>(
 //
 #[allow(non_snake_case)]
 pub fn relu_plus__pi_5<'a>(
-    pc: &ParmesanCloudovo<'a>,
-    c: &ParmEncrWord<'a>,
-) -> ParmEncrWord<'a> {
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
+) -> ParmEncrWord {
     eval_LUT_5_uint(
         pc,
         c,
@@ -422,9 +422,9 @@ pub fn relu_plus__pi_5<'a>(
 //
 #[allow(non_snake_case)]
 pub fn round_2y_s__pi_5<'a>(
-    pc: &ParmesanCloudovo<'a>,
-    c: &ParmEncrWord<'a>,
-) -> ParmEncrWord<'a> {
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
+) -> ParmEncrWord {
     eval_LUT_5_uint(
         pc,
         c,
@@ -440,9 +440,9 @@ pub fn round_2y_s__pi_5<'a>(
 //
 #[allow(non_snake_case)]
 pub fn nonneg__pi_5<'a>(
-    pc: &ParmesanCloudovo<'a>,
-    c: &ParmEncrWord<'a>,
-) -> ParmEncrWord<'a> {
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
+) -> ParmEncrWord {
     let mut h = eval_LUT_5_float(
         pc,
         c,
@@ -457,9 +457,9 @@ pub fn nonneg__pi_5<'a>(
 //
 #[allow(non_snake_case)]
 pub fn max_s_2x_6y__pi_5<'a>(
-    pc: &ParmesanCloudovo<'a>,
-    c: &ParmEncrWord<'a>,
-) -> ParmEncrWord<'a> {
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
+) -> ParmEncrWord {
     eval_LUT_5_uint(
         pc,
         c,
@@ -479,10 +479,10 @@ pub fn max_s_2x_6y__pi_5<'a>(
 //~ //
 //~ #[allow(non_snake_case)]
 //~ pub fn XOR(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ x: &ParmEncrWord<'a>,
-    //~ y: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ x: &ParmEncrWord,
+    //~ y: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ // t = 2x + 2y
     //~ let mut t = x.mul_uint_constant(2)?;
     //~ t.add_uint_inplace(y)?; t.add_uint_inplace(y)?;
@@ -499,10 +499,10 @@ pub fn max_s_2x_6y__pi_5<'a>(
 //~ //
 //~ #[allow(non_snake_case)]
 //~ pub fn AND(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ x: &ParmEncrWord<'a>,
-    //~ y: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ x: &ParmEncrWord,
+    //~ y: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ // t = x + y
     //~ let t = x.add_uint(y)?;
     //~ // bootstrap
@@ -518,11 +518,11 @@ pub fn max_s_2x_6y__pi_5<'a>(
 //~ //
 //~ #[allow(non_snake_case)]
 //~ pub fn XOR_THREE(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ x: &ParmEncrWord<'a>,
-    //~ y: &ParmEncrWord<'a>,
-    //~ z: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ x: &ParmEncrWord,
+    //~ y: &ParmEncrWord,
+    //~ z: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ // t = 2(x + y + z)
     //~ let mut t = x.mul_uint_constant(2)?;
     //~ t.add_uint_inplace(y)?; t.add_uint_inplace(y)?;
@@ -540,11 +540,11 @@ pub fn max_s_2x_6y__pi_5<'a>(
 //~ //
 //~ #[allow(non_snake_case)]
 //~ pub fn TWO_OF_THREE(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ x: &ParmEncrWord<'a>,
-    //~ y: &ParmEncrWord<'a>,
-    //~ z: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ x: &ParmEncrWord,
+    //~ y: &ParmEncrWord,
+    //~ z: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ // t = x + y + z
     //~ let mut t = x.add_uint(y)?;
     //~ t.add_uint_inplace(z)?;
@@ -567,9 +567,9 @@ pub fn max_s_2x_6y__pi_5<'a>(
 //~ //
 //~ #[allow(non_snake_case)]
 //~ pub fn c_4__pi_2x4(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ c: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ c: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ //TODO resolve trivial case
     //~ if c.dimension == 0 {
         //~ return Ok(c.clone());
@@ -592,9 +592,9 @@ pub fn max_s_2x_6y__pi_5<'a>(
 //~ //
 //~ #[allow(non_snake_case)]
 //~ pub fn id__pi_3(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ c: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ c: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ //TODO resolve trivial case
     //~ if c.dimension == 0 {
         //~ return Ok(c.clone());
@@ -611,9 +611,9 @@ pub fn max_s_2x_6y__pi_5<'a>(
 //~ //
 //~ #[allow(non_snake_case)]
 //~ pub fn f_1__pi_3(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ c: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ c: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ //TODO resolve trivial case
     //~ if c.dimension == 0 {
         //~ return Ok(c.clone());
@@ -630,9 +630,9 @@ pub fn max_s_2x_6y__pi_5<'a>(
 //~ //
 //~ #[allow(non_snake_case)]
 //~ pub fn f_2__pi_3(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ c: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ c: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ //TODO resolve trivial case
     //~ if c.dimension == 0 {
         //~ return Ok(c.clone());
@@ -649,9 +649,9 @@ pub fn max_s_2x_6y__pi_5<'a>(
 //~ //
 //~ #[allow(non_snake_case)]
 //~ pub fn g_1__pi_3(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ c: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ c: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ //TODO resolve trivial case
     //~ if c.dimension == 0 {
         //~ return Ok(c.clone());
@@ -668,9 +668,9 @@ pub fn max_s_2x_6y__pi_5<'a>(
 //~ //
 //~ #[allow(non_snake_case)]
 //~ pub fn g_2__pi_3(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ c: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ c: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ // for π = 3 .. equivalent to X ⋛ ±2
     //~ f_2__pi_3(pc, c)
 //~ }
@@ -686,9 +686,9 @@ pub fn max_s_2x_6y__pi_5<'a>(
 //~ //
 //~ #[allow(non_snake_case)]
 //~ pub fn id__pi_4(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ c: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ c: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ //TODO resolve trivial case
     //~ if c.dimension == 0 {
         //~ return Ok(c.clone());
@@ -705,9 +705,9 @@ pub fn max_s_2x_6y__pi_5<'a>(
 //~ //
 //~ #[allow(non_snake_case)]
 //~ pub fn f_2__pi_4(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ c: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ c: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ //TODO resolve trivial case
     //~ if c.dimension == 0 {
         //~ return Ok(c.clone());
@@ -724,9 +724,9 @@ pub fn max_s_2x_6y__pi_5<'a>(
 //~ //
 //~ #[allow(non_snake_case)]
 //~ pub fn f_3__pi_4(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ c: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ c: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ //TODO resolve trivial case
     //~ if c.dimension == 0 {
         //~ return Ok(c.clone());
@@ -743,9 +743,9 @@ pub fn max_s_2x_6y__pi_5<'a>(
 //~ //
 //~ #[allow(non_snake_case)]
 //~ pub fn g_2__pi_4(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ c: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ c: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ //TODO resolve trivial case
     //~ if c.dimension == 0 {
         //~ return Ok(c.clone());
@@ -762,10 +762,10 @@ pub fn max_s_2x_6y__pi_5<'a>(
 //~ //
 //~ #[allow(non_snake_case)]
 //~ pub fn g_1__pi_4__with_val(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ c: &ParmEncrWord<'a>,
+    //~ pc: &ParmesanCloudovo,
+    //~ c: &ParmEncrWord,
     //~ val: u32,
-//~ ) -> ParmEncrWord<'a> {
+//~ ) -> ParmEncrWord {
     //~ //TODO resolve trivial case
     //~ if c.dimension == 0 {
         //~ return Ok(c.clone());
@@ -790,9 +790,9 @@ pub fn max_s_2x_6y__pi_5<'a>(
 //~ //
 //~ #[allow(non_snake_case)]
 //~ pub fn id__pi_7(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ c: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ c: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ //TODO resolve trivial case
     //~ if c.dimension == 0 {
         //~ return Ok(c.clone());
@@ -809,9 +809,9 @@ pub fn max_s_2x_6y__pi_5<'a>(
 //~ //
 //~ #[allow(non_snake_case)]
 //~ pub fn f_14__pi_7(
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ c: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ c: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ //TODO resolve trivial case
     //~ if c.dimension == 0 {
         //~ return Ok(c.clone());
@@ -851,9 +851,9 @@ pub fn max_s_2x_6y__pi_5<'a>(
 
 //~ pub fn with_lut(
     //~ lut: &Lut,
-    //~ pc: &ParmesanCloudovo<'a>,
-    //~ c: &ParmEncrWord<'a>,
-//~ ) -> ParmEncrWord<'a> {
+    //~ pc: &ParmesanCloudovo,
+    //~ c: &ParmEncrWord,
+//~ ) -> ParmEncrWord {
     //~ measure_duration!(
         //~ ["PBS Identity"],
         //~ [let res = c.bootstrap_with_function(pc.bsk, |x| x*x, pc.encoder)?

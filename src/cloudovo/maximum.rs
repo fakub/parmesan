@@ -17,10 +17,10 @@ use super::{pbs,signum};
 
 /// Implementation of parallel maximum using signum
 pub fn max_impl<'a>(
-    pc: &'a ParmesanCloudovo<'a>,
-    x:  &'a ParmCiphertext<'a>,
-    y:  &'a ParmCiphertext<'a>,
-) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+    pc: &'a ParmesanCloudovo,
+    x:  &'a ParmCiphertext,
+    y:  &'a ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     let mut m: ParmCiphertext;
 

@@ -28,9 +28,9 @@ use super::pbs;
 
 /// Choose & call appropriate algorithm for a square of a ciphertexts (Divide'n'Conquer, or schoolbook multiplication)
 pub fn squ_impl<'a>(
-    pc: &'a ParmesanCloudovo<'a>,
-    x:  &'a ParmCiphertext<'a>,
-) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+    pc: &'a ParmesanCloudovo,
+    x:  &'a ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     match x.len() {
         l if l == 0     => Ok(ParmArithmetics::zero()),
@@ -43,9 +43,9 @@ pub fn squ_impl<'a>(
 
 /// Divide'n'Conquer squaring
 fn squ_dnq<'a>(
-    pc: &'a ParmesanCloudovo<'a>,
-    x:  &'a ParmCiphertext<'a>,
-) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+    pc: &'a ParmesanCloudovo,
+    x:  &'a ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     let len0 = (x.len() + 1) / 2;
 
@@ -116,9 +116,9 @@ fn squ_dnq<'a>(
 
 /// Square of a 1-bit ciphertext
 fn squ_1word<'a>(
-    pc: &'a ParmesanCloudovo<'a>,
-    x:  &'a ParmCiphertext<'a>,
-) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+    pc: &'a ParmesanCloudovo,
+    x:  &'a ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     measure_duration!(
         ["Squaring 1-word"],
@@ -133,9 +133,9 @@ fn squ_1word<'a>(
 
 /// Square of a 2- or 3-bit ciphertexts
 fn squ_2_3word<'a>(
-    pc: &'a ParmesanCloudovo<'a>,
-    x:  &'a ParmCiphertext<'a>,
-) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+    pc: &'a ParmesanCloudovo,
+    x:  &'a ParmCiphertext,
+) -> Result<ParmCiphertext, Box<dyn Error>> {
     assert!(x.len() == 2 || x.len() == 3);
     let mut res = ParmCiphertext::triv(2*x.len(), pc);
     let mut res_pbs = ParmCiphertext::triv(2*x.len() - 1, pc);

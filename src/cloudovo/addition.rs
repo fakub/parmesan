@@ -17,13 +17,13 @@ use crate::ciphertexts::{ParmCiphertext,ParmCiphertextImpl,ParmEncrWord};
 use super::pbs;
 
 /// Implementation of parallel addition/subtraction
-pub fn add_sub_impl<'a>(
+pub fn add_sub_impl(
     is_add: bool,
-    pc: &'a ParmesanCloudovo<'a>,
-    x:  &'a ParmCiphertext<'a>,
-    y:  &'a ParmCiphertext<'a>,
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
+    y:  &ParmCiphertext,
     refresh: bool,
-) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     // calculate right overlap of trivial zero samples (any)
     //             ____
@@ -159,9 +159,9 @@ pub fn add_sub_impl<'a>(
     Ok(z)
 }
 
-pub fn opposite_impl<'a>(
-    x: &'a ParmCiphertext<'a>,
-) -> ParmCiphertext<'a> {
+pub fn opposite_impl(
+    x: &ParmCiphertext,
+) -> ParmCiphertext {
     let mut nx = ParmCiphertext::empty();
     for xi in x {
         nx.push(xi.opp());
@@ -169,11 +169,11 @@ pub fn opposite_impl<'a>(
     nx
 }
 
-pub fn add_const_impl<'a>(
-    pc: &'a ParmesanCloudovo<'a>,
-    x:  &'a ParmCiphertext<'a>,
+pub fn add_const_impl(
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
     k:  i64,
-) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
+) -> Result<ParmCiphertext, Box<dyn Error>> {
     // resolve k == 0
     if k == 0 {
         return Ok(x.clone());
