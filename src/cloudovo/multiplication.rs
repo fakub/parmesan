@@ -27,10 +27,10 @@ use super::pbs;
 //
 
 /// Choose & call appropriate algorithm for a product of two ciphertexts (Karatsuba, or schoolbook multiplication)
-pub fn mul_impl<'a>(
-    pc: &'a ParmesanCloudovo,
-    x:  &'a ParmCiphertext,
-    y:  &'a ParmCiphertext,
+pub fn mul_impl(
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
+    y:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     //  Karatsuba for lengths 14 or >= 16, otherwise schoolbook (i.e., lengths < 14 or 15)
@@ -86,10 +86,10 @@ pub fn mul_impl<'a>(
 }
 
 /// Karatsuba multiplication
-fn mul_karatsuba<'a>(
-    pc: &'a ParmesanCloudovo,
-    x:  &'a ParmCiphertext,
-    y:  &'a ParmCiphertext,
+fn mul_karatsuba(
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
+    y:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     //WISH  be able to calculate n and n-1 bit numbers (useful for squaring of non-power of two lengths)
@@ -206,10 +206,10 @@ fn mul_karatsuba<'a>(
 }
 
 /// Schoolbook multiplication `O(n^2)`
-fn mul_schoolbook<'a>(
-    pc: &'a ParmesanCloudovo,
-    x:  &'a ParmCiphertext,
-    y:  &'a ParmCiphertext,
+fn mul_schoolbook(
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
+    y:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     measure_duration!(
@@ -226,10 +226,10 @@ fn mul_schoolbook<'a>(
 }
 
 /// Product of two 1-word ciphertexts
-fn mul_1word<'a>(
-    pc: &'a ParmesanCloudovo,
-    x:  &'a ParmCiphertext,
-    y:  &'a ParmCiphertext,
+fn mul_1word(
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
+    y:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     measure_duration!(
@@ -244,10 +244,10 @@ fn mul_1word<'a>(
 }
 
 /// Fill multiplication array (for schoolbook multiplication)
-fn fill_mulary<'a>(
-    pc: &'a ParmesanCloudovo,
-    x:  &'a ParmCiphertext,
-    y:  &'a ParmCiphertext,
+fn fill_mulary(
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
+    y:  &ParmCiphertext,
 ) -> Result<Vec<ParmCiphertext>, Box<dyn Error>> {
 
     assert_eq!(x.len(), y.len());
@@ -286,10 +286,10 @@ fn fill_mulary<'a>(
 
 /// Implementation of LWE sample multiplication, where `x` and `y` encrypt
 /// a plaintext in `{-1, 0, 1}`
-pub fn mul_lwe<'a>(
-    pc: &'a ParmesanCloudovo,
-    x:  &'a ParmEncrWord,
-    y:  &'a ParmEncrWord,
+pub fn mul_lwe(
+    pc: &ParmesanCloudovo,
+    x:  &ParmEncrWord,
+    y:  &ParmEncrWord,
 ) -> Result<ParmEncrWord, Box<dyn Error>> {
 
     // resolve trivial cases
@@ -319,9 +319,9 @@ pub fn mul_lwe<'a>(
 }
 
 /// Reduce mul/squ-ary with addition
-pub fn reduce_mulsquary<'a>(
-    pc: &'a ParmesanCloudovo,
-    mulary: &'a Vec<ParmCiphertext>,
+pub fn reduce_mulsquary(
+    pc: &ParmesanCloudovo,
+    mulary: &Vec<ParmCiphertext>,
 ) -> ParmCiphertext {
     let mut intmd = vec![ParmCiphertext::empty(); 2];
     let mut idx = 0usize;

@@ -8,7 +8,6 @@ pub use std::fs::{self,File,OpenOptions};
 #[allow(unused_imports)]
 use colored::Colorize;
 
-//~ use concrete_core::prelude::*;
 use tfhe::shortint::prelude::*;
 
 use crate::*;

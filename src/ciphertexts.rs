@@ -1,6 +1,5 @@
 use std::error::Error;
 
-//~ use concrete_core::prelude::*;
 use tfhe::shortint::prelude::*;
 use tfhe::core_crypto::algorithms::*;
 use tfhe::core_crypto::entities::plaintext::*;
@@ -138,18 +137,6 @@ impl ParmEncrWord {
 
 
     // -------------------------------------------------------------------------
-    //  Check trivial values
-
-    pub fn is_triv(&self) -> bool {
-        matches!(self.ct, ParmCtWord::Triv(_))
-    }
-
-    pub fn is_triv_zero(&self) -> bool {
-        if let ParmCtWord::Triv(pts) = self.ct {pts.0 == 0} else {false}
-    }
-
-
-    // -------------------------------------------------------------------------
     //  Basic operations with encrypted words
 
     pub fn add_inplace(
@@ -253,6 +240,18 @@ impl ParmEncrWord {
         let mut res = self.clone();
         res.mul_const_inplace(k);
         res
+    }
+
+
+    // -------------------------------------------------------------------------
+    //  Check trivial values
+
+    pub fn is_triv(&self) -> bool {
+        matches!(self.ct, ParmCtWord::Triv(_))
+    }
+
+    pub fn is_triv_zero(&self) -> bool {
+        if let ParmCtWord::Triv(pts) = self.ct {pts.0 == 0} else {false}
     }
 }
 

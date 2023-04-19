@@ -11,9 +11,9 @@ use colored::Colorize;
 use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
 use super::pbs;
 
-pub fn round_at_impl<'a>(
-    pc: &'a ParmesanCloudovo,
-    x:  &'a ParmCiphertext,
+pub fn round_at_impl(
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
     pos: usize,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 

@@ -1,7 +1,6 @@
 #[allow(unused_imports)]
 use colored::Colorize;
 
-//~ use concrete_core::prelude::*;
 use tfhe::core_crypto::entities::GlweCiphertext;
 use tfhe::shortint::ciphertext::Degree;
 use tfhe::shortint::prelude::*;
@@ -35,9 +34,9 @@ use crate::ParmesanCloudovo;
 //
 
 #[allow(non_snake_case)]
-pub fn eval_LUT_5_uint<'a>(
-    pc: &'a ParmesanCloudovo,
-    c: &'a ParmEncrWord,
+pub fn eval_LUT_5_uint(
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
     lut: [u64; 1 << (5-1)],
 ) -> ParmEncrWord {
     let mut lut_f = [0f64; 1 << (5-1)];
@@ -53,9 +52,9 @@ pub fn eval_LUT_5_uint<'a>(
 }
 
 #[allow(non_snake_case)]
-fn eval_LUT_5_float<'a>(
-    pc: &'a ParmesanCloudovo,
-    c: &'a ParmEncrWord,
+fn eval_LUT_5_float(
+    pc: &ParmesanCloudovo,
+    c: &ParmEncrWord,
     lut: [f64; 1 << (5-1)],
 ) -> ParmEncrWord {
     match &c.ct {
@@ -199,7 +198,7 @@ where
 //  X (around zero)
 //
 #[allow(non_snake_case)]
-pub fn id__pi_5<'a>(
+pub fn id__pi_5(
     pc: &ParmesanCloudovo,
     c: &ParmEncrWord,
 ) -> ParmEncrWord {
@@ -214,7 +213,7 @@ pub fn id__pi_5<'a>(
 //  X ⋛ ±3
 //
 #[allow(non_snake_case)]
-pub fn f_3__pi_5<'a>(
+pub fn f_3__pi_5(
     pc: &ParmesanCloudovo,
     c: &ParmEncrWord,
 ) -> ParmEncrWord {
@@ -229,7 +228,7 @@ pub fn f_3__pi_5<'a>(
 //  X ⋛ ±4
 //
 #[allow(non_snake_case)]
-pub fn f_4__pi_5<'a>(
+pub fn f_4__pi_5(
     pc: &ParmesanCloudovo,
     c: &ParmEncrWord,
 ) -> ParmEncrWord {
@@ -244,7 +243,7 @@ pub fn f_4__pi_5<'a>(
 //  X ⋛ ±5
 //
 #[allow(non_snake_case)]
-pub fn f_5__pi_5<'a>(
+pub fn f_5__pi_5(
     pc: &ParmesanCloudovo,
     c: &ParmEncrWord,
 ) -> ParmEncrWord {
@@ -259,7 +258,7 @@ pub fn f_5__pi_5<'a>(
 //  X ≡ ±2 (× val)
 //
 #[allow(non_snake_case)]
-pub fn g_2__pi_5__with_val<'a>(
+pub fn g_2__pi_5__with_val(
     pc: &ParmesanCloudovo,
     c: &ParmEncrWord,
     val: u64,
@@ -275,7 +274,7 @@ pub fn g_2__pi_5__with_val<'a>(
 //  X ⋛ ±1 (× val)
 //
 #[allow(non_snake_case)]
-pub fn f_1__pi_5__with_val<'a>(
+pub fn f_1__pi_5__with_val(
     pc: &ParmesanCloudovo,
     c: &ParmEncrWord,
     val: u64,
@@ -291,7 +290,7 @@ pub fn f_1__pi_5__with_val<'a>(
 //  X ≥ 0 /sgn+/ (× val)
 //
 #[allow(non_snake_case)]
-pub fn f_0__pi_5__with_val<'a>(
+pub fn f_0__pi_5__with_val(
     pc: &ParmesanCloudovo,
     c: &ParmEncrWord,
     val: u64,
@@ -307,7 +306,7 @@ pub fn f_0__pi_5__with_val<'a>(
 //  |X| ≥ 2
 //
 #[allow(non_snake_case)]
-pub fn a_2__pi_5<'a>(
+pub fn a_2__pi_5(
     pc: &ParmesanCloudovo,
     c: &ParmEncrWord,
 ) -> ParmEncrWord {
@@ -322,7 +321,7 @@ pub fn a_2__pi_5<'a>(
 //  |X| ≥ 1   (i.e., squaring in {-1,0,1})
 //
 #[allow(non_snake_case)]
-pub fn a_1__pi_5<'a>(
+pub fn a_1__pi_5(
     pc: &ParmesanCloudovo,
     c: &ParmEncrWord,
 ) -> ParmEncrWord {
@@ -337,7 +336,7 @@ pub fn a_1__pi_5<'a>(
 //  3-bit squaring (usable for 2-bit squ, too)
 //
 #[allow(non_snake_case)]
-pub fn squ_3_bit__pi_5<'a>(
+pub fn squ_3_bit__pi_5(
     pc: &ParmesanCloudovo,
     c: &ParmEncrWord,
     pos: usize,
@@ -384,7 +383,7 @@ pub fn squ_3_bit__pi_5<'a>(
 //  --------------------
 //
 #[allow(non_snake_case)]
-pub fn mul_bit__pi_5<'a>(
+pub fn mul_bit__pi_5(
     pc: &ParmesanCloudovo,
     c: &ParmEncrWord,
 ) -> ParmEncrWord {
@@ -402,7 +401,7 @@ pub fn mul_bit__pi_5<'a>(
 //  X - 2   (X > 0)
 //
 #[allow(non_snake_case)]
-pub fn relu_plus__pi_5<'a>(
+pub fn relu_plus__pi_5(
     pc: &ParmesanCloudovo,
     c: &ParmEncrWord,
 ) -> ParmEncrWord {
@@ -421,7 +420,7 @@ pub fn relu_plus__pi_5<'a>(
 //   1   (2y + s == 2, 3)
 //
 #[allow(non_snake_case)]
-pub fn round_2y_s__pi_5<'a>(
+pub fn round_2y_s__pi_5(
     pc: &ParmesanCloudovo,
     c: &ParmEncrWord,
 ) -> ParmEncrWord {
@@ -439,7 +438,7 @@ pub fn round_2y_s__pi_5<'a>(
 //   1   (X ≥ 0)
 //
 #[allow(non_snake_case)]
-pub fn nonneg__pi_5<'a>(
+pub fn nonneg__pi_5(
     pc: &ParmesanCloudovo,
     c: &ParmEncrWord,
 ) -> ParmEncrWord {
@@ -456,7 +455,7 @@ pub fn nonneg__pi_5<'a>(
 //  Selector for max
 //
 #[allow(non_snake_case)]
-pub fn max_s_2x_6y__pi_5<'a>(
+pub fn max_s_2x_6y__pi_5(
     pc: &ParmesanCloudovo,
     c: &ParmEncrWord,
 ) -> ParmEncrWord {

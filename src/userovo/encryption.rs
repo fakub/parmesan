@@ -19,8 +19,8 @@ pub const PARM_CT_MAXLEN: usize = 63;
 /// Parmesan encryption of a 64-bit signed integer
 /// * splits signed integer into words
 /// * encrypts one-by-one
-pub fn parm_encrypt<'a>(
-    priv_keys: &'a PrivKeySet,
+pub fn parm_encrypt(
+    priv_keys: &PrivKeySet,
     m: i64,
     words: usize,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
@@ -29,9 +29,9 @@ pub fn parm_encrypt<'a>(
 }
 
 /// Parmesan encryption of a vector of words from alphabet `{-1,0,1}`
-pub fn parm_encrypt_from_vec<'a>(
+pub fn parm_encrypt_from_vec(
     priv_keys: &PrivKeySet,
-    mv: &'a Vec<i32>,
+    mv: &Vec<i32>,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
     let mut c = ParmCiphertext::empty();
     for mi in mv {

@@ -1,5 +1,3 @@
-//~ use concrete_core::prelude::*;
-//~ use concrete_shortint::Parameters;
 use tfhe::shortint::parameters::*;
 
 /// # Parmesan Parameters

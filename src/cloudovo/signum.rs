@@ -16,9 +16,9 @@ use crate::ciphertexts::{ParmCiphertext, ParmCiphertextImpl};
 use super::pbs;
 
 /// Implementation of signum via parallel reduction
-pub fn sgn_impl<'a>(
-    pc: &'a ParmesanCloudovo,
-    x:  &'a ParmCiphertext,
+pub fn sgn_impl(
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
 
     if x.len() == 0 {
@@ -56,9 +56,9 @@ pub fn sgn_impl<'a>(
 ///  - in 1st round, inputs fresh {-1,0,1}
 ///  - in subseq rounds, inputs {-15..15} of qw = 22
 ///      - this is also its output
-pub fn sgn_recursion_raw<'a>(
-    pc: &'a ParmesanCloudovo,
-    x:  &'a ParmCiphertext,
+pub fn sgn_recursion_raw(
+    pc: &ParmesanCloudovo,
+    x:  &ParmCiphertext,
     first_round: bool,
 ) -> Result<ParmCiphertext, Box<dyn Error>> {
     const GAMMA: usize = 4;
