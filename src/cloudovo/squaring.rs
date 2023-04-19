@@ -124,7 +124,7 @@ fn squ_1word<'a>(
         ["Squaring 1-word"],
         [
             // squaring 1 signed bit is equivalent to |x| ≥ 1
-            let sqbit = pbs::a_1__pi_5(pc, &x[0])?;
+            let sqbit = pbs::a_1__pi_5(pc, &x[0]);
         ]
     );
 
@@ -137,8 +137,8 @@ fn squ_2_3word<'a>(
     x:  &'a ParmCiphertext<'a>,
 ) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
     assert!(x.len() == 2 || x.len() == 3);
-    let mut res = ParmCiphertext::triv(2*x.len(), &pc);
-    let mut res_pbs = ParmCiphertext::triv(2*x.len() - 1, &pc);
+    let mut res = ParmCiphertext::triv(2*x.len(), pc);
+    let mut res_pbs = ParmCiphertext::triv(2*x.len() - 1, pc);
 
     //       (x) y z
     //       (x) y z
@@ -151,13 +151,13 @@ fn squ_2_3word<'a>(
             // get value of x
             let mut x_val;
             if x.len() == 2 {
-                x_val = x[1].mul_const(2)?;
-                x_val.add_inplace(&x[0])?;
+                x_val = x[1].mul_const(2);
+                x_val.add_inplace(&x[0]);
             } else {
-                x_val = x[2].mul_const(2)?;
-                x_val.add_inplace(&x[1])?;
-                x_val.mul_const_inplace(2)?;
-                x_val.add_inplace(&x[0])?;
+                x_val = x[2].mul_const(2);
+                x_val.add_inplace(&x[1]);
+                x_val.mul_const_inplace(2);
+                x_val.add_inplace(&x[0]);
             }
 
             // calc the 4/6 bits in parallel
@@ -171,14 +171,14 @@ fn squ_2_3word<'a>(
             let sj_iter = res_pbs.iter_mut().enumerate();
 
             sj_iter.for_each(| (i, rpi) | {
-                *rpi = pbs::squ_3_bit__pi_5(pc, &x_val, if i < 1 {i} else {i+1}).expect("pbs::squ_3_bit__pi_5 failed.");
+                *rpi = pbs::squ_3_bit__pi_5(pc, &x_val, if i < 1 {i} else {i+1});
             });
         ]
     );
 
     // fill 0 at 2^1
     res[0] = res_pbs[0].clone();
-    res[1] = ParmEncrWord::encrypt_word_triv(0);
+    res[1] = ParmEncrWord::encrypt_word_triv(&pc.pub_keys, 0);
     for (ri, rpi) in res[2..].iter_mut().zip(res_pbs[1..].iter()) {
         *ri = rpi.clone();
     }

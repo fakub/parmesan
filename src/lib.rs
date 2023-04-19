@@ -122,7 +122,7 @@ impl ParmesanUserovo<'_> {
 
     /// Get the Public Key Set
     pub fn export_pub_keys(&self) -> PubKeySet {
-        PubKeySet {server_key: &self.server_key}
+        PubKeySet {server_key: &self.priv_keys.server_key}
     }
 
     /// Encrypt a 64-bit signed integer
@@ -133,7 +133,7 @@ impl ParmesanUserovo<'_> {
         m: i64,
         words: usize,
     ) -> Result<ParmCiphertext, Box<dyn Error>> {   //WISH change to a template for other integer types/lengths, too
-        encryption::parm_encrypt(self.params, &self.priv_keys, m, words)
+        encryption::parm_encrypt(&self.priv_keys, m, words)
     }
 
     /// Encrypt a vector of words from alphabet `{-1,0,1}`
@@ -141,12 +141,12 @@ impl ParmesanUserovo<'_> {
         &self,
         mv: &Vec<i32>,
     ) -> Result<ParmCiphertext, Box<dyn Error>> {   //WISH change to a template for other integer types/lengths, too
-        encryption::parm_encrypt_from_vec(self.params, &self.priv_keys, mv)
+        encryption::parm_encrypt_from_vec(&self.priv_keys, mv)
     }
 
     /// Decrypt ciphertext into a 64-bit signed integer
     pub fn decrypt(&self, c: &ParmCiphertext) -> Result<i64, Box<dyn Error>> {   //WISH change to a template for other integer types/lengths, too
-        encryption::parm_decrypt(self.params, &self.priv_keys, c)
+        encryption::parm_decrypt(&self.priv_keys, c)
     }
 }
 

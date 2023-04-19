@@ -46,13 +46,13 @@ pub fn round_at_impl<'a>(
                 [
                     let s = ParmArithmetics::sgn(pc, &x[0..pos-1].to_vec());
                     // calc 2y
-                    let mut yy_s = x[pos-1].mul_const(2)?;
+                    let mut yy_s = x[pos-1].mul_const(2);
                     // 2y + s
-                    if s.len() > 0 {yy_s.add_inplace(&s[0])?;}
+                    if s.len() > 0 {yy_s.add_inplace(&s[0]);}
 
                     // factor that is to be added
-                    let mut r = ParmCiphertext::triv(pos, &pc.params)?;
-                    r.push(pbs::round_2y_s__pi_5(pc, &yy_s)?);
+                    let mut r = ParmCiphertext::triv(pos, pc);
+                    r.push(pbs::round_2y_s__pi_5(pc, &yy_s));
 
                     // sliced input
                         // was:

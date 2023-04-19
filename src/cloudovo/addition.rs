@@ -35,10 +35,10 @@ pub fn add_sub_impl<'a>(
     let mut x_rzero = 0usize;
     let mut y_rzero = 0usize;
     for xi in x {
-        if xi.is_triv_zero(&pc.params)? {x_rzero += 1;} else {break;}
+        if xi.is_triv_zero() {x_rzero += 1;} else {break;}
     }
     for yi in y {
-        if yi.is_triv_zero(&pc.params)? {y_rzero += 1;} else {break;}
+        if yi.is_triv_zero() {y_rzero += 1;} else {break;}
     }
     // resolve all-triv-zeros cases
     if x_rzero == x.len() { return if is_add {Ok(y.clone())} else {Ok(ParmArithmetics::opp(y))};}
@@ -54,10 +54,10 @@ pub fn add_sub_impl<'a>(
     let mut x_lzero  = 0usize;
     let mut y_lzero  = 0usize;
     for xi in x.iter().rev() {
-        if xi.is_triv_zero(&pc.params)? {x_lzero += 1;} else {break;}
+        if xi.is_triv_zero() {x_lzero += 1;} else {break;}
     }
     for yi in y.iter().rev() {
-        if yi.is_triv_zero(&pc.params)? {y_lzero += 1;} else {break;}
+        if yi.is_triv_zero() {y_lzero += 1;} else {break;}
     }
     let wlen = std::cmp::max(x.len() - x_lzero, y.len() - y_lzero);
 
@@ -75,18 +75,18 @@ pub fn add_sub_impl<'a>(
             }
             // if x is shorter than wlen, fill the rest with zeros
             for _ in 0..((wlen as i64) - (x.len() as i64)) {
-                w.push(ParmEncrWord::encrypt_word_triv(0));
+                w.push(ParmEncrWord::encrypt_word_triv(&pc.pub_keys, 0));
             }
             // now w has the correct length!
 
             // w = x + y
             if is_add {
                 for (wi, yi) in w.iter_mut().zip(y.iter()) {
-                    wi.add_inplace(&yi)?;
+                    wi.add_inplace(&yi);
                 }
             } else {
                 for (wi, yi) in w.iter_mut().zip(y.iter()) {
-                    wi.sub_inplace(&yi)?;
+                    wi.sub_inplace(&yi);
                 }
             }
 
@@ -114,18 +114,18 @@ pub fn add_sub_impl<'a>(
             q_w_iter.for_each(| (qi, (i0, wi)) | {
                 let i = i0 + r_triv;
                 // calc   3 w_i + w_i-1
-                let mut wi_3 = wi.mul_const(3).expect("mul_const failed.");
-                if i0 > 0 { wi_3.add_inplace(&w[i-1]).expect("add_inplace failed."); }
-                *qi = pbs::f_4__pi_5(pc, &wi_3).expect("f_4__pi_5 failed.");
+                let mut wi_3 = wi.mul_const(3);
+                if i0 > 0 { wi_3.add_inplace(&w[i-1]); }
+                *qi = pbs::f_4__pi_5(pc, &wi_3);
             });
 
             // w_i += -2 q_i + q_i-1
             //WISH also check this, if parallel is better? (there's no BS)
             w.iter_mut().zip(q.iter().enumerate()).for_each(| (wi, (i, qi)) | {
                 // calc   2 q_i
-                let qi_2 = qi.mul_const(2).expect("mul_const failed.");
-                wi.sub_inplace(&qi_2).expect("sub_inplace failed.");
-                if i > 0 { wi.add_inplace(&q[i-1]).expect("add_inplace failed."); }
+                let qi_2 = qi.mul_const(2);
+                wi.sub_inplace(&qi_2);
+                if i > 0 { wi.add_inplace(&q[i-1]); }
             });
 
             // init z of zeros of wlen length, then clone / bootstrap ID from w, finally push carry q_i-1
@@ -140,7 +140,7 @@ pub fn add_sub_impl<'a>(
                 let z_w_iter = z[r_triv..].iter_mut().zip(w[r_triv..].iter());
 
                 z_w_iter.for_each(| (zi, wi) | {
-                    *zi = pbs::id__pi_5(pc, wi).expect("pbs::id__pi_5 failed.");
+                    *zi = pbs::id__pi_5(pc, wi);
                 });
             } else {
                 z[r_triv..].iter_mut().zip(w[r_triv..].iter()).for_each(| (zi, wi) | {
@@ -165,10 +165,10 @@ pub fn opposite_impl<'a>(
     let mut nx = ParmCiphertext::empty();
 
     for xi in x {
-        nx.push(xi.opp()?);
+        nx.push(xi.opp());
     }
 
-    Ok(nx)
+    Ok(nx)   //TODO consider removing Result from all arithmetic trait
 }
 
 pub fn add_const_impl<'a>(
@@ -199,7 +199,7 @@ pub fn add_const_impl<'a>(
         };
 
         // encrypt as trivial sample
-        let cti = ParmEncrWord::encrypt_word_triv(ki as i32);
+        let cti = ParmEncrWord::encrypt_word_triv(&pc.pub_keys, ki as i32);
 
         ck.push(cti);
     }

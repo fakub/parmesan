@@ -4,7 +4,6 @@ use std::error::Error;
 #[allow(unused_imports)]
 use colored::Colorize;
 
-use crate::params::Params;
 use crate::userovo::keys::PrivKeySet;
 use crate::ciphertexts::{ParmCiphertext,ParmCiphertextImpl,ParmEncrWord};
 
@@ -21,18 +20,16 @@ pub const PARM_CT_MAXLEN: usize = 63;
 /// * splits signed integer into words
 /// * encrypts one-by-one
 pub fn parm_encrypt<'a>(
-    params: &'a Params,
     priv_keys: &'a PrivKeySet,
     m: i64,
     words: usize,
 ) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
     let mv = convert_to_vec(m, words);
-    parm_encrypt_from_vec(params, priv_keys, &mv)
+    parm_encrypt_from_vec(priv_keys, &mv)
 }
 
 /// Parmesan encryption of a vector of words from alphabet `{-1,0,1}`
 pub fn parm_encrypt_from_vec<'a>(
-    params: &'a Params,
     priv_keys: &'a PrivKeySet,
     mv: &'a Vec<i32>,
 ) -> Result<ParmCiphertext<'a>, Box<dyn Error>> {
@@ -44,7 +41,7 @@ pub fn parm_encrypt_from_vec<'a>(
             return Err(format!("{}", "Word to be encrypted outside the alphabet {-1,0,1}.").into());
         }
 
-        c.push(ParmEncrWord::encrypt_word(params, priv_keys, *mi));
+        c.push(ParmEncrWord::encrypt_word(priv_keys, *mi));
     }
     Ok(c)
 }
@@ -60,25 +57,21 @@ pub fn parm_encrypt_from_vec<'a>(
 /// * composes signed integer from multiple encrypted nibbles (bits)
 /// * considers symmetric alphabet around zero
 pub fn parm_decrypt(
-    params: &Params,
     priv_keys: &PrivKeySet,
     c: &ParmCiphertext,
 ) -> Result<i64, Box<dyn Error>> {
-    let mv = parm_decrypt_to_vec(params, priv_keys, c)?;
+    let mv = parm_decrypt_to_vec(priv_keys, c)?;
     convert_from_vec(&mv)
 }
 
 /// Parmesan encryption of a vector of words from alphabet `{-1,0,1}`
 pub fn parm_decrypt_to_vec(
-    params: &Params,
     priv_keys: &PrivKeySet,
     c: &ParmCiphertext,
 ) -> Result<Vec<i32>, Box<dyn Error>> {
     let mut mv: Vec<i32> = Vec::new();
     for ci in c {
-        let mi_pos = ci.decrypt_word_pos(params, Some(priv_keys))?;
-        // wrap upper half to negative
-        mv.push(if mi_pos >= params.plaintext_pos_max() {mi_pos as i32 - params.plaintext_space_size()} else {mi_pos as i32});
+        mv.push(ci.decrypt_mi(Some(priv_keys))?);
     }
     Ok(mv)
 }

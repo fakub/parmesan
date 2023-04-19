@@ -45,7 +45,7 @@ pub fn sgn_impl<'a>(
                 pc,
                 &s_raw[0],
                 1,
-            )?;
+            );
         ]
     );
 
@@ -66,7 +66,7 @@ pub fn sgn_recursion_raw<'a>(
     // special case: empty ciphertext
     if x.len() == 0 {
         // must not be empty (i.e., no ParmArithmetics::zero())
-        return ParmCiphertext::triv(1, &pc.params);
+        return Ok(ParmCiphertext::triv(1, pc));
     }
 
     // end of recursion, may return {-15 .. 15} as a sum of four values
@@ -80,7 +80,7 @@ pub fn sgn_recursion_raw<'a>(
     measure_duration!(
         ["Signum recursion in parallel ({}-bit, groups by {})", x.len(), GAMMA],
         [
-            let mut b = ParmCiphertext::triv((x.len() - 1) / GAMMA + 1, &pc.params)?;
+            let mut b = ParmCiphertext::triv((x.len() - 1) / GAMMA + 1, pc);
 
             // the thread needs to know the index j so that it can check against x.len()
             // parallel iterators
@@ -98,26 +98,26 @@ pub fn sgn_recursion_raw<'a>(
                     // (altogether 8a + 4b + 2c + d gives QW = 8^2 + 4^2 + 2^2 + 1^2 = 85)
                     if GAMMA * j + 3 < x.len() {
                         let sj3 = if pc.params.quad_weight >= 85 {
-                            x[GAMMA * j + 3].mul_const(1 << 3).expect("mul_const failed.")
+                            x[GAMMA * j + 3].mul_const(1 << 3)
                         } else {
                             pbs::f_1__pi_5__with_val(
                                 pc,
                                 &x[GAMMA * j + 3],
                                 1 << 3,
-                            ).expect("pbs::f_1__pi_5__with_val failed.")
+                            )
                         };
-                        bj.add_inplace(&sj3).expect("add_inplace failed.");
+                        bj.add_inplace(&sj3);
                     }
                     // add others multiplied by 1 << i
                     for i in 0..=2 {
                         if GAMMA * j + i < x.len() {
-                            let xi = if i == 0 {x[GAMMA * j + i].clone()} else {x[GAMMA * j + i].mul_const(1 << i).expect("mul_const failed.")};
-                            bj.add_inplace(&xi).expect("add_inplace failed.");
+                            let xi = if i == 0 {x[GAMMA * j + i].clone()} else {x[GAMMA * j + i].mul_const(1 << i)};
+                            bj.add_inplace(&xi);
                         }
                     }
                 // otherwise input ranges in {-15 .. 15} and not bootstrapped
                 } else {
-                    let mut sj = ParmCiphertext::triv(GAMMA, &pc.params).expect("ParmCiphertext::triv failed.");
+                    let mut sj = ParmCiphertext::triv(GAMMA, pc);
 
                     // parallel iterators
                     #[cfg(not(feature = "seq_analyze"))]
@@ -132,13 +132,13 @@ pub fn sgn_recursion_raw<'a>(
                                 pc,
                                 &x[GAMMA * j + i],
                                 1 << i,
-                            ).expect("pbs::f_1__pi_5__with_val failed.");
+                            );
                         }
                     });
 
                     // possibly exchange for parallel reduction (negligible effect expected)
                     for sji in sj {
-                        bj.add_inplace(&sji).expect("add_inplace failed.");
+                        bj.add_inplace(&sji);
                     }
                 }
             });

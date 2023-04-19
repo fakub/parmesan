@@ -57,9 +57,9 @@ pub fn mul_impl<'a>(
 
         for _i in 0..len_diff {
             if x_in.len() < y_in.len() {
-                x_in.push(ParmEncrWord::encrypt_word_triv(0));
+                x_in.push(ParmEncrWord::encrypt_word_triv(&pc.pub_keys, 0));
             } else {
-                y_in.push(ParmEncrWord::encrypt_word_triv(0));
+                y_in.push(ParmEncrWord::encrypt_word_triv(&pc.pub_keys, 0));
             }
         }
     }
@@ -154,7 +154,7 @@ fn mul_karatsuba<'a>(
                     //  A + B .. -A - B
                     let pa_pb = ParmArithmetics::add(pc, ar, br);
                     for abi in pa_pb {
-                        na_nbr.push(abi.opp().expect("opposite failed."));
+                        na_nbr.push(abi.opp());
                     }
                 });
 
@@ -294,17 +294,12 @@ pub fn mul_lwe<'a>(
 
     // resolve trivial cases
     //WISH check correctness
-    let pi = pc.params.bit_precision;
     if x.is_triv() {
-        let mut mx: i32 = x.decrypt_word_pos(&pc.params, None)? as i32;
-        // convert to signed domain
-        if mx > 1 << (pi - 1) {mx -= 1 << pi}
-        return Ok(y.mul_const(mx)?);
+        let mx: i32 = x.decrypt_mi(None)?;
+        return Ok(y.mul_const(mx));
     } else if y.is_triv() {
-        let mut my: i32 = y.decrypt_word_pos(&pc.params, None)? as i32;
-        // convert to signed domain
-        if my > 1 << (pi - 1) {my -= 1 << pi}
-        return Ok(x.mul_const(my)?);
+        let my: i32 = y.decrypt_mi(None)?;
+        return Ok(x.mul_const(my));
     }
 
     //  X | -1 |  0 |  1 |
@@ -316,11 +311,11 @@ pub fn mul_lwe<'a>(
     // => serialize this table (fits 32 cleartext size)
 
     // 3x + y
-    let mut p3xpy = x.mul_const(3)?;
-    p3xpy.add_inplace(y)?;
+    let mut p3xpy = x.mul_const(3);
+    p3xpy.add_inplace(y);
 
     // LUT serialized table
-    pbs::mul_bit__pi_5(pc, &p3xpy)
+    Ok(pbs::mul_bit__pi_5(pc, &p3xpy))
 }
 
 /// Reduce mul/squ-ary with addition

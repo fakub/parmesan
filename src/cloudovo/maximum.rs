@@ -41,16 +41,16 @@ pub fn max_impl<'a>(
             let s: ParmEncrWord = pbs::nonneg__pi_5(
                 pc,
                 &s_raw[0],
-            )?;
+            );
 
             // align inputs
             let mut xa = x.clone();
             let mut ya = y.clone();
             for _ in 0..((y.len() as i64) - (x.len() as i64)) {
-                xa.push(ParmEncrWord::encrypt_word_triv(0));
+                xa.push(ParmEncrWord::encrypt_word_triv(&pc.pub_keys, 0));
             }
             for _ in 0..((x.len() as i64) - (y.len() as i64)) {
-                ya.push(ParmEncrWord::encrypt_word_triv(0));
+                ya.push(ParmEncrWord::encrypt_word_triv(&pc.pub_keys, 0));
             }
 
             m = ParmCiphertext::triv(xa.len(), &pc);
@@ -69,18 +69,18 @@ pub fn max_impl<'a>(
                 // check whether direct multiplication of yi by 6 can be applied
                 // (altogether 6yi + 2xi + s gives QW = 6^2 + 2^2 + 1^2 = 41)
                 if pc.params.quad_weight >= 41 {
-                    s_2xi_6yi = yi.mul_const(6).expect("mul_const failed.");
+                    s_2xi_6yi = yi.mul_const(6);
                 } else {
-                    s_2xi_6yi = pbs::f_1__pi_5__with_val(pc, yi, 6).expect("pbs::f_1__pi_5__with_val failed.");
+                    s_2xi_6yi = pbs::f_1__pi_5__with_val(pc, yi, 6);
                 }
                 // 2 xi
-                let xi_2 = xi.mul_const(2).expect("mul_const failed.");
-                s_2xi_6yi.add_inplace(&xi_2).expect("add_inplace failed.");
+                let xi_2 = xi.mul_const(2);
+                s_2xi_6yi.add_inplace(&xi_2);
                 // s + 2 xi + 6 yi
-                s_2xi_6yi.add_inplace(&s).expect("add_inplace failed.");
+                s_2xi_6yi.add_inplace(&s);
 
                 // mi = ReLU+(xi + 2s)
-                *mi = pbs::max_s_2x_6y__pi_5(pc, &s_2xi_6yi).expect("pbs::max_s_2x_6y__pi_5 failed.");   // ti
+                *mi = pbs::max_s_2x_6y__pi_5(pc, &s_2xi_6yi);   // ti
             });
         ]
     );

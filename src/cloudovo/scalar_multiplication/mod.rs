@@ -33,9 +33,9 @@ pub fn scalar_mul_impl<'a>(
     for xi in x {
         if k >= 0 {
             x_pos.push(xi.clone());
-            x_neg.push(xi.opp()?);
+            x_neg.push(xi.opp());
         } else {
-            x_pos.push(xi.opp()?);
+            x_pos.push(xi.opp());
             x_neg.push(xi.clone());
         }
     }

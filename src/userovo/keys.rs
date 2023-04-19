@@ -44,7 +44,7 @@ impl PrivKeySet {
             measure_duration!(
                 ["Generating new keys"],
                 [
-                    (client_key, server_key) = gen_keys(params);
+                    (client_key, server_key) = gen_keys(params.concrete_pars);
                 ]
             );
 
