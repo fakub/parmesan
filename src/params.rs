@@ -107,6 +107,7 @@ pub const PAR_CNCR_V0_2__M2_C3: Params = Params {
         message_modulus: MessageModulus(1 << 5),
         ..PARAM_MESSAGE_4_CARRY_0
     },
+    //TODO assert_eq!(server_key.carry_modulus.0, 1)
     //TODO use message_modulus from tfhe-rs instead (or do not implement custom params at all)
     bit_precision:    5,
     // derived as follows: greatest message = 3, fits within carry multiplied by 10 (3x10 = 30 < 2^5)

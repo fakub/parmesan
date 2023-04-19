@@ -3,6 +3,8 @@ use std::error::Error;
 //~ use concrete_core::prelude::*;
 use tfhe::shortint::prelude::*;
 use tfhe::core_crypto::algorithms::*;
+use tfhe::core_crypto::entities::plaintext::*;
+use tfhe::core_crypto::entities::cleartext::*;
 
 use crate::params::Params;
 use crate::userovo::keys::{PrivKeySet,PubKeySet};
@@ -15,53 +17,115 @@ use crate::ParmesanCloudovo;
 //  Encrypted Word
 //
 
-/// Enum that allows both trivial and non-trivial ciphertext
+/// Enum that holds either plaintext (triv. ciphertext), or actual ciphertext
 #[derive(Clone)]
-pub enum ParmEncrWord<'a> {
-    Ct{
-        c: tfhe::shortint::CiphertextBig,
-        server_key: &'a ServerKey,
-    },
-    Triv(i32),
+pub enum ParmCtWord {
+    Ct(tfhe::shortint::CiphertextBig),
+    Triv(tfhe::core_crypto::entities::plaintext::Plaintext<u64>),   //TODO check if u64 is ok?
+}
+
+/// Struct that holds encrypted Parmesan word
+#[derive(Clone)]
+pub struct ParmEncrWord<'a> {
+    ct: ParmCtWord,
+    server_key: &'a ServerKey,
 }
 
 impl ParmEncrWord<'_> {
     pub fn encrypt_word(
-        params: &Params,
         priv_keys: &PrivKeySet,
         mi: i32,
     ) -> Self {
-        // little hack, how to bring mi into positive interval [0, 2^pi)
-        let mu = (mi & params.plaintext_mask() as i32) as u64;
-        // encrypt
-        ParmEncrWord::Ct{
-            c: priv_keys.client_key.encrypt_without_padding(mu),
-            server_key: priv_keys.server_key,
+        Self{
+            ct: ParmCtWord::Ct(priv_keys.client_key.encrypt_without_padding(Self::mi_to_mu(priv_keys, mi))),
+            server_key: &priv_keys.server_key,
         }
     }
 
     pub fn encrypt_word_triv(
+        pub_keys: &PubKeySet,
         mi: i32,
     ) -> Self {
-        ParmEncrWord::Triv(mi)
+        Self{
+            ct: ParmCtWord::Triv(Self::mi_to_pt(&pub_keys.server_key, mi)),
+            server_key: pub_keys.server_key,
+        }
     }
 
-    pub fn decrypt_word_pos(
+    pub fn decrypt_mu(
         &self,
-        params: &Params,
         priv_keys_opt: Option<&PrivKeySet>,
     ) -> Result<u64, Box<dyn Error>> {
-        match self {
-            ParmEncrWord::Ct{c, ..} =>
+        match self.ct {
+            ParmCtWord::Ct(ctb) =>
                 if let Some(priv_keys) = priv_keys_opt {
-                    priv_keys.client_key.decrypt_without_padding(&c)
+                    Ok(priv_keys.client_key.decrypt_without_padding(&ctb))
                 } else {
                     Err("Client key is None for decryption of non-trivial ciphertext.".into())
                 },
-            ParmEncrWord::Triv(mi) =>
-                // little hack, how to bring mi into positive interval [0, 2^pi)
-                (mi & params.plaintext_mask() as i32) as u64,
+            ParmCtWord::Triv(pt) =>
+                Ok(pt_to_mu(self.server_key, &pt)),
         }
+    }
+
+    pub fn decrypt_mi(
+        &self,
+        priv_keys_opt: Option<&PrivKeySet>,
+    ) -> Result<i32, Box<dyn Error>> {
+        mu_to_mi(self.server_key, self.decrypt_mu(priv_keys_opt)?)
+    }
+
+    fn delta(server_key: &ServerKey) -> u64 {((1_u64 << 63) / server_key.message_modulus.0 as u64) * 2}
+
+    fn mi_to_mu(
+        server_key: &ServerKey,
+        mi: i32,
+    ) -> u64 {
+        mi.rem_euclid(server_key.message_modulus.0) as u64
+    }
+
+    fn mu_to_mi(
+        server_key: &ServerKey,
+        mut mu: u64,
+    ) -> i32 {
+        mu %= server_key.message_modulus.0;
+        if mu >= server_key.message_modulus.0 / 2 {
+            mu as i32 - server_key.message_modulus.0 as i32
+        } else {
+            mu as i32
+        }
+    }
+
+    fn mi_to_pt(
+        server_key: &ServerKey,
+        mi: i32,
+    ) -> Plaintext<u64> {
+        Plaintext(Self::mi_to_mu(server_key, mi) * delta(server_key))
+    }
+
+    fn half_to_pt(
+        server_key: &ServerKey,
+    ) -> Plaintext<u64> {
+        Plaintext(1u64 * delta(server_key) / 2)
+    }
+
+    pub fn pt_to_mu(
+        server_key: &ServerKey,
+        pt: &Plaintext<u64>,
+    ) -> u64 {
+        let delta = delta(server_key);
+
+        let rounding_bit = delta >> 1;
+        let rounding = (pt.0 & rounding_bit) << 1;
+
+        (pt.0.wrapping_add(rounding)) / delta
+    }
+
+    fn pt_to_mi(
+        server_key: &ServerKey,
+        pt: &Plaintext<u64>,
+    ) -> i32 {
+        mu_to_mi(pt_to_mu(server_key, pt))
     }
 
     //~ pub fn is_triv(&self) -> bool {
@@ -79,73 +143,85 @@ impl ParmEncrWord<'_> {
     pub fn add_inplace(
         &mut self,
         other: &Self,
-    ) -> Result<(), Box<dyn Error>> {
-
-        match self {
-            ParmEncrWord::Ct(cs, server_key_s) =>
+    ) {
+        match self.ct {
+            ParmCtWord::Ct(ctbs) =>
                 // !self.is_triv
                 match other {
-                    ParmEncrWord::Ct{co, ..} => {
+                    ParmCtWord::Ct(ctbo) =>
                         // !other.is_triv -> addition of two ciphertexts
-                        lwe_ciphertext_add_assign(&mut cs.ct, &co.ct);
-                    },
-                    ParmEncrWord::Triv(mio) =>
+                        lwe_ciphertext_add_assign(&mut ctbs.ct, &ctbo.ct),
+                    ParmCtWord::Triv(pto) =>
                         // other.is_triv
-                        lwe_ciphertext_add_assign(&mut cs.ct, &server_key_s.create_trivial(mio).ct),
-                }
-                ,
-            ParmEncrWord::Triv(mis) =>
+                        lwe_ciphertext_plaintext_add_assign(&mut ctbs.ct, pto),
+                },
+            ParmCtWord::Triv(pts) =>
                 // self.is_triv
                 match other {
-                    ParmEncrWord::Ct{co, server_key_o} => {
+                    ParmCtWord::Ct(ctbo) => {
                         // !other.is_triv
-                        *self = server_key_o.create_trivial(mis);
-                        lwe_ciphertext_add_assign(&mut self.ct, &co);
+                        let pts_clone = pts.clone();
+                        *self.ct = ctbo.clone();
+                        lwe_ciphertext_plaintext_add_assign(&mut self.ct.ct, pts_clone);
+
+                        //~ let mut new_self_ct = self.server_key.create_trivial(pt_to_mu(pts));
+                        //~ lwe_ciphertext_add_assign(&mut new_self_ct, &ctbo);
+                        //~ *self.ct = ParmCtWord::Ct(new_self_ct);
                     },
-                    ParmEncrWord::Triv(mio) =>
+                    ParmCtWord::Triv(pto) =>
                         // other.is_triv
-                        ParmEncrWord::Triv(mis + mio),
-                }
+                        *self.ct = ParmCtWord::Triv(Plaintext(pts.0.wrapping_add(pto.0))),
+                },
         }
-        Ok(())
     }
 
     pub fn add(
         &self,
         other: &Self,
-    ) -> Result<Self, Box<dyn Error>> {
+    ) -> Self {
         let mut res = self.clone();
-        res.add_inplace(other)?;
-        Ok(res)
+        res.add_inplace(other);
+        res
     }
 
-    pub fn add_half_inplace(&mut self, pc: &ParmesanCloudovo) -> Result<(), Box<dyn Error>> {
-        let enc_half: u64 = 1u64 << (64 - pc.params.bit_precision - 1);
-        let p_half = engine.create_plaintext(&enc_half)?;
-        engine.fuse_add_lwe_ciphertext_plaintext(&mut self.0, &p_half)?;
-        Ok(())
+    pub fn add_half_inplace(&mut self) {
+        let half_pt = half_to_pt(self.server_key);
+
+        match self.ct {
+            ParmCtWord::Ct(ctbs) => {
+                // !self.is_triv, half.is_triv
+                lwe_ciphertext_plaintext_add_assign(&mut ctbs.ct, half_pt);
+            },
+            ParmCtWord::Triv(pts) =>
+                // self.is_triv, half.is_triv
+                *self.ct = ParmCtWord::Triv(Plaintext(pts.0.wrapping_add(half_pt.0))),
+        }
     }
 
     pub fn sub_inplace(
         &mut self,
         other: &Self,
-    ) -> Result<(), Box<dyn Error>> {
-        let neg_other = other.opp()?;
+    ) {
+        let neg_other = other.opp();
         self.add_inplace(&neg_other)
     }
 
     pub fn sub(
         &self,
         other: &Self,
-    ) -> Result<Self, Box<dyn Error>> {
+    ) -> Self {
         let mut res = self.clone();
-        res.sub_inplace(other)?;
-        Ok(res)
+        res.sub_inplace(other);
+        res
     }
 
-    pub fn opp_inplace(&mut self) -> Result<(), Box<dyn Error>> {
-        engine.fuse_opp_lwe_ciphertext(&mut self.0)?;
-        Ok(())
+    pub fn opp_inplace(&mut self) {
+        match self.ct {
+            ParmCtWord::Ct(ctbs) =>
+                lwe_ciphertext_opposite_assign(&mut ctbs),
+            ParmCtWord::Triv(pts) =>
+                *self.ct = ParmCtWord::Triv(Plaintext(pts.0.wrapping_neg())),
+        }
     }
 
     pub fn opp(&self) -> Result<Self, Box<dyn Error>> {
@@ -156,16 +232,19 @@ impl ParmEncrWord<'_> {
 
     pub fn mul_const_inplace(&mut self, k: i32) -> Result<(), Box<dyn Error>> {
         let k_abs: u64 = k.abs() as u64;
-        let k_abs_ct64: Cleartext64 = engine.create_cleartext(&k_abs)?;
-        engine.fuse_mul_lwe_ciphertext_cleartext(&mut self.0, &k_abs_ct64)?;
-        if k < 0 {self.opp_inplace()?;}
-        Ok(())
+        match self.ct {
+            ParmCtWord::Ct(ctbs) =>
+                lwe_ciphertext_cleartext_mul_assign(&mut ctbs, Cleartext(k_abs)),
+            ParmCtWord::Triv(pts) =>
+                *self.ct = ParmCtWord::Triv(Plaintext(pts.0.wrapping_mul(k_abs))),
+        }
+        if k < 0 {self.opp_inplace();}
     }
 
-    pub fn mul_const(&self, k: i32) -> Result<Self, Box<dyn Error>> {
+    pub fn mul_const(&self, k: i32) -> Self {
         let mut res = self.clone();
-        res.mul_const_inplace(k)?;
-        Ok(res)
+        res.mul_const_inplace(k);
+        res
     }
 }
 
@@ -201,7 +280,7 @@ pub trait ParmCiphertextImpl {
     fn to_str(&self) -> String;
 }
 
-impl ParmCiphertextImpl<'_> for ParmCiphertext<'_> {
+impl ParmCiphertextImpl for ParmCiphertext<'_> {
     fn triv<'a>(
         len: usize,
         pc: &'a ParmesanCloudovo<'a>,

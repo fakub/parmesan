@@ -4,8 +4,13 @@ use std::error::Error;
 use colored::Colorize;
 
 //~ use concrete_core::prelude::*;
+use tfhe::core_crypto::entities::GlweCiphertext;
+use tfhe::shortint::ciphertext::Degree;
+use tfhe::shortint::parameters::*;
+use tfhe::shortint::prelude::*;
+use tfhe::shortint::server_key::LookupTableOwned;
 
-use crate::ciphertexts::ParmEncrWord;
+use crate::ciphertexts::*;
 use crate::ParmesanCloudovo;
 
 //~ //
@@ -55,92 +60,136 @@ fn eval_LUT_5_float<'a>(
     pc: &'a ParmesanCloudovo<'a>,
     c: &'a ParmEncrWord<'a>,
     lut: [f64; 1 << (5-1)],
-) -> Result<ParmEncrWord<'a>, Box<dyn Error>> {
-    // resolve trivial case
-    if c.is_triv() {
-        let  m = c.decrypt_word_pos(&pc.params, None)?;
-        let fm = if m < (1 << (5-1)) { lut[m as usize] }
-            else if m < (1 << 5) { -lut[(m as i32 - (1 << (5-1))) as usize] }
-            else {return Err(format!("Word m = {} does not fit 5-bit LUT.", m).into())};
-        // check if LUT value is "half-ish"
-        let fm_half = (2.0 * fm) as i32 & 1 == 1;
-                              // remove half
-        let fm_u = ((if fm_half {fm - 0.5} else {fm} as i32) & ((1 << 5) - 1)) as u32;
-        if fm_half {
-            let mut res = ParmEncrWord::encrypt_word_triv(fm_u as i32);
-            // add half back
-            res.add_half_inplace(pc)?;
-            Ok(res)
-        } else {
-            Ok(ParmEncrWord::encrypt_word_triv(fm_u as i32))
-        }
-    } else {
-        #[cfg(feature = "seq_analyze")]
-        unsafe { if let Some(last) = crate::N_PBS.last_mut() { *last += 1; } }
+) -> ParmEncrWord<'a> {
+    match c.ct {
+        ParmCtWord::Ct(ctb) => {
+            #[cfg(feature = "seq_analyze")]
+            unsafe { if let Some(last) = crate::N_PBS.last_mut() { *last += 1; } }
 
-        let mut res = c.0.clone();
+            let accumulator = gen_no_padding_acc(pc.server_key, |x| lut[x as usize]);
 
-        let mut engine = CoreEngine::new(())?;
-        let accumulator = create_accum(|x| lut[x as usize], &pc.pub_keys.bsk, pc.params.bit_precision)?;
-
-        let zero_plaintext = engine.create_plaintext(&0_u64)?;
-        let mut buffer_lwe_after_pbs = engine.trivially_encrypt_lwe_ciphertext(
-            pc.pub_keys.ksk.output_lwe_dimension().to_lwe_size(), // prepare space for the results
-            &zero_plaintext,
-        )?;
-        // Compute a key switch
-        engine.discard_keyswitch_lwe_ciphertext(
-            &mut buffer_lwe_after_pbs,
-            &mut res,
-            &pc.pub_keys.ksk,
-        )?;
-        // Compute a bootstrap
-        engine.discard_bootstrap_lwe_ciphertext(
-            &mut res,
-            &buffer_lwe_after_pbs,
-            &accumulator,
-            &pc.pub_keys.bsk,
-        )?;
-
-        Ok(ParmEncrWord(res))
+            ParmEncrWord{
+                server_key: pc.pub_keys.server_key,
+                ct: pc.pub_keys.server_key.apply_lookup_table(&ctb, &accumulator),
+            }
+        },
+        ParmCtWord::Triv(pt) => {
+            let  m = pt_to_mu(c.server_key, &pt);
+            let fm = if m < (1 << (5-1)) { lut[m as usize] }
+                else if m < (1 << 5) { -lut[(m as i32 - (1 << (5-1))) as usize] }
+                else {panic!("Word m = {} does not fit 5-bit LUT.", m)};
+            // check if LUT value is "half-ish"
+            let fm_half = (2.0 * fm) as i32 & 1 == 1;
+                                  // remove half
+            let fm_u = ((if fm_half {fm - 0.5} else {fm} as i32) & ((1 << 5) - 1)) as u32;
+            if fm_half {
+                let mut res = ParmEncrWord::encrypt_word_triv(&pc.pub_keys, fm_u as i32);
+                // add half back
+                res.add_half_inplace(pc)?;
+                Ok(res)
+            } else {
+                Ok(ParmEncrWord::encrypt_word_triv(fm_u as i32))
+            }
+        },
     }
 }
 
-// create accumulator
-fn create_accum<F>(
-    func: F,
-    bootstrapping_key: &FourierLweBootstrapKey64,
-    bit_precision: usize,
-) -> Result<GlweCiphertext64, Box<dyn std::error::Error>>
-where F: Fn(usize) -> f64 {
-    let mut engine = CoreEngine::new(())?;
-    let delta = 1u64 << (64 - bit_precision);
-    let mut accumulator_u64 = vec![0_u64; bootstrapping_key.polynomial_size().0];
-    let modulus_sup = 1 << (bit_precision - 1);   // half of values is to be set .. 16
-    let box_size = bootstrapping_key.polynomial_size().0 / modulus_sup;
-    let half_box_size = box_size / 2;
-    // fill accumulator
+//~ // create accumulator
+//~ fn create_accum<F>(
+    //~ func: F,
+    //~ bootstrapping_key: &FourierLweBootstrapKey64,
+    //~ bit_precision: usize,
+//~ ) -> Result<GlweCiphertext64, Box<dyn std::error::Error>>
+//~ where F: Fn(usize) -> f64 {
+    //~ let mut engine = CoreEngine::new(())?;
+    //~ let delta = 1u64 << (64 - bit_precision);
+    //~ let mut accumulator_u64 = vec![0_u64; bootstrapping_key.polynomial_size().0];
+    //~ let modulus_sup = 1 << (bit_precision - 1);   // half of values is to be set .. 16
+    //~ let box_size = bootstrapping_key.polynomial_size().0 / modulus_sup;
+    //~ let half_box_size = box_size / 2;
+    //~ // fill accumulator
+    //~ for i in 0..modulus_sup {
+        //~ let index = i as usize * box_size;
+        //~ accumulator_u64[index..index + box_size]
+            //~ .iter_mut()
+            //~ .for_each(|a| *a = (func(i) * delta as f64).round() as u64);
+    //~ }
+    //~ // Negate the first half_box_size coefficients
+    //~ for a_i in accumulator_u64[0..half_box_size].iter_mut() {
+        //~ *a_i = (*a_i).wrapping_neg();
+    //~ }
+    //~ // Rotate the accumulator
+    //~ accumulator_u64.rotate_left(half_box_size);
+    //~ // init accumulator as GLWE
+    //~ let accumulator_plaintext = engine.create_plaintext_vector(&accumulator_u64)?;
+
+    //~ let accumulator = engine.trivially_encrypt_glwe_ciphertext(
+        //~ bootstrapping_key.glwe_dimension().to_glwe_size(), // prepare space for the results
+        //~ &accumulator_plaintext,
+    //~ )?;
+
+    //~ Ok(accumulator)
+//~ }
+
+// create no-padding accumulator
+fn gen_no_padding_acc<F>(server_key: &ServerKey, f: F) -> LookupTableOwned
+where
+    F: Fn(u64) -> u64,
+{
+    let mut accumulator = GlweCiphertext::new(
+        0u64,
+        server_key.bootstrapping_key.glwe_size(),
+        server_key.bootstrapping_key.polynomial_size(),
+        server_key.key_switching_key.ciphertext_modulus(),
+    );
+
+    let mut accumulator_view = accumulator.as_mut_view();
+
+    accumulator_view.get_mut_mask().as_mut().fill(0);
+
+    // Modulus of the msg contained in the msg bits and operations buffer
+    // Modulus_sup is divided by two as in parmesan
+    let modulus_sup = server_key.message_modulus.0 * server_key.carry_modulus.0 / 2;
+
+    // N/(p/2) = size of each block
+    let box_size = server_key.bootstrapping_key.polynomial_size().0 / modulus_sup;
+
+    // Value of the shift we multiply our messages by
+    // First main change delta is re multiplied by 2 to account for the padding bit
+    let delta =
+        ((1u64 << 63) / (server_key.message_modulus.0 * server_key.carry_modulus.0) as u64) * 2;
+
+    let mut body = accumulator_view.get_mut_body();
+    let accumulator_u64 = body.as_mut();
+
+    // Tracking the max value of the function to define the degree later
+    let mut max_value = 0;
+
     for i in 0..modulus_sup {
-        let index = i as usize * box_size;
+        let index = i * box_size;
         accumulator_u64[index..index + box_size]
             .iter_mut()
-            .for_each(|a| *a = (func(i) * delta as f64).round() as u64);
+            .for_each(|a| {
+                let f_eval = f(i as u64);
+                *a = f_eval * delta;
+                max_value = max_value.max(f_eval);
+            });
     }
+
+    let half_box_size = box_size / 2;
+
     // Negate the first half_box_size coefficients
     for a_i in accumulator_u64[0..half_box_size].iter_mut() {
         *a_i = (*a_i).wrapping_neg();
     }
+
     // Rotate the accumulator
     accumulator_u64.rotate_left(half_box_size);
-    // init accumulator as GLWE
-    let accumulator_plaintext = engine.create_plaintext_vector(&accumulator_u64)?;
 
-    let accumulator = engine.trivially_encrypt_glwe_ciphertext(
-        bootstrapping_key.glwe_dimension().to_glwe_size(), // prepare space for the results
-        &accumulator_plaintext,
-    )?;
-
-    Ok(accumulator)
+    LookupTableOwned {
+        acc: accumulator,
+        degree: Degree(max_value as usize),
+    }
 }
 
 
