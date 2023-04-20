@@ -73,7 +73,7 @@ impl PrivKeySet {
 
     /// Get filename from params
     fn filename_from_params(pars: &Params) -> String {
-        let suffix = format!("n-{}_N-{}_gamma-{}_l-{}_kappa-{}_t-{}_v0.2.key",
+        let suffix = format!("n-{}_N-{}_gamma-{}_l-{}_kappa-{}_t-{}.key",
                                 pars.lwe_dimension(),
                                      pars.polynomial_size(),
                                               pars.pbs_base_log(),
@@ -81,7 +81,7 @@ impl PrivKeySet {
                                                             pars.ks_base_log(),
                                                                  pars.ks_level(),
         );
-        let filename = format!("{}/parcrete-keys__{}", KEYS_PATH, suffix);
+        let filename = format!("{}/parm__tfhe_rs_v0_2-keys__{}", KEYS_PATH, suffix);
 
         filename
     }
