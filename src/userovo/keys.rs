@@ -40,6 +40,9 @@ impl PrivKeySet {
         let (client_key, server_key): (ClientKey, ServerKey);
 
         if !path.is_file() {
+            // create KEYS_PATH directory, unless it exists
+            fs::create_dir_all(KEYS_PATH)?;
+
             measure_duration!(
                 ["Generating new keys"],
                 [
@@ -55,9 +58,6 @@ impl PrivKeySet {
                 ]
             );
         } else {
-            // create KEYS_PATH directory, unless it exists
-            fs::create_dir_all(KEYS_PATH)?;
-
             measure_duration!(
                 ["Loading saved keys"],
                 [
