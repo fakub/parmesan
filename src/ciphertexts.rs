@@ -18,7 +18,7 @@ use crate::ParmesanCloudovo;
 /// Enum that holds either plaintext (triv. ciphertext), or actual ciphertext
 #[derive(Clone)]
 pub enum ParmCtWord {
-    Ct(tfhe::shortint::CiphertextBig),
+    Ct(tfhe::shortint::Ciphertext),
     Triv(tfhe::core_crypto::entities::plaintext::Plaintext<u64>),   //TODO check if u64 is ok?
 }
 

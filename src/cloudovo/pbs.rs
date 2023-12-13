@@ -147,7 +147,7 @@ where
 
     LookupTableOwned {
         acc: accumulator,
-        degree: Degree(max_value as usize),   //TODO check what this means?
+        degree: Degree::new(max_value as usize),   //TODO check what this means?
     }
 }
 
