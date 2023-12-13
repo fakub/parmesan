@@ -100,10 +100,11 @@ impl Params {
 }
 
 #[allow(dead_code)]
-pub const PAR_TFHE_V0_5__M1_C3: Params = Params {
+pub const PAR_TFHE_V0_5__M4_C0: Params = Params {
     concrete_pars:  ClassicPBSParameters {
         message_modulus: MessageModulus(1 << 5),
-        ..PARAM_MESSAGE_1_CARRY_3_KS_PBS
+        ..PARAM_MESSAGE_4_CARRY_0_KS_PBS
+        //TODO make it work with PARAM_MESSAGE_1_CARRY_3_KS_PBS
     },
     //TODO assert_eq!(server_key.carry_modulus.0, 1)
     //TODO use message_modulus from tfhe-rs instead (or do not implement custom params at all)
@@ -111,5 +112,5 @@ pub const PAR_TFHE_V0_5__M1_C3: Params = Params {
     // derived as follows: greatest message = 3, fits within carry multiplied by 10 (3x10 = 30 < 2^5)
     // i.e., the error must fit even when sample is multiplied by 10
     // => QW = 10^2
-    quad_weight:    225,
+    quad_weight:    100,
 };

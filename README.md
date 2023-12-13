@@ -64,7 +64,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     //  Initialization
     // ---------------------------------
     //  Global Scope
-    let par = &params::PAR_TFHE_V0_2__M4_C0;
+    let par = &params::PAR_TFHE_V0_5__M4_C0;
 
     // ---------------------------------
     //  Userovo Scope
