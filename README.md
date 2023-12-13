@@ -35,8 +35,12 @@ Add a dependency to your `Cargo.toml` file in your Rust project.
 
 ```toml
 [dependencies]
-parmesan = { version = "^0.0.20-alpha", features = ["measure"] }
+parmesan = { version = "^0.1.5", features = ["measure"] }
 colored = "^2.0.0"
+```
+N.b., the latest version might be missing at crates.io, then adding github source would be needed:
+```toml
+parmesan = { git = "https://github.com/fakub/parmesan", branch = "master", version = ...
 ```
 
 For the best performance, compile with
@@ -115,7 +119,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 
 ## Benchmarks
 
-For benchmarks, we implement an experimental tool [bench-parmesan](https://github.com/fakub/bench-parmesan), which also compares Parmesan and Concrete `v0.2`.
+For benchmarks, we implement an experimental tool [bench-parmesan](https://github.com/fakub/bench-parmesan), which also compares Parmesan and `tfhe-rs`.
 Results can be found in the [whitepaper](https://eprint.iacr.org/2023/544).
 
 ### Processor Load
@@ -129,6 +133,7 @@ An extra graph that shows the processor load during 32-bit multiplication can be
 
 ## Version Log
 
+  * `v0.1.5`: upgraded backend to `tfhe v0.5`
   * `v0.1.0-alpha`: rewritten using `tfhe v0.2` instead of `concrete_core`.
   * `v0.0.20-alpha-4`: algorithms for [whitepaper](https://eprint.iacr.org/2023/544).
 
