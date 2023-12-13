@@ -51,8 +51,8 @@ fn t_impl_pbs_with_mode(
 
         // encrypt
         let c = match mode {
-            EncrVsTriv::ENCR => ParmEncrWord::encrypt_word(&common::TEST_PRIV_KEYS, m),
-            EncrVsTriv::TRIV => ParmEncrWord::encrypt_word_triv(&common::TEST_PC.pub_keys, m),
+            EncrVsTriv::ENCR     => ParmEncrWord::encrypt_word(     &common::TEST_PRIV_KEYS,   m),
+            EncrVsTriv::TRIV     => ParmEncrWord::encrypt_word_triv(&common::TEST_PC.pub_keys, m),
             EncrVsTriv::ENCRTRIV => panic!("Not called"),
         };
 

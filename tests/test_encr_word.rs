@@ -43,14 +43,6 @@ fn t_encr_word_ee() {
     t_impl_encr_word_with_modes(EncrVsTriv::ENCR, EncrVsTriv::ENCR);
 }
 
-// finally, just verify ENCRTRIV
-#[test]
-/// Both Triv
-fn t_encr_word_etet() {
-    println!("EncrWord: both triv ...");
-    t_impl_encr_word_with_modes(EncrVsTriv::ENCRTRIV, EncrVsTriv::ENCRTRIV);
-}
-
 
 // -----------------------------------------------------------------------------
 //  Test Implementations
@@ -76,20 +68,19 @@ fn t_impl_encr_word_with_modes(
         let cs = match s_mode {
             EncrVsTriv::ENCR     => ParmEncrWord::encrypt_word(     &common::TEST_PRIV_KEYS,   ms),
             EncrVsTriv::TRIV     => ParmEncrWord::encrypt_word_triv(&common::TEST_PC.pub_keys, ms),
-            //TODO what is this supposed to do??
-            EncrVsTriv::ENCRTRIV => ParmEncrWord::encrypt_word_triv(&common::TEST_PC.pub_keys, ms),
+            EncrVsTriv::ENCRTRIV => panic!("Not called"),
         };
         let co = match o_mode {
             EncrVsTriv::ENCR     => ParmEncrWord::encrypt_word(     &common::TEST_PRIV_KEYS,   mo),
             EncrVsTriv::TRIV     => ParmEncrWord::encrypt_word_triv(&common::TEST_PC.pub_keys, mo),
-            EncrVsTriv::ENCRTRIV => ParmEncrWord::encrypt_word_triv(&common::TEST_PC.pub_keys, mo),
+            EncrVsTriv::ENCRTRIV => panic!("Not called"),
         };
 
         // test is_triv
         match s_mode {
-            EncrVsTriv::ENCR => assert!(!cs.is_triv()),
-            EncrVsTriv::TRIV => assert!(cs.is_triv()),
-            EncrVsTriv::ENCRTRIV => assert!(cs.is_triv()),
+            EncrVsTriv::ENCR     => assert!(!cs.is_triv()),
+            EncrVsTriv::TRIV     => assert!(cs.is_triv()),
+            EncrVsTriv::ENCRTRIV => panic!("Not called"),
         }
 
         // verify inputs (also check the case with None)
